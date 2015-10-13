@@ -63,6 +63,7 @@ for target in "js" "lua"; do
   echo "main()" >> "${bin}/monki.${target}"
 done
 
+rlwrap="`which rlwrap`"
 if [ ! -z "$rlwrap" ]; then
   cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"     
 else

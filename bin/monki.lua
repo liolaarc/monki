@@ -1270,7 +1270,8 @@ end})
 ffi.cdef("int usleep (unsigned int usecs)")
 usleep = ffi.C.usleep
 function sleep(secs)
-  return(usleep(secs * 1000000))
+  usleep(secs * 1000000)
+  return(nil)
 end
 local popen = io.popen
 function shell(cmd)
