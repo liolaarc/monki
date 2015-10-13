@@ -1,0 +1,50 @@
+#!/bin/sh
+
+dir="$(pwd)"
+cd "$(dirname "$0")"
+bin="$(pwd)"
+cd ..
+lumen_bin="lumen/bin"
+if [[ ! -d "${lumen_bin}" ]]; then
+  1>&2 echo "Lumen not found" && exit 1;
+fi
+cd "${dir}"
+
+if [ ! -z ${LUMEN_HOST} ]
+then
+    host=${LUMEN_HOST}
+elif luajit -v > /dev/null 2>&1
+then
+    host=luajit
+elif lua -v > /dev/null 2>&1
+then
+    host=lua
+elif node -v > /dev/null 2>&1
+then
+    host=node
+else
+    echo "no Lumen host found"
+fi
+
+case $host in
+    node*)
+        ext=js
+        export NODE_PATH="$NODE_PATH:${bin}:${dir}/lib";;
+    *)
+        ext=lua
+        export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
+esac
+
+cp "${lumen_bin}/"*.{js,lua} bin/
+
+${host} "${bin}/lumen.${ext}" -c monki.l -o bin/monki.js -t js
+${host} "${bin}/lumen.${ext}" -c monki.l -o bin/monki.lua -t lua
+
+rlwrap="`which rlwrap`"
+
+if [ ! -z "$rlwrap" ]; then
+  exec "${rlwrap}" ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "$@"
+else
+  exec "${rlwrap}" ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "$@"
+fi
+
