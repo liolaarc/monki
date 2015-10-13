@@ -1,10 +1,23 @@
+function comp(expr)
+  return(print(compile(macroexpand(expr))))
+end
+reader = require("reader")
+function read_str(s)
+  return(join({"do"}, reader["read-all"](reader.stream(s))))
+end
+function reload(file)
+  local code = read_str(read_file(file))
+  comp(code)
+  eval(code)
+  return(print("Reloaded " .. file))
+end
 setenv("mac", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"define-macro"}, l))
 end})
 setenv("letmac", {_stash = true, macro = function (name, args, body, ...)
-  local _r1 = unstash({...})
-  local _id1 = _r1
+  local _r4 = unstash({...})
+  local _id1 = _r4
   local l = cut(_id1, 0)
   return(join({"let-macro", {{name, args, body}}}, l))
 end})
@@ -16,8 +29,8 @@ idfn = function (x)
   return(x)
 end
 setenv("w/uniq", {_stash = true, macro = function (x, ...)
-  local _r4 = unstash({...})
-  local _id3 = _r4
+  local _r7 = unstash({...})
+  local _id3 = _r7
   local body = cut(_id3, 0)
   if atom63(x) then
     return(join({"let-unique", {x}}, body))
@@ -30,14 +43,14 @@ setenv("void", {_stash = true, macro = function (...)
   return(join({"do"}, l, {"nil"}))
 end})
 setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
-  local _r6 = unstash({...})
-  local _id5 = _r6
+  local _r9 = unstash({...})
+  local _id5 = _r9
   local l = cut(_id5, 0)
   return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, l))
 end})
 setenv("accum", {_stash = true, macro = function (name, ...)
-  local _r8 = unstash({...})
-  local _id7 = _r8
+  local _r11 = unstash({...})
+  local _id7 = _r11
   local body = cut(_id7, 0)
   local g = unique("g")
   return({"let", g, join(), join({"lfn", name, {"item"}, {"add", g, "item"}}, body), g})
@@ -63,8 +76,8 @@ function any63(x)
   return(lst63(x) and some63(x))
 end
 setenv("iflet", {_stash = true, macro = function (name, ...)
-  local _r12 = unstash({...})
-  local _id10 = _r12
+  local _r15 = unstash({...})
+  local _id10 = _r15
   local l = cut(_id10, 0)
   if some63(l) then
     local _id11 = l
@@ -107,17 +120,17 @@ function str(x)
   end
 end
 function pr(...)
-  local _r15 = unstash({...})
-  local _id12 = _r15
+  local _r18 = unstash({...})
+  local _id12 = _r18
   local sep = _id12.sep
   local l = cut(_id12, 0)
   local c = nil
   if sep then
-    local _x71 = l
-    local _n1 = _35(_x71)
+    local _x84 = l
+    local _n1 = _35(_x84)
     local _i1 = 0
     while _i1 < _n1 do
-      local x = _x71[_i1 + 1]
+      local x = _x84[_i1 + 1]
       if c then
         write(c)
       else
@@ -127,11 +140,11 @@ function pr(...)
       _i1 = _i1 + 1
     end
   else
-    local _x72 = l
-    local _n2 = _35(_x72)
+    local _x85 = l
+    local _n2 = _35(_x85)
     local _i2 = 0
     while _i2 < _n2 do
-      local x = _x72[_i2 + 1]
+      local x = _x85[_i2 + 1]
       write(str(x))
       _i2 = _i2 + 1
     end
@@ -141,8 +154,8 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r17 = unstash({...})
-  local _id14 = _r17
+  local _r20 = unstash({...})
+  local _id14 = _r20
   local bs = cut(_id14, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
@@ -157,8 +170,8 @@ setenv("import", {_stash = true, macro = function (name)
   return({"def", name, {"require", {"quote", name}}})
 end})
 setenv("mcall", {_stash = true, macro = function (o, method, ...)
-  local _r21 = unstash({...})
-  local _id16 = _r21
+  local _r24 = unstash({...})
+  local _id16 = _r24
   local args = cut(_id16, 0)
   local g = unique("g")
   return({"let", g, o, join({{"get", g, method}, g}, args)})

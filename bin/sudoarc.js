@@ -1,10 +1,23 @@
+comp = function (expr) {
+  return(print(compile(macroexpand(expr))));
+};
+reader = require("reader");
+read_str = function (s) {
+  return(join(["do"], reader["read-all"](reader.stream(s))));
+};
+reload = function (file) {
+  var code = read_str(read_file(file));
+  comp(code);
+  eval(code);
+  return(print("Reloaded " + file));
+};
 setenv("mac", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
   return(join(["define-macro"], l));
 }});
 setenv("letmac", {_stash: true, macro: function (name, args, body) {
-  var _r1 = unstash(Array.prototype.slice.call(arguments, 3));
-  var _id1 = _r1;
+  var _r4 = unstash(Array.prototype.slice.call(arguments, 3));
+  var _id1 = _r4;
   var l = cut(_id1, 0);
   return(join(["let-macro", [[name, args, body]]], l));
 }});
@@ -16,8 +29,8 @@ idfn = function (x) {
   return(x);
 };
 setenv("w/uniq", {_stash: true, macro: function (x) {
-  var _r4 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id3 = _r4;
+  var _r7 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id3 = _r7;
   var body = cut(_id3, 0);
   if (atom63(x)) {
     return(join(["let-unique", [x]], body));
@@ -30,14 +43,14 @@ setenv("void", {_stash: true, macro: function () {
   return(join(["do"], l, ["nil"]));
 }});
 setenv("lfn", {_stash: true, macro: function (name, args, body) {
-  var _r6 = unstash(Array.prototype.slice.call(arguments, 3));
-  var _id5 = _r6;
+  var _r9 = unstash(Array.prototype.slice.call(arguments, 3));
+  var _id5 = _r9;
   var l = cut(_id5, 0);
   return(join(["let", name, "nil", ["set", name, ["fn", args, body]]], l));
 }});
 setenv("accum", {_stash: true, macro: function (name) {
-  var _r8 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id7 = _r8;
+  var _r11 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id7 = _r11;
   var body = cut(_id7, 0);
   var g = unique("g");
   return(["let", g, join(), join(["lfn", name, ["item"], ["add", g, "item"]], body), g]);
@@ -70,8 +83,8 @@ any63 = function (x) {
   return(lst63(x) && some63(x));
 };
 setenv("iflet", {_stash: true, macro: function (name) {
-  var _r12 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id10 = _r12;
+  var _r15 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id10 = _r15;
   var l = cut(_id10, 0);
   if (some63(l)) {
     var _id11 = l;
@@ -114,17 +127,17 @@ str = function (x) {
   }
 };
 pr = function () {
-  var _r15 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id12 = _r15;
+  var _r18 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id12 = _r18;
   var sep = _id12.sep;
   var l = cut(_id12, 0);
   var c = undefined;
   if (sep) {
-    var _x58 = l;
-    var _n1 = _35(_x58);
+    var _x71 = l;
+    var _n1 = _35(_x71);
     var _i1 = 0;
     while (_i1 < _n1) {
-      var x = _x58[_i1];
+      var x = _x71[_i1];
       if (c) {
         write(c);
       } else {
@@ -134,11 +147,11 @@ pr = function () {
       _i1 = _i1 + 1;
     }
   } else {
-    var _x59 = l;
-    var _n2 = _35(_x59);
+    var _x72 = l;
+    var _n2 = _35(_x72);
     var _i2 = 0;
     while (_i2 < _n2) {
-      var x = _x59[_i2];
+      var x = _x72[_i2];
       write(str(x));
       _i2 = _i2 + 1;
     }
@@ -148,8 +161,8 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r17 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id14 = _r17;
+  var _r20 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id14 = _r20;
   var bs = cut(_id14, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
@@ -164,8 +177,8 @@ setenv("import", {_stash: true, macro: function (name) {
   return(["def", name, ["require", ["quote", name]]]);
 }});
 setenv("mcall", {_stash: true, macro: function (o, method) {
-  var _r21 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id16 = _r21;
+  var _r24 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id16 = _r24;
   var args = cut(_id16, 0);
   var g = unique("g");
   return(["let", g, o, join([["get", g, method], g], args)]);
@@ -174,5 +187,5 @@ var childproc = require("child_process");
 var exec = childproc.execSync;
 shell = function (cmd) {
   var o = exec(cmd);
-  return(o["toString"]());
+  return(o.toString());
 };
