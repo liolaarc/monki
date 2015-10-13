@@ -31,9 +31,13 @@
 
 (define system (require 'system))
 (define write (get system 'write))
+(define read-file (get system 'read-file))
 
 (define-macro mac l
   `(define-macro ,@l))
+
+(mac len l
+  `(# ,@l))
 
 (mac letmac (name args body rest: l)
   `(let-macro ((,name ,args ,body))
@@ -107,13 +111,46 @@
 
 (mac awhen l
   `(let-when it ,@l))
-         
+
+(def atom (x)
+  (or (atom? x) (function? x)))
+
+(def acons (x)
+  (not (atom x)))
+
+(def car (x)
+  (if (and (acons x) (some? x))
+      (hd x)))
+ 
+(def cdr (x)
+  (if (and (acons x) (some? x))
+      (tl x)))        
+
+(def caar (x) (car (car x)))
+(def cadr (x) (car (cdr x)))
+(def cddr (x) (cdr (cdr x)))
+
+(def cons (x y)
+  (join (list x) y))
+
 (def intersperse (x lst)
   (let sep nil
     (acc:each item lst
       (if sep (a sep)
         (set sep x))
       (a item))))
+
+(mac complement (f)
+  (w/uniq g
+    `(fn ,g (not (apply ,f ,g)))))
+
+(def keep (f xs)
+  (acc:step x xs
+    (when (f x)
+      (a x))))
+
+(def rem (f xs)
+  (keep (complement f) xs))
 
 ; Useful benchmark?
 
@@ -147,6 +184,14 @@
   (do1 (apply pr l)
        (pr "\n")))
 
+(def filechars (path)
+  (read-file path))
+
+(def readstr read-str)
+(def readfile (path) (readstr (filechars path)))
+
+(def env (get system 'get-environment-variable))
+(def args () (split (env 'cmdline) " "))
 ;
 ; Imports.
 ;

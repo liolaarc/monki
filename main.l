@@ -1,8 +1,11 @@
 
-(def system (require 'system))
-(def env (get system 'get-environment-variable))
+(def fetch (repo subdir)
+  (shell (cat "mkdir -p " subdir))
+  (shell (cat "git clone https://github.com/" repo " " subdir)))
 
-(def args (env 'cmdline))
-
-(prn args)
+(each file (args)
+  (prn file)
+  (iflet code (readfile file))
+   (do (prn code)
+      (eval code)))
 

@@ -1092,9 +1092,14 @@ function reload(file)
 end
 local system = require("system")
 local write = system.write
+local read_file = system["read-file"]
 setenv("mac", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"define-macro"}, l))
+end})
+setenv("len", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"#"}, l))
 end})
 setenv("letmac", {_stash = true, macro = function (name, args, body, ...)
   local _r4 = unstash({...})
@@ -1182,6 +1187,34 @@ setenv("awhen", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"let-when", "it"}, l))
 end})
+function atom(x)
+  return(atom63(x) or function63(x))
+end
+function acons(x)
+  return(not atom(x))
+end
+function car(x)
+  if acons(x) and some63(x) then
+    return(hd(x))
+  end
+end
+function cdr(x)
+  if acons(x) and some63(x) then
+    return(tl(x))
+  end
+end
+function caar(x)
+  return(car(car(x)))
+end
+function cadr(x)
+  return(car(cdr(x)))
+end
+function cddr(x)
+  return(cdr(cdr(x)))
+end
+function cons(x, y)
+  return(join({x}, y))
+end
 function intersperse(x, lst)
   local sep = nil
   local _e3
@@ -1193,6 +1226,23 @@ function intersperse(x, lst)
   end
   return(acc58each(item, lst, _e3, a(item)))
 end
+setenv("complement", {_stash = true, macro = function (f)
+  local g = unique("g")
+  return({"fn", g, {"not", {"apply", f, g}}})
+end})
+function keep(f, xs)
+  local _e4
+  if f(x) then
+    _e4 = a(x)
+  end
+  return(acc58step(x, xs, _e4))
+end
+function rem(f, xs)
+  return(keep(function (...)
+    local _g = unstash({...})
+    return(not apply(f, _g))
+  end, xs))
+end
 function str(x)
   if string63(x) then
     return(x)
@@ -1201,17 +1251,17 @@ function str(x)
   end
 end
 function pr(...)
-  local _r18 = unstash({...})
-  local _id12 = _r18
+  local _r30 = unstash({...})
+  local _id12 = _r30
   local sep = _id12.sep
   local l = cut(_id12, 0)
   local c = nil
   if sep then
-    local _x84 = l
-    local _n1 = _35(_x84)
+    local _x96 = l
+    local _n1 = _35(_x96)
     local _i1 = 0
     while _i1 < _n1 do
-      local x = _x84[_i1 + 1]
+      local x = _x96[_i1 + 1]
       if c then
         write(c)
       else
@@ -1221,11 +1271,11 @@ function pr(...)
       _i1 = _i1 + 1
     end
   else
-    local _x85 = l
-    local _n2 = _35(_x85)
+    local _x97 = l
+    local _n2 = _35(_x97)
     local _i2 = 0
     while _i2 < _n2 do
-      local x = _x85[_i2 + 1]
+      local x = _x97[_i2 + 1]
       write(str(x))
       _i2 = _i2 + 1
     end
@@ -1235,37 +1285,48 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r20 = unstash({...})
-  local _id14 = _r20
+  local _r32 = unstash({...})
+  local _id14 = _r32
   local bs = cut(_id14, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
 end})
 function prn(...)
   local l = unstash({...})
-  local _g = apply(pr, l)
+  local _g1 = apply(pr, l)
   pr("\n")
-  return(_g)
+  return(_g1)
+end
+function filechars(path)
+  return(read_file(path))
+end
+readstr = read_str
+function readfile(path)
+  return(readstr(filechars(path)))
+end
+env = system["get-environment-variable"]
+function args()
+  return(split(env("cmdline"), " "))
 end
 setenv("import", {_stash = true, macro = function (name)
   return({"def", name, {"require", {"quote", name}}})
 end})
 setenv("mcall", {_stash = true, macro = function (o, method, ...)
-  local _r24 = unstash({...})
-  local _id16 = _r24
-  local args = cut(_id16, 0)
+  local _r39 = unstash({...})
+  local _id16 = _r39
+  local _args1 = cut(_id16, 0)
   local g = unique("g")
-  return({"let", g, o, join({{"get", g, method}, g}, args)})
+  return({"let", g, o, join({{"get", g, method}, g}, _args1)})
 end})
 ffi = require("ffi")
 setenv("defc", {_stash = true, macro = function (name, val)
-  local _e4
+  local _e5
   if id_literal63(val) then
-    _e4 = inner(val)
+    _e5 = inner(val)
   else
-    _e4 = val
+    _e5 = val
   end
-  return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e4}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+  return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e5}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
 end})
 ffi.cdef("int usleep (unsigned int usecs)")
 usleep = ffi.C.usleep
@@ -1276,14 +1337,23 @@ end
 local popen = io.popen
 function shell(cmd)
   local h = popen(cmd)
-  local _g2 = h
-  local _g1 = _g2.read(_g2, "*a")
   local _g3 = h
-  _g3.close(_g3)
-  return(_g1)
+  local _g2 = _g3.read(_g3, "*a")
+  local _g4 = h
+  _g4.close(_g4)
+  return(_g2)
 end
-system = require("system")
-env = system["get-environment-variable"]
-args = env("cmdline")
-prn(args)
+function fetch(repo, subdir)
+  shell("mkdir -p " .. subdir)
+  return(shell("git clone https://github.com/" .. repo .. " " .. subdir))
+end
+local __o = args()
+local _i = nil
+for _i in next, __o do
+  local file = __o[_i]
+  prn(file)
+  local code = readfile(file)
+  prn(code)
+  eval(code)
+end
 main()

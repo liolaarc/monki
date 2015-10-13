@@ -1194,9 +1194,14 @@ reload = function (file) {
 };
 var system = require("system");
 var write = system.write;
+var read_file = system["read-file"];
 setenv("mac", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
   return(join(["define-macro"], l));
+}});
+setenv("len", {_stash: true, macro: function () {
+  var l = unstash(Array.prototype.slice.call(arguments, 0));
+  return(join(["#"], l));
 }});
 setenv("letmac", {_stash: true, macro: function (name, args, body) {
   var _r4 = unstash(Array.prototype.slice.call(arguments, 3));
@@ -1291,6 +1296,34 @@ setenv("awhen", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
   return(join(["let-when", "it"], l));
 }});
+atom = function (x) {
+  return(atom63(x) || function63(x));
+};
+acons = function (x) {
+  return(! atom(x));
+};
+car = function (x) {
+  if (acons(x) && some63(x)) {
+    return(hd(x));
+  }
+};
+cdr = function (x) {
+  if (acons(x) && some63(x)) {
+    return(tl(x));
+  }
+};
+caar = function (x) {
+  return(car(car(x)));
+};
+cadr = function (x) {
+  return(car(cdr(x)));
+};
+cddr = function (x) {
+  return(cdr(cdr(x)));
+};
+cons = function (x, y) {
+  return(join([x], y));
+};
 intersperse = function (x, lst) {
   var sep = undefined;
   var _e3;
@@ -1302,6 +1335,23 @@ intersperse = function (x, lst) {
   }
   return(acc58each(item, lst, _e3, a(item)));
 };
+setenv("complement", {_stash: true, macro: function (f) {
+  var g = unique("g");
+  return(["fn", g, ["not", ["apply", f, g]]]);
+}});
+keep = function (f, xs) {
+  var _e4;
+  if (f(x)) {
+    _e4 = a(x);
+  }
+  return(acc58step(x, xs, _e4));
+};
+rem = function (f, xs) {
+  return(keep(function () {
+    var _g = unstash(Array.prototype.slice.call(arguments, 0));
+    return(! apply(f, _g));
+  }, xs));
+};
 str = function (x) {
   if (string63(x)) {
     return(x);
@@ -1310,17 +1360,17 @@ str = function (x) {
   }
 };
 pr = function () {
-  var _r18 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id12 = _r18;
+  var _r30 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id12 = _r30;
   var sep = _id12.sep;
   var l = cut(_id12, 0);
   var c = undefined;
   if (sep) {
-    var _x71 = l;
-    var _n1 = _35(_x71);
+    var _x81 = l;
+    var _n1 = _35(_x81);
     var _i1 = 0;
     while (_i1 < _n1) {
-      var x = _x71[_i1];
+      var x = _x81[_i1];
       if (c) {
         write(c);
       } else {
@@ -1330,11 +1380,11 @@ pr = function () {
       _i1 = _i1 + 1;
     }
   } else {
-    var _x72 = l;
-    var _n2 = _35(_x72);
+    var _x82 = l;
+    var _n2 = _35(_x82);
     var _i2 = 0;
     while (_i2 < _n2) {
-      var x = _x72[_i2];
+      var x = _x82[_i2];
       write(str(x));
       _i2 = _i2 + 1;
     }
@@ -1344,27 +1394,38 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r20 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id14 = _r20;
+  var _r32 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id14 = _r32;
   var bs = cut(_id14, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
 }});
 prn = function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
-  var _g = apply(pr, l);
+  var _g1 = apply(pr, l);
   pr("\n");
-  return(_g);
+  return(_g1);
+};
+filechars = function (path) {
+  return(read_file(path));
+};
+readstr = read_str;
+readfile = function (path) {
+  return(readstr(filechars(path)));
+};
+env = system["get-environment-variable"];
+args = function () {
+  return(split(env("cmdline"), " "));
 };
 setenv("import", {_stash: true, macro: function (name) {
   return(["def", name, ["require", ["quote", name]]]);
 }});
 setenv("mcall", {_stash: true, macro: function (o, method) {
-  var _r24 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id16 = _r24;
-  var args = cut(_id16, 0);
+  var _r39 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id16 = _r39;
+  var _args1 = cut(_id16, 0);
   var g = unique("g");
-  return(["let", g, o, join([["get", g, method], g], args)]);
+  return(["let", g, o, join([["get", g, method], g], _args1)]);
 }});
 var childproc = require("child_process");
 var exec = childproc.execSync;
@@ -1372,8 +1433,24 @@ shell = function (cmd) {
   var o = exec(cmd);
   return(o.toString());
 };
-system = require("system");
-env = system["get-environment-variable"];
-args = env("cmdline");
-prn(args);
+fetch = function (repo, subdir) {
+  shell("mkdir -p " + subdir);
+  return(shell("git clone https://github.com/" + repo + " " + subdir));
+};
+var __o = args();
+var _i = undefined;
+for (_i in __o) {
+  var file = __o[_i];
+  var _e;
+  if (numeric63(_i)) {
+    _e = parseInt(_i);
+  } else {
+    _e = _i;
+  }
+  var __i = _e;
+  prn(file);
+  var code = readfile(file);
+  prn(code);
+  eval(code);
+}
 main()
