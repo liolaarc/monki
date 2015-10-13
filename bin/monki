@@ -35,16 +35,21 @@ case $host in
         export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
 esac
 
-cp "${lumen_bin}/"*.{js,lua} bin/
+git checkout "${bin}/"*.{js,lua}
 
-${host} "${bin}/lumen.${ext}" -c monki.l -o bin/monki.js -t js
-${host} "${bin}/lumen.${ext}" -c monki.l -o bin/monki.lua -t lua
+cp "${lumen_bin}/"*.{js,lua} "${bin}/"
+
+for src in "monki" "sudoarc"; do
+  for target in "js" "lua"; do
+    ${host} "${bin}/lumen.${ext}" -c "${src}.l" -o "${bin}/${src}.${target}" -t ${target}
+  done
+done
 
 rlwrap="`which rlwrap`"
 
 if [ ! -z "$rlwrap" ]; then
-  exec "${rlwrap}" ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "$@"
+  exec "${rlwrap}" ${host} "${bin}/"{lumen,monki,sudoarc}".${ext}" "$@"
 else
-  exec "${rlwrap}" ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "$@"
+  exec             ${host} "${bin}/"{lumen,monki,sudoarc}".${ext}" "$@"
 fi
 
