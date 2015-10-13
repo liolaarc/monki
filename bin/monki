@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 bin="$(pwd)"
 cd ..
 lumen_bin="lumen/bin"
-if [[ ! -d "${lumen_bin}" ]]; then
+if [ ! -d "${lumen_bin}" ]; then
   1>&2 echo "Lumen not found" && exit 1;
 fi
 cd "${dir}"
@@ -35,9 +35,10 @@ case $host in
         export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
 esac
 
-git checkout "${bin}/"*.{js,lua}
-
-cp "${lumen_bin}/"*.{js,lua} "${bin}/"
+for ext in "js" "lua"; do
+    git checkout "${bin}/"*.${ext}
+    cp "${lumen_bin}/"*.${ext} "${bin}/"
+done
 
 for src in "monki" "sudoarc"; do
   for target in "js" "lua"; do
@@ -48,8 +49,8 @@ done
 rlwrap="`which rlwrap`"
 
 if [ ! -z "$rlwrap" ]; then
-  exec "${rlwrap}" ${host} "${bin}/"{lumen,monki,sudoarc}".${ext}" "$@"
+  exec "${rlwrap}" ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "${bin}/sudoarc.${ext}" "$@"
 else
-  exec             ${host} "${bin}/"{lumen,monki,sudoarc}".${ext}" "$@"
+  exec             ${host} "${bin}/lumen.${ext}" "${bin}/monki.${ext}" "${bin}/sudoarc.${ext}" "$@"
 fi
 
