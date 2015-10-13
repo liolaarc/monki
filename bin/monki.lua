@@ -1281,4 +1281,8 @@ function shell(cmd)
   _g3.close(_g3)
   return(_g1)
 end
+system = require("system")
+env = system["get-environment-variable"]
+args = env("cmdline")
+prn(args)
 main()

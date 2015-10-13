@@ -1372,4 +1372,8 @@ shell = function (cmd) {
   var o = exec(cmd);
   return(o.toString());
 };
+system = require("system");
+env = system["get-environment-variable"];
+args = env("cmdline");
+prn(args);
 main()

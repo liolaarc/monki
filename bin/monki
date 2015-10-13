@@ -3,10 +3,12 @@
 dir="$(pwd)"
 cd "$(dirname "$0")"
 bin="$(pwd)"
-cd ../obj
-obj="$(pwd)"
 cd ..
-lumen_bin="lumen/bin"
+home="$(pwd)"
+cd obj
+obj="$(pwd)"
+cd ../lumen/bin
+lumen_bin="$(pwd)"
 if [ ! -d "${lumen_bin}" ]; then
   1>&2 echo "Lumen not found" && exit 1;
 fi
@@ -42,26 +44,26 @@ for ext in "js" "lua"; do
     cp "${lumen_bin}/"*.${ext} "${bin}/"
 done
 
+rm -f "${obj}/"*.js  "${obj}/"*.lua
 for target in "js" "lua"; do
-  rm -f "${obj}/"*.${target}
-  for src in "sudoarc" "monki"; do
-    ${host} "${lumen_bin}/lumen.${ext}" -c "${src}.l" -o "${obj}/${src}.${target}" -t ${target}
+    ${host} "${lumen_bin}/lumen.${ext}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+done
+for target in "js" "lua"; do
+  for src in "main"; do
+      ${host} "${lumen_bin}/lumen.${ext}" "${obj}/sudoarc.${ext}" \
+          -c "${home}/${src}.l" -o "${obj}/${src}.${target}" -t ${target}
   done
   code="${bin}/monki.${target}"
   cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${code}"
-  for src in "sudoarc"; do
+  for src in "sudoarc" "main"; do
       cat "${obj}/${src}.${target}" >> "${code}"
   done
   echo "main()" >> "${code}"
 done
 
-cmdline="$@"
-
-rlwrap="`which rlwrap`"
-
 if [ ! -z "$rlwrap" ]; then
-  cmdline="${cmdline}" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"     
+  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"     
 else
-  cmdline="${cmdline}" exec             "${host}" "${bin}/monki.${ext}"     
+  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}"     
 fi
 
