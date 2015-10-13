@@ -11,11 +11,12 @@
 (define-global comp (expr)
   (print (compile (macroexpand expr))))
 
-(set reader (require 'reader))
+(define reader (require 'reader))
+(define reader-stream (get reader 'stream))
+(define read-all (get reader 'read-all))
 
 (define-global read-str (s)
-    `(do ,@((get reader 'read-all)
-            ((get reader 'stream) s))))
+    `(do ,@(read-all (reader-stream s))))
 
 (define-global reload (file)
   (let code (read-str (read-file file))
@@ -27,6 +28,9 @@
 ;
 ; Let's see how far we can push Lumen in the direction of Arc.
 ;
+
+(define system (require 'system))
+(define write (get system 'write))
 
 (define-macro mac l
   `(define-macro ,@l))
