@@ -45,20 +45,22 @@ for ext in "js" "lua"; do
 done
 
 rm -f "${obj}/"*.js  "${obj}/"*.lua
+
 for target in "js" "lua"; do
-    ${host} "${lumen_bin}/lumen.${ext}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+    ${host} "${lumen_bin}/lumen.${ext}" \
+        -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
 done
+
 for target in "js" "lua"; do
   for src in "main"; do
       ${host} "${lumen_bin}/lumen.${ext}" "${obj}/sudoarc.${ext}" \
           -c "${home}/${src}.l" -o "${obj}/${src}.${target}" -t ${target}
   done
-  code="${bin}/monki.${target}"
-  cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${code}"
+  cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${bin}/monki.${target}"
   for src in "sudoarc" "main"; do
-      cat "${obj}/${src}.${target}" >> "${code}"
+      cat "${obj}/${src}.${target}" >> "${bin}/monki.${target}"
   done
-  echo "main()" >> "${code}"
+  echo "main()" >> "${bin}/monki.${target}"
 done
 
 if [ ! -z "$rlwrap" ]; then
