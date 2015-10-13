@@ -179,7 +179,7 @@
   ;   (print 'end)
   (defc usleep |int usleep (unsigned int usecs)|)
   (def sleep (secs)
-    (usleep (* secs 1000000))))
+    (do (usleep (* secs 1000000)) nil)))
 )
 
 ;
