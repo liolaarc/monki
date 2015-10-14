@@ -3,24 +3,6 @@
   (def j (get sys 'path-join))
   (def file? (get sys 'file-exists?)))
 
-(def wschars (list " " "\t" "\n" "\r"))
-
-(def ws? (s)
-  (for i (len s)
-    (let c (char s i)
-      (when (in? c wschars)
-        (return true)))))
-
-(def rtrim (s :f)
-  (while (and (some? s) ((or f ws?) (char s (edge s))))
-    (set s (clip s 0 (edge s))))
-  s)
-
-(def ltrim (s :f)
-  (while (and (some? s) ((or f ws?) (char s 0)))
-    (set s (clip s 1 (len s))))
-  s)
-
 (def dir? (path)
   ; There isn't any way to determine whether a directory exists in
   ; plain Lua without resorting to third-party libraries.
@@ -111,8 +93,6 @@
     (error (cat "tree: not a dir: " path)))
   (pushd path)
   (let s (if match 
-             ; ($ "find" "." "|" "sed" "'s|^\\./||'" "|" "grep" match)
-             ; ($ "find" "." "|" "sed" "'s|^\\./||'"))
              ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" match)
              ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
     (split s "\n")))
@@ -133,7 +113,8 @@
       (let cmdline (apply cat (intersperse "; " cmds))
         (when (not (= cwd "."))
           (set cmdline (cat "cd " (q cwd) "; " cmdline)))
-        (unless hush (prn cmdline))
+        (when (or (not hush) (env "VERBOSE"))
+          (prn cmdline))
         (rtrim (docmd cmdline))))))
 
 (def git? (path)
@@ -149,7 +130,7 @@
   (when (or (not repo) (none? repo))
     (error "fetch: bad repo"))
   (unless (or (= "." (char repo 0))
-              (= 0 (search repo "://")))
+              (search repo "://"))
     (set repo (cat "https://github.com/" repo)))
   (mkdir (j ".monki" "git"))
   ($ "echo" "'*'" ">" (j ".monki" ".gitignore"))
@@ -170,7 +151,7 @@
     ($ "mkdir" "-p" (j ".monki" "tmp"))
     ($ "cp" file (j ".monki" "tmp"))
     ; run the file.
-    (load (realpath path)  verbose: true)
+    (load (realpath file)  verbose: true)
     ; restore the file.
     ($ "cp" (j ".monki" "tmp" file) file)
     ($ "rm" (j ".monki" "tmp" file))
@@ -182,9 +163,33 @@
     (prn file)
     (monki file)))
 
-(let l (args)
-  (if (none? l) (monkitree (pwd))
-    (each path l
-      (if (dir? path) (monkitree path)
-        (monki path)))))
+(def monkiusage ()
+  (prn "  to run all monki.l files beneath a dir:")
+  (prn "    monki <dir>")
+  (prn "  to clone a git repo at a subdir:")
+  (prn "    monki clone <url> [revision] <subdir>")
+  (prn "")
+  (prn " e.g.  monki clone laarc/monki monki"))
+
+(def monkimain (argv)
+  (when (none? (or argv ()))
+    (return (monkitree (pwd))))
+  (when (in? (at argv 0) (list "-h" "--help" "help"))
+    (return))
+  (when (= (at argv 0) "clone")
+    (unless (> (len argv) 1)
+      (monkiusage)
+      (return))
+    (let dst (at argv (edge argv))
+      (when (dir? dst)
+        (error (cat "monki clone: already exists: " dst)))
+      (mkdir dst)
+      ($ "echo" (cat "(clone " (inner (string (cut argv 1 (edge argv)))) ")")
+         ">" (j dst "monki.l"))
+      (return (monkitree dst))))
+  (step arg argv
+    (if (dir? arg) (monkitree arg)
+        (endswith arg ".l") (monki arg)
+        (error (cat "unknown cmd " arg)))))
+(monkimain (args))
 

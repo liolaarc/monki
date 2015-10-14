@@ -1415,18 +1415,54 @@ str = function (x) {
     return(string(x));
   }
 };
+wschars = [" ", "\t", "\n", "\r"];
+ws63 = function (s) {
+  var i = 0;
+  while (i < _35(s)) {
+    var c = char(s, i);
+    if (in63(c, wschars)) {
+      return(true);
+    }
+    i = i + 1;
+  }
+};
+rtrim = function (s) {
+  var _r35 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id14 = _r35;
+  var f = _id14.f;
+  while (some63(s) && (f || ws63)(char(s, edge(s)))) {
+    s = clip(s, 0, edge(s));
+  }
+  return(s);
+};
+ltrim = function (s) {
+  var _r36 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id15 = _r36;
+  var f = _id15.f;
+  while (some63(s) && (f || ws63)(char(s, 0))) {
+    s = clip(s, 1, _35(s));
+  }
+  return(s);
+};
+endswith = function (s, ending) {
+  var i = _35(s) - _35(ending);
+  return(i === search(s, ending, i));
+};
+startswith = function (s, prefix) {
+  return(search(s, prefix) === 0);
+};
 pr = function () {
-  var _r34 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id14 = _r34;
-  var sep = _id14.sep;
-  var l = cut(_id14, 0);
+  var _r39 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id16 = _r39;
+  var sep = _id16.sep;
+  var l = cut(_id16, 0);
   var c = undefined;
   if (sep) {
-    var _x75 = l;
-    var _n4 = _35(_x75);
+    var _x76 = l;
+    var _n4 = _35(_x76);
     var _i4 = 0;
     while (_i4 < _n4) {
-      var x = _x75[_i4];
+      var x = _x76[_i4];
       if (c) {
         write(c);
       } else {
@@ -1436,11 +1472,11 @@ pr = function () {
       _i4 = _i4 + 1;
     }
   } else {
-    var _x76 = l;
-    var _n5 = _35(_x76);
+    var _x77 = l;
+    var _n5 = _35(_x77);
     var _i5 = 0;
     while (_i5 < _n5) {
-      var x = _x76[_i5];
+      var x = _x77[_i5];
       write(str(x));
       _i5 = _i5 + 1;
     }
@@ -1450,9 +1486,9 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r36 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id16 = _r36;
-  var bs = cut(_id16, 0);
+  var _r41 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id18 = _r41;
+  var bs = cut(_id18, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
 }});
@@ -1490,35 +1526,6 @@ shell = function (cmd) {
 var _sys = require("system");
 j = _sys["path-join"];
 file63 = _sys["file-exists?"];
-wschars = [" ", "\t", "\n", "\r"];
-ws63 = function (s) {
-  var i = 0;
-  while (i < _35(s)) {
-    var c = char(s, i);
-    if (in63(c, wschars)) {
-      return(true);
-    }
-    i = i + 1;
-  }
-};
-rtrim = function (s) {
-  var _r1 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id = _r1;
-  var f = _id.f;
-  while (some63(s) && (f || ws63)(char(s, edge(s)))) {
-    s = clip(s, 0, edge(s));
-  }
-  return(s);
-};
-ltrim = function (s) {
-  var _r2 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id1 = _r2;
-  var f = _id1.f;
-  while (some63(s) && (f || ws63)(char(s, 0))) {
-    s = clip(s, 1, _35(s));
-  }
-  return(s);
-};
 dir63 = function (path) {
   return("1" === _36("sh", "-c", "if [ -d " + escape(path) + " ]; then echo 1; fi", {_stash: true, hush: true}));
 };
@@ -1547,10 +1554,10 @@ rmrf = function (path) {
   }
 };
 surround = function (x) {
-  var _r9 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id2 = _r9;
-  var lh = _id2.lh;
-  var rh = _id2.rh;
+  var _r6 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id = _r6;
+  var lh = _id.lh;
+  var rh = _id.rh;
   return((lh || "") + x + (rh || ""));
 };
 q = function (x) {
@@ -1565,8 +1572,8 @@ docmd = function (cmdline) {
     try {
       return([true, shell(cmdline)]);
     }
-    catch (_e3) {
-      return([false, _e3.message]);
+    catch (_e2) {
+      return([false, _e2.message]);
     }
   })()[1]);
 };
@@ -1602,25 +1609,25 @@ pwd = function () {
   return(_36("pwd", {_stash: true, hush: true}));
 };
 setenv("w/pushd", {_stash: true, macro: function (path) {
-  var _r19 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id4 = _r19;
-  var body = cut(_id4, 0);
+  var _r16 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id2 = _r16;
+  var body = cut(_id2, 0);
   return(join(["do", ["pushd", path]], body, [["popd"]]));
 }});
 mkdir = function (path) {
   return(_36("mkdir", "-p", path));
 };
 setenv("w/mkdir", {_stash: true, macro: function (path) {
-  var _r22 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id6 = _r22;
-  var body = cut(_id6, 0);
+  var _r19 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id4 = _r19;
+  var body = cut(_id4, 0);
   var g = unique("g");
   return(join(["let", g, path, ["mkdir", g], ["pushd", g]], body, [["popd"]]));
 }});
 tree = function (path) {
-  var _r23 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id7 = _r23;
-  var match = _id7.match;
+  var _r20 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id5 = _r20;
+  var match = _id5.match;
   if (! dir63(path)) {
     throw new Error("tree: not a dir: " + path);
   }
@@ -1639,11 +1646,11 @@ _36 = function () {
   var hush = args.hush;
   var c = "";
   var cmds = [];
-  var _x22 = args;
-  var _n = _35(_x22);
+  var _x21 = args;
+  var _n = _35(_x21);
   var _i = 0;
   while (_i < _n) {
-    var arg = _x22[_i];
+    var arg = _x21[_i];
     if (arg === ";") {
       add(cmds, c);
       c = "";
@@ -1665,7 +1672,7 @@ _36 = function () {
   if (!( cwd === ".")) {
     cmdline = "cd " + q(cwd) + "; " + cmdline;
   }
-  if (! hush) {
+  if (! hush || env("VERBOSE")) {
     prn(cmdline);
   }
   return(rtrim(docmd(cmdline)));
@@ -1674,9 +1681,9 @@ git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r25 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id8 = _r25;
-  var args = cut(_id8, 0);
+  var _r22 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id6 = _r22;
+  var args = cut(_id6, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
       throw new Error("no .git at " + path);
@@ -1688,7 +1695,7 @@ clone = function (repo, revision) {
   if (! repo || none63(repo)) {
     throw new Error("fetch: bad repo");
   }
-  if (!( "." === char(repo, 0) || 0 === search(repo, "://"))) {
+  if (!( "." === char(repo, 0) || search(repo, "://"))) {
     repo = "https://github.com/" + repo;
   }
   mkdir(j(".monki", "git"));
@@ -1713,7 +1720,7 @@ monki = function (path) {
   cd(dir);
   _36("mkdir", "-p", j(".monki", "tmp"));
   _36("cp", file, j(".monki", "tmp"));
-  load(realpath(path), {_stash: true, verbose: true});
+  load(realpath(file), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
   _36("rm", j(".monki", "tmp", file));
   return(resetcwd());
@@ -1734,26 +1741,50 @@ monkitree = function (path) {
     monki(file);
   }
 };
-var _l = args();
-if (none63(_l)) {
-  monkitree(pwd());
-} else {
-  var _o1 = _l;
-  var _i2 = undefined;
-  for (_i2 in _o1) {
-    var path = _o1[_i2];
-    var _e2;
-    if (numeric63(_i2)) {
-      _e2 = parseInt(_i2);
-    } else {
-      _e2 = _i2;
-    }
-    var __i2 = _e2;
-    if (dir63(path)) {
-      monkitree(path);
-    } else {
-      monki(path);
-    }
+monkiusage = function () {
+  prn("  to run all monki.l files beneath a dir:");
+  prn("    monki <dir>");
+  prn("  to clone a git repo at a subdir:");
+  prn("    monki clone <url> [revision] <subdir>");
+  prn("");
+  return(prn(" e.g.  monki clone laarc/monki monki"));
+};
+monkimain = function (argv) {
+  if (none63(argv || [])) {
+    return(monkitree(pwd()));
   }
-}
+  if (in63(argv[0], ["-h", "--help", "help"])) {
+    return;
+  }
+  if (argv[0] === "clone") {
+    if (!( _35(argv) > 1)) {
+      monkiusage();
+      return;
+    }
+    var dst = argv[edge(argv)];
+    if (dir63(dst)) {
+      throw new Error("monki clone: already exists: " + dst);
+    }
+    mkdir(dst);
+    _36("echo", "(clone " + inner(string(cut(argv, 1, edge(argv)))) + ")", ">", j(dst, "monki.l"));
+    return(monkitree(dst));
+  }
+  var _x24 = argv;
+  var _n2 = _35(_x24);
+  var _i2 = 0;
+  while (_i2 < _n2) {
+    var arg = _x24[_i2];
+    if (dir63(arg)) {
+      monkitree(arg);
+    } else {
+      if (endswith(arg, ".l")) {
+        monki(arg);
+      } else {
+        throw new Error("unknown cmd " + arg);
+      }
+    }
+    _i2 = _i2 + 1;
+  }
+};
+monkimain(args());
 main()
