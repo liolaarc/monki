@@ -1412,9 +1412,21 @@ function ws63(s)
     i = i + 1
   end
 end
-function rtrim(s)
-  while ws63(char(s, _35(s) - 1)) do
-    s = clip(s, 0, _35(s) - 1)
+function rtrim(s, ...)
+  local _r1 = unstash({...})
+  local _id = _r1
+  local f = _id.f
+  while some63(s) and (f or ws63)(char(s, edge(s))) do
+    s = clip(s, 0, edge(s))
+  end
+  return(s)
+end
+function ltrim(s, ...)
+  local _r2 = unstash({...})
+  local _id1 = _r2
+  local f = _id1.f
+  while some63(s) and (f or ws63)(char(s, 0)) do
+    s = clip(s, 1, _35(s))
   end
   return(s)
 end
@@ -1431,10 +1443,11 @@ function basename(file)
   return(_36("basename", file, {_stash = true, hush = true}))
 end
 function realpath(path)
-  if not dir63(path) then
-    error("no such dir: " .. path)
+  if dir63(path) then
+    return(_36("cd", path, ";", "pwd"))
+  else
+    return(j(_36("cd", dirname(path), ";", "pwd"), basename(path)))
   end
-  return(_36("cd", path, ";", "pwd"))
 end
 function rmrf(path)
   if 0 == search(path, "/") then
@@ -1445,10 +1458,10 @@ function rmrf(path)
   end
 end
 function surround(x, ...)
-  local _r8 = unstash({...})
-  local _id = _r8
-  local lh = _id.lh
-  local rh = _id.rh
+  local _r9 = unstash({...})
+  local _id2 = _r9
+  local lh = _id2.lh
+  local rh = _id2.rh
   return((lh or "") .. x .. (rh or ""))
 end
 function q(x)
@@ -1459,18 +1472,18 @@ function q(x)
   end
 end
 function docmd(cmdline)
-  local _x2 = nil
+  local _x4 = nil
   local _msg = nil
   local _e = xpcall(function ()
-    _x2 = shell(cmdline)
-    return(_x2)
+    _x4 = shell(cmdline)
+    return(_x4)
   end, function (m)
     _msg = _37message_handler(m)
     return(_msg)
   end)
   local _e1
   if _e then
-    _e1 = _x2
+    _e1 = _x4
   else
     _e1 = _msg
   end
@@ -1508,31 +1521,48 @@ function pwd()
   return(_36("pwd", {_stash = true, hush = true}))
 end
 setenv("w/pushd", {_stash = true, macro = function (path, ...)
-  local _r19 = unstash({...})
-  local _id2 = _r19
-  local body = cut(_id2, 0)
+  local _r20 = unstash({...})
+  local _id4 = _r20
+  local body = cut(_id4, 0)
   return(join({"do", {"pushd", path}}, body, {{"popd"}}))
 end})
 function mkdir(path)
   return(_36("mkdir", "-p", path))
 end
 setenv("w/mkdir", {_stash = true, macro = function (path, ...)
-  local _r22 = unstash({...})
-  local _id4 = _r22
-  local body = cut(_id4, 0)
+  local _r23 = unstash({...})
+  local _id6 = _r23
+  local body = cut(_id6, 0)
   local g = unique("g")
   return(join({"let", g, path, {"mkdir", g}, {"pushd", g}}, body, {{"popd"}}))
 end})
+function tree(path, ...)
+  local _r24 = unstash({...})
+  local _id7 = _r24
+  local match = _id7.match
+  if not dir63(path) then
+    error("tree: not a dir: " .. path)
+  end
+  pushd(path)
+  local _e2
+  if match then
+    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", match)
+  else
+    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'")
+  end
+  local s = _e2
+  return(split(s, "\n"))
+end
 function _36(...)
   local args = unstash({...})
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x27 = args
-  local _n = _35(_x27)
+  local _x30 = args
+  local _n = _35(_x30)
   local _i = 0
   while _i < _n do
-    local arg = _x27[_i + 1]
+    local arg = _x30[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1563,9 +1593,9 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r24 = unstash({...})
-  local _id5 = _r24
-  local args = cut(_id5, 0)
+  local _r26 = unstash({...})
+  local _id8 = _r26
+  local args = cut(_id8, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
@@ -1602,15 +1632,33 @@ function monki(path)
   cd(dir)
   _36("mkdir", "-p", j(".monki", "tmp"))
   _36("cp", file, j(".monki", "tmp"))
-  load(path, {_stash = true, verbose = true})
+  load(realpath(path), {_stash = true, verbose = true})
   _36("cp", j(".monki", "tmp", file), file)
   _36("rm", j(".monki", "tmp", file))
   return(resetcwd())
 end
-local __o = args()
-local _i1 = nil
-for _i1 in next, __o do
-  local file = __o[_i1]
-  monki(file)
+function monkitree(path)
+  local _o = tree(path, {_stash = true, match = "/monki.l$"})
+  local _i1 = nil
+  for _i1 in next, _o do
+    local file = _o[_i1]
+    prn(file)
+    monki(file)
+  end
+end
+local _l = args()
+if none63(_l) then
+  monkitree(pwd())
+else
+  local _o1 = _l
+  local _i2 = nil
+  for _i2 in next, _o1 do
+    local path = _o1[_i2]
+    if dir63(path) then
+      monkitree(path)
+    else
+      monki(path)
+    end
+  end
 end
 main()

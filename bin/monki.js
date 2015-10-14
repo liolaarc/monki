@@ -1502,8 +1502,20 @@ ws63 = function (s) {
   }
 };
 rtrim = function (s) {
-  while (ws63(char(s, _35(s) - 1))) {
-    s = clip(s, 0, _35(s) - 1);
+  var _r1 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id = _r1;
+  var f = _id.f;
+  while (some63(s) && (f || ws63)(char(s, edge(s)))) {
+    s = clip(s, 0, edge(s));
+  }
+  return(s);
+};
+ltrim = function (s) {
+  var _r2 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id1 = _r2;
+  var f = _id1.f;
+  while (some63(s) && (f || ws63)(char(s, 0))) {
+    s = clip(s, 1, _35(s));
   }
   return(s);
 };
@@ -1520,10 +1532,11 @@ basename = function (file) {
   return(_36("basename", file, {_stash: true, hush: true}));
 };
 realpath = function (path) {
-  if (! dir63(path)) {
-    throw new Error("no such dir: " + path);
+  if (dir63(path)) {
+    return(_36("cd", path, ";", "pwd"));
+  } else {
+    return(j(_36("cd", dirname(path), ";", "pwd"), basename(path)));
   }
-  return(_36("cd", path, ";", "pwd"));
 };
 rmrf = function (path) {
   if (0 === search(path, "/")) {
@@ -1534,10 +1547,10 @@ rmrf = function (path) {
   }
 };
 surround = function (x) {
-  var _r8 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id = _r8;
-  var lh = _id.lh;
-  var rh = _id.rh;
+  var _r9 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id2 = _r9;
+  var lh = _id2.lh;
+  var rh = _id2.rh;
   return((lh || "") + x + (rh || ""));
 };
 q = function (x) {
@@ -1552,8 +1565,8 @@ docmd = function (cmdline) {
     try {
       return([true, shell(cmdline)]);
     }
-    catch (_e1) {
-      return([false, _e1.message]);
+    catch (_e3) {
+      return([false, _e3.message]);
     }
   })()[1]);
 };
@@ -1589,21 +1602,38 @@ pwd = function () {
   return(_36("pwd", {_stash: true, hush: true}));
 };
 setenv("w/pushd", {_stash: true, macro: function (path) {
-  var _r18 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id2 = _r18;
-  var body = cut(_id2, 0);
+  var _r19 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id4 = _r19;
+  var body = cut(_id4, 0);
   return(join(["do", ["pushd", path]], body, [["popd"]]));
 }});
 mkdir = function (path) {
   return(_36("mkdir", "-p", path));
 };
 setenv("w/mkdir", {_stash: true, macro: function (path) {
-  var _r21 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id4 = _r21;
-  var body = cut(_id4, 0);
+  var _r22 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id6 = _r22;
+  var body = cut(_id6, 0);
   var g = unique("g");
   return(join(["let", g, path, ["mkdir", g], ["pushd", g]], body, [["popd"]]));
 }});
+tree = function (path) {
+  var _r23 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id7 = _r23;
+  var match = _id7.match;
+  if (! dir63(path)) {
+    throw new Error("tree: not a dir: " + path);
+  }
+  pushd(path);
+  var _e;
+  if (match) {
+    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", match);
+  } else {
+    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'");
+  }
+  var s = _e;
+  return(split(s, "\n"));
+};
 _36 = function () {
   var args = unstash(Array.prototype.slice.call(arguments, 0));
   var hush = args.hush;
@@ -1644,9 +1674,9 @@ git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r23 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id5 = _r23;
-  var args = cut(_id5, 0);
+  var _r25 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id8 = _r25;
+  var args = cut(_id8, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
       throw new Error("no .git at " + path);
@@ -1683,22 +1713,47 @@ monki = function (path) {
   cd(dir);
   _36("mkdir", "-p", j(".monki", "tmp"));
   _36("cp", file, j(".monki", "tmp"));
-  load(path, {_stash: true, verbose: true});
+  load(realpath(path), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
   _36("rm", j(".monki", "tmp", file));
   return(resetcwd());
 };
-var __o = args();
-var _i1 = undefined;
-for (_i1 in __o) {
-  var file = __o[_i1];
-  var _e;
-  if (numeric63(_i1)) {
-    _e = parseInt(_i1);
-  } else {
-    _e = _i1;
+monkitree = function (path) {
+  var _o = tree(path, {_stash: true, match: "/monki.l$"});
+  var _i1 = undefined;
+  for (_i1 in _o) {
+    var file = _o[_i1];
+    var _e1;
+    if (numeric63(_i1)) {
+      _e1 = parseInt(_i1);
+    } else {
+      _e1 = _i1;
+    }
+    var __i1 = _e1;
+    prn(file);
+    monki(file);
   }
-  var __i1 = _e;
-  monki(file);
+};
+var _l = args();
+if (none63(_l)) {
+  monkitree(pwd());
+} else {
+  var _o1 = _l;
+  var _i2 = undefined;
+  for (_i2 in _o1) {
+    var path = _o1[_i2];
+    var _e2;
+    if (numeric63(_i2)) {
+      _e2 = parseInt(_i2);
+    } else {
+      _e2 = _i2;
+    }
+    var __i2 = _e2;
+    if (dir63(path)) {
+      monkitree(path);
+    } else {
+      monki(path);
+    }
+  }
 }
 main()
