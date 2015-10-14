@@ -129,7 +129,7 @@
   (when (or (not repo) (none? repo))
     (error "fetch: bad repo"))
   (unless (or (= "." (char repo 0))
-              (= 0 (search repo "://")))
+              (search repo "://"))
     (set repo (cat "https://github.com/" repo)))
   (mkdir (j ".monki" "git"))
   ($ "echo" "'*'" ">" (j ".monki" ".gitignore"))

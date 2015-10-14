@@ -1695,7 +1695,7 @@ clone = function (repo, revision) {
   if (! repo || none63(repo)) {
     throw new Error("fetch: bad repo");
   }
-  if (!( "." === char(repo, 0) || 0 === search(repo, "://"))) {
+  if (!( "." === char(repo, 0) || search(repo, "://"))) {
     repo = "https://github.com/" + repo;
   }
   mkdir(j(".monki", "git"));

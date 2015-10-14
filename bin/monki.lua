@@ -1614,7 +1614,7 @@ function clone(repo, revision)
   if not repo or none63(repo) then
     error("fetch: bad repo")
   end
-  if not( "." == char(repo, 0) or 0 == search(repo, "://")) then
+  if not( "." == char(repo, 0) or search(repo, "://")) then
     repo = "https://github.com/" .. repo
   end
   mkdir(j(".monki", "git"))
