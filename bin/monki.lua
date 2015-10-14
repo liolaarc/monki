@@ -1591,7 +1591,7 @@ function _36(...)
   if not( cwd == ".") then
     cmdline = "cd " .. q(cwd) .. "; " .. cmdline
   end
-  if not hush then
+  if not hush or env("VERBOSE") then
     prn(cmdline)
   end
   return(rtrim(docmd(cmdline)))
@@ -1639,7 +1639,7 @@ function monki(path)
   cd(dir)
   _36("mkdir", "-p", j(".monki", "tmp"))
   _36("cp", file, j(".monki", "tmp"))
-  load(realpath(path), {_stash = true, verbose = true})
+  load(realpath(file), {_stash = true, verbose = true})
   _36("cp", j(".monki", "tmp", file), file)
   _36("rm", j(".monki", "tmp", file))
   return(resetcwd())
@@ -1653,19 +1653,50 @@ function monkitree(path)
     monki(file)
   end
 end
-local _l = args()
-if none63(_l) then
-  monkitree(pwd())
-else
-  local _o1 = _l
-  local _i2 = nil
-  for _i2 in next, _o1 do
-    local path = _o1[_i2]
-    if dir63(path) then
-      monkitree(path)
-    else
-      monki(path)
+function monkiusage()
+  prn("  to run all monki.l files beneath a dir:")
+  prn("    monki <dir>")
+  prn("  to clone a git repo at a subdir:")
+  prn("    monki clone <url> [revision] <subdir>")
+  prn("")
+  return(prn(" e.g.  monki clone laarc/monki monki"))
+end
+function monkimain(argv)
+  if none63(argv or {}) then
+    return(monkitree(pwd()))
+  end
+  if in63(argv[1], {"-h", "--help", "help"}) then
+    return
+  end
+  if argv[1] == "clone" then
+    if not( _35(argv) > 1) then
+      monkiusage()
+      return
     end
+    local dst = argv[edge(argv) + 1]
+    if dir63(dst) then
+      error("monki clone: already exists: " .. dst)
+    end
+    mkdir(dst)
+    _36("echo", "(clone " .. inner(string(cut(argv, 1, edge(argv)))) .. ")", ">", j(dst, "monki.l"))
+    return(monkitree(dst))
+  end
+  local _x31 = argv
+  local _n2 = _35(_x31)
+  local _i2 = 0
+  while _i2 < _n2 do
+    local arg = _x31[_i2 + 1]
+    if dir63(arg) then
+      monkitree(arg)
+    else
+      if endswith(arg, ".l") then
+        monki(arg)
+      else
+        error("unknown cmd " .. arg)
+      end
+    end
+    _i2 = _i2 + 1
   end
 end
+monkimain(args())
 main()

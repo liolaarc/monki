@@ -113,7 +113,8 @@
       (let cmdline (apply cat (intersperse "; " cmds))
         (when (not (= cwd "."))
           (set cmdline (cat "cd " (q cwd) "; " cmdline)))
-        (unless hush (prn cmdline))
+        (when (or (not hush) (env "VERBOSE"))
+          (prn cmdline))
         (rtrim (docmd cmdline))))))
 
 (def git? (path)
@@ -150,7 +151,7 @@
     ($ "mkdir" "-p" (j ".monki" "tmp"))
     ($ "cp" file (j ".monki" "tmp"))
     ; run the file.
-    (load (realpath path)  verbose: true)
+    (load (realpath file)  verbose: true)
     ; restore the file.
     ($ "cp" (j ".monki" "tmp" file) file)
     ($ "rm" (j ".monki" "tmp" file))
@@ -162,9 +163,33 @@
     (prn file)
     (monki file)))
 
-(let l (args)
-  (if (none? l) (monkitree (pwd))
-    (each path l
-      (if (dir? path) (monkitree path)
-        (monki path)))))
+(def monkiusage ()
+  (prn "  to run all monki.l files beneath a dir:")
+  (prn "    monki <dir>")
+  (prn "  to clone a git repo at a subdir:")
+  (prn "    monki clone <url> [revision] <subdir>")
+  (prn "")
+  (prn " e.g.  monki clone laarc/monki monki"))
+
+(def monkimain (argv)
+  (when (none? (or argv ()))
+    (return (monkitree (pwd))))
+  (when (in? (at argv 0) (list "-h" "--help" "help"))
+    (return))
+  (when (= (at argv 0) "clone")
+    (unless (> (len argv) 1)
+      (monkiusage)
+      (return))
+    (let dst (at argv (edge argv))
+      (when (dir? dst)
+        (error (cat "monki clone: already exists: " dst)))
+      (mkdir dst)
+      ($ "echo" (cat "(clone " (inner (string (cut argv 1 (edge argv)))) ")")
+         ">" (j dst "monki.l"))
+      (return (monkitree dst))))
+  (step arg argv
+    (if (dir? arg) (monkitree arg)
+        (endswith arg ".l") (monki arg)
+        (error (cat "unknown cmd " arg)))))
+(monkimain (args))
 

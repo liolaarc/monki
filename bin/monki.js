@@ -1572,8 +1572,8 @@ docmd = function (cmdline) {
     try {
       return([true, shell(cmdline)]);
     }
-    catch (_e3) {
-      return([false, _e3.message]);
+    catch (_e2) {
+      return([false, _e2.message]);
     }
   })()[1]);
 };
@@ -1672,7 +1672,7 @@ _36 = function () {
   if (!( cwd === ".")) {
     cmdline = "cd " + q(cwd) + "; " + cmdline;
   }
-  if (! hush) {
+  if (! hush || env("VERBOSE")) {
     prn(cmdline);
   }
   return(rtrim(docmd(cmdline)));
@@ -1720,7 +1720,7 @@ monki = function (path) {
   cd(dir);
   _36("mkdir", "-p", j(".monki", "tmp"));
   _36("cp", file, j(".monki", "tmp"));
-  load(realpath(path), {_stash: true, verbose: true});
+  load(realpath(file), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
   _36("rm", j(".monki", "tmp", file));
   return(resetcwd());
@@ -1741,26 +1741,50 @@ monkitree = function (path) {
     monki(file);
   }
 };
-var _l = args();
-if (none63(_l)) {
-  monkitree(pwd());
-} else {
-  var _o1 = _l;
-  var _i2 = undefined;
-  for (_i2 in _o1) {
-    var path = _o1[_i2];
-    var _e2;
-    if (numeric63(_i2)) {
-      _e2 = parseInt(_i2);
-    } else {
-      _e2 = _i2;
-    }
-    var __i2 = _e2;
-    if (dir63(path)) {
-      monkitree(path);
-    } else {
-      monki(path);
-    }
+monkiusage = function () {
+  prn("  to run all monki.l files beneath a dir:");
+  prn("    monki <dir>");
+  prn("  to clone a git repo at a subdir:");
+  prn("    monki clone <url> [revision] <subdir>");
+  prn("");
+  return(prn(" e.g.  monki clone laarc/monki monki"));
+};
+monkimain = function (argv) {
+  if (none63(argv || [])) {
+    return(monkitree(pwd()));
   }
-}
+  if (in63(argv[0], ["-h", "--help", "help"])) {
+    return;
+  }
+  if (argv[0] === "clone") {
+    if (!( _35(argv) > 1)) {
+      monkiusage();
+      return;
+    }
+    var dst = argv[edge(argv)];
+    if (dir63(dst)) {
+      throw new Error("monki clone: already exists: " + dst);
+    }
+    mkdir(dst);
+    _36("echo", "(clone " + inner(string(cut(argv, 1, edge(argv)))) + ")", ">", j(dst, "monki.l"));
+    return(monkitree(dst));
+  }
+  var _x24 = argv;
+  var _n2 = _35(_x24);
+  var _i2 = 0;
+  while (_i2 < _n2) {
+    var arg = _x24[_i2];
+    if (dir63(arg)) {
+      monkitree(arg);
+    } else {
+      if (endswith(arg, ".l")) {
+        monki(arg);
+      } else {
+        throw new Error("unknown cmd " + arg);
+      }
+    }
+    _i2 = _i2 + 1;
+  }
+};
+monkimain(args());
 main()
