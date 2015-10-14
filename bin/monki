@@ -2,33 +2,24 @@
 
 dir="$(pwd)"
 cd "$(dirname "$0")"
-bin="$(pwd)"
 cd ..
 home="$(pwd)"
-cd obj
-obj="$(pwd)"
-cd ../lumen/bin
-lumen_bin="$(pwd)"
-if [ ! -d "${lumen_bin}" ]; then
-  1>&2 echo "Lumen not found" && exit 1;
-fi
+bin="${home}/bin"
+obj="${home}/obj"
+lumen_bin="${home}/lumen/bin"
+lumen="${home}/lumen/bin/lumen"
+if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
 cd "${dir}"
 
-if [ ! -z ${LUMEN_HOST} ]
-then
-    host=${LUMEN_HOST}
-elif luajit -v > /dev/null 2>&1
-then
-    host=luajit
-elif lua -v > /dev/null 2>&1
-then
-    host=lua
-elif node -v > /dev/null 2>&1
-then
-    host=node
+if [ ! -z ${LUMEN_HOST} ]; then host=${LUMEN_HOST}
+elif luajit -v > /dev/null 2>&1; then host=luajit
+elif    lua -v > /dev/null 2>&1; then host=lua
+elif   node -v > /dev/null 2>&1; then host=node
 else
-    echo "no Lumen host found"
+    1>&2 echo "no Lumen host found"
+    exit 1
 fi
+export LUMEN_HOST="${host}"
 
 case $host in
     node*)
@@ -39,23 +30,19 @@ case $host in
         export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
 esac
 
-for ext in "js" "lua"; do
-    git checkout "${bin}/"*.${ext}
-    cp "${lumen_bin}/"*.${ext} "${bin}/"
+for target in "js" "lua"; do
+    git checkout "${bin}/"*.${target}
+    cp "${lumen_bin}/"*.${target} "${bin}/"
 done
 
-rm -f "${obj}/"*.js  "${obj}/"*.lua
+rm -f "${obj}/"*.js "${obj}/"*.lua
 
 for target in "js" "lua"; do
-    ${host} "${lumen_bin}/lumen.${ext}" \
-        -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+    "${lumen}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
 done
 
 for target in "js" "lua"; do
-  for src in "main"; do
-      ${host} "${lumen_bin}/lumen.${ext}" "${obj}/sudoarc.${ext}" \
-          -c "${home}/${src}.l" -o "${obj}/${src}.${target}" -t ${target}
-  done
+  "${lumen}" "${obj}/sudoarc.${ext}" -c "${home}/main.l" -o "${obj}/main.${target}" -t ${target}
   cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${bin}/monki.${target}"
   for src in "sudoarc" "main"; do
       cat "${obj}/${src}.${target}" >> "${bin}/monki.${target}"
