@@ -93,8 +93,6 @@
     (error (cat "tree: not a dir: " path)))
   (pushd path)
   (let s (if match 
-             ; ($ "find" "." "|" "sed" "'s|^\\./||'" "|" "grep" match)
-             ; ($ "find" "." "|" "sed" "'s|^\\./||'"))
              ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" match)
              ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
     (split s "\n")))
