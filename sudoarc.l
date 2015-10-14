@@ -3,9 +3,9 @@
 ; can be used anywhere eval is used, and it shows you what code eval
 ; would have run.  E.g. try:
 ;
-;   (let code '(let (adder (fn (x) (fn (n) (+ x n))) add2 (adder 2)) (add2 42))
-;     (comp code)
-;     (eval code))
+;   (let exprs '(let (adder (fn (x) (fn (n) (+ x n))) add2 (adder 2)) (add2 42))
+;     (comp exprs)
+;     (eval exprs))
 ;
 
 (define-global comp (expr)
@@ -19,11 +19,10 @@
     `(do ,@(read-all (reader-stream s))))
 
 (define-global reload (file)
-  (let code (read-str (read-file file))
-    (comp code)
-    (eval code)
+  (let exprs (read-str (read-file file))
+    (comp exprs)
+    (eval exprs)
     (print (cat "Reloaded " file))))
-
 
 ;
 ; Let's see how far we can push Lumen in the direction of Arc.
@@ -192,6 +191,8 @@
 
 (def env (get system 'get-environment-variable))
 (def args () (split (env 'cmdline) " "))
+(def host () (env "LUMEN_HOST"))
+(def host? (x) (search (host) x))
 ;
 ; Imports.
 ;
@@ -199,33 +200,27 @@
 (mac import (name)
   `(def ,name (require ',name)))
 
-; method call.
-(mac mcall (o method rest: args)
-  (w/uniq g
-    `(let ,g ,o
-      ((get ,g ,method) ,g ,@args))))
-
 ;
 ; Externals (LuaJIT only)
 ;
 
-(target lua: (do
+(target lua:
+  (when (host? 'luajit)
 
-  (import ffi)
+    (import ffi)
 
-  (mac defc (name val)
-    `(do ((get ffi 'cdef) ',(if (id-literal? val) (inner val) val))
-         (def ,name (get (get ffi 'C) ',name))))
+    (mac defc (name val)
+      `(do ((get ffi 'cdef) ',(if (id-literal? val) (inner val) val))
+           (def ,name (get (get ffi 'C) ',name))))
 
-  ; (sleep secs) to sleep for a number of seconds. 
-  ; E.g.
-  ;   (print 'begin)
-  ;   (sleep 1.3)
-  ;   (print 'end)
-  (defc usleep |int usleep (unsigned int usecs)|)
-  (def sleep (secs)
-    (do (usleep (* secs 1000000)) nil)))
-)
+    ; (sleep secs) to sleep for a number of seconds. 
+    ; E.g.
+    ;   (print 'begin)
+    ;   (sleep 1.3)
+    ;   (print 'end)
+    (defc usleep |int usleep (unsigned int usecs)|)
+    (def sleep (secs)
+      (do (usleep (* secs 1000000)) nil))))
 
 ;
 ; Externals (All hosts)
@@ -251,8 +246,8 @@
   (def shell (cmd)
        ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
        (let h (popen cmd)
-         (do1 (mcall h 'read "*a")
-              (mcall h 'close))))))
+         (do1 ((get h 'read) h "*a")
+              ((get h 'close) h))))))
 
 
 
