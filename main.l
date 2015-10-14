@@ -11,9 +11,14 @@
       (when (in? c wschars)
         (return true)))))
 
-(def rtrim (s)
-  (while (ws? (char s (- (len s) 1)))
-    (set s (clip s 0 (- (len s) 1))))
+(def rtrim (s :f)
+  (while (and (some? s) ((or f ws?) (char s (edge s))))
+    (set s (clip s 0 (edge s))))
+  s)
+
+(def ltrim (s :f)
+  (while (and (some? s) ((or f ws?) (char s 0)))
+    (set s (clip s 1 (len s))))
   s)
 
 (def dir? (path)
@@ -35,11 +40,10 @@
 (def basename (file)
   ($ hush: true "basename" file))
 
-; TODO: add support for file paths.
 (def realpath (path)
-  (unless (dir? path)
-    (error (cat "no such dir: " path)))
-  ($ "cd" path ";" "pwd"))
+  (if (dir? path)
+    ($ "cd" path ";" "pwd")
+    (j ($ "cd" (dirname path) ";" "pwd") (basename path))))
 
 (def rmrf (path)
   (when (= 0 (search path "/"))
@@ -102,6 +106,17 @@
        ,@body
        (popd))))
 
+(def tree (path :match)
+  (unless (dir? path)
+    (error (cat "tree: not a dir: " path)))
+  (pushd path)
+  (let s (if match 
+             ; ($ "find" "." "|" "sed" "'s|^\\./||'" "|" "grep" match)
+             ; ($ "find" "." "|" "sed" "'s|^\\./||'"))
+             ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" match)
+             ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
+    (split s "\n")))
+
 (def $ args
   (let hush (get args 'hush)
     (let (c ""
@@ -155,12 +170,21 @@
     ($ "mkdir" "-p" (j ".monki" "tmp"))
     ($ "cp" file (j ".monki" "tmp"))
     ; run the file.
-    (load path  verbose: true)
+    (load (realpath path)  verbose: true)
     ; restore the file.
     ($ "cp" (j ".monki" "tmp" file) file)
     ($ "rm" (j ".monki" "tmp" file))
     (resetcwd)))
 
-(each file (args)
-  (monki file))
+; recursively call monki on any file named "monki.l" under the path.
+(def monkitree (path)
+  (each file (tree path match: "/monki.l$")
+    (prn file)
+    (monki file)))
+
+(let l (args)
+  (if (none? l) (monkitree (pwd))
+    (each path l
+      (if (dir? path) (monkitree path)
+        (monki path)))))
 
