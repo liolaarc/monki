@@ -3,24 +3,6 @@
   (def j (get sys 'path-join))
   (def file? (get sys 'file-exists?)))
 
-(def wschars (list " " "\t" "\n" "\r"))
-
-(def ws? (s)
-  (for i (len s)
-    (let c (char s i)
-      (when (in? c wschars)
-        (return true)))))
-
-(def rtrim (s :f)
-  (while (and (some? s) ((or f ws?) (char s (edge s))))
-    (set s (clip s 0 (edge s))))
-  s)
-
-(def ltrim (s :f)
-  (while (and (some? s) ((or f ws?) (char s 0)))
-    (set s (clip s 1 (len s))))
-  s)
-
 (def dir? (path)
   ; There isn't any way to determine whether a directory exists in
   ; plain Lua without resorting to third-party libraries.

@@ -174,6 +174,31 @@
   (if (string? x) x
     (string x)))
 
+(def wschars (list " " "\t" "\n" "\r"))
+
+(def ws? (s)
+  (for i (len s)
+    (let c (char s i)
+      (when (in? c wschars)
+        (return true)))))
+
+(def rtrim (s :f)
+  (while (and (some? s) ((or f ws?) (char s (edge s))))
+    (set s (clip s 0 (edge s))))
+  s)
+
+(def ltrim (s :f)
+  (while (and (some? s) ((or f ws?) (char s 0)))
+    (set s (clip s 1 (len s))))
+  s)
+
+(def endswith (s ending)
+  (let i (- (len s) (len ending))
+    (= i (search s ending i))))
+
+(def startswith (s prefix)
+  (= (search s prefix) 0))
+
 (def pr (:sep rest: l)
   (let c nil
     (if sep
