@@ -1214,7 +1214,7 @@ load = function (file) {
     if (! ok) {
       prn("Error in ", file, ": ");
       prn("   ", x);
-      prn("At code: ");
+      prn("The error occurred while evaluating: ");
       prn(expr);
     }
     _i = _i + 1;
@@ -1470,17 +1470,34 @@ shell = function (cmd) {
   var o = exec(cmd);
   return(o.toString());
 };
-compiler = require("compiler");
-eval = compiler.eval;
+var _x = require("compiler");
+eval = _x.eval;
+macex = _x.expand;
+var _x1 = require("system");
+j = _x1["path-join"];
+file63 = _x1["file-exists?"];
+dir63 = function (path) {
+  return("1\n" === docmd("sh -c 'if [ -d " + escape(path) + " ]; then echo 1; fi'"));
+};
+exists63 = function (path) {
+  return(dir63(path) || file63(path));
+};
+rmrf = function (path) {
+  if (0 === search(path, "/")) {
+    throw new Error("Cowardly refusing to rm -rf an absolute path: " + path);
+  }
+  if (dir63(path) || file63(path)) {
+    return(_36("rm", "-rf", path));
+  }
+};
 surround = function (x) {
-  var _r = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id = _r;
+  var _r3 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id = _r3;
   var lh = _id.lh;
   var rh = _id.rh;
   return((lh || "\"") + x + (rh || "\""));
 };
 docmd = function (cmdline) {
-  prn(cmdline);
   return((function () {
     try {
       return([true, shell(cmdline)]);
@@ -1493,8 +1510,12 @@ docmd = function (cmdline) {
 ws63 = function (s) {
   return(search(s, " ") || search(s, "\t"));
 };
-cmd = function () {
+_36 = function () {
   var args = unstash(Array.prototype.slice.call(arguments, 0));
+  var quiet = args.quiet;
+  if (quiet) {
+    args.quiet = undefined;
+  }
   var c = "";
   var cmds = [];
   var _o = args;
@@ -1530,15 +1551,59 @@ cmd = function () {
   if (some63(c)) {
     add(cmds, c);
   }
-  return(docmd(apply(cat, intersperse("; ", cmds))));
-};
-fetch = function (repo, subdir, revision) {
-  cmd("mkdir -p", subdir);
-  cmd("git clone", "https://github.com/" + repo, subdir);
-  cmd("cd", subdir, ";", "git reset", "--", ".", ";", "git checkout", "--", ".");
-  if (revision) {
-    return(cmd("cd", subdir, ";", "git checkout", revision, "."));
+  var cmdline = apply(cat, intersperse("; ", cmds));
+  if (! quiet) {
+    prn(cmdline);
   }
+  return(docmd(cmdline));
+};
+git63 = function (path) {
+  return(dir63(j(path, ".git")));
+};
+git = function (path, what) {
+  var _r8 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id1 = _r8;
+  var args = cut(_id1, 0);
+  if (!( what === "clone")) {
+    if (! git63(path)) {
+      throw new Error("no .git at " + path);
+    }
+  }
+  return(apply(_36, join(["cd", path, ";", "git", what], args)));
+};
+realpath = function (path) {
+  if (! dir63(path)) {
+    throw new Error("no such dir: " + path);
+  }
+  var s = _36("cd", path, ";", "pwd");
+  return(clip(s, 0, _35(s) - 1));
+};
+ln = function (src, dst) {
+  if (exists63(dst)) {
+    throw new Error("ln: path already exists: " + dst);
+  }
+  return(_36("ln", "-s", src, dst));
+};
+fetch = function (repo, dst, revision) {
+  var dstgit = j(".monki", dst);
+  if (! git63(dstgit)) {
+    _36("mkdir", "-p", ".monki");
+    git(".monki", "clone", "-n", "https://github.com/" + repo, dst);
+  }
+  if (! git63(dstgit)) {
+    throw new Error("could not clone " + repo + " to " + dstgit);
+  }
+  _36("mkdir", "-p", dst);
+  var gitdir = realpath(j(".monki", dst, ".git"));
+  _36("cd", dst, ";", "rm", "-f", ".git");
+  _36("cd", dst, ";", "ln", "-s", gitdir, ".git");
+  git(dst, "reset", "--", ".");
+  git(dst, "checkout", "--", ".");
+  git(dst, "pull");
+  if (revision) {
+    git(dst, "checkout", revision, ".");
+  }
+  return(_36("rm", j(dst, ".git")));
 };
 monki = function (file) {
   return(load(file, {_stash: true, verbose: true}));

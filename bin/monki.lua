@@ -1120,7 +1120,7 @@ function load(file, ...)
     if not ok then
       prn("Error in ", file, ": ")
       prn("   ", x)
-      prn("At code: ")
+      prn("The error occurred while evaluating: ")
       prn(expr)
     end
     _i = _i + 1
@@ -1388,29 +1388,46 @@ function shell(cmd)
   h.close(h)
   return(_g4)
 end
-compiler = require("compiler")
-eval = compiler.eval
+local _x = require("compiler")
+eval = _x.eval
+macex = _x.expand
+local _x1 = require("system")
+j = _x1["path-join"]
+file63 = _x1["file-exists?"]
+function dir63(path)
+  return("1\n" == docmd("sh -c 'if [ -d " .. escape(path) .. " ]; then echo 1; fi'"))
+end
+function exists63(path)
+  return(dir63(path) or file63(path))
+end
+function rmrf(path)
+  if 0 == search(path, "/") then
+    error("Cowardly refusing to rm -rf an absolute path: " .. path)
+  end
+  if dir63(path) or file63(path) then
+    return(_36("rm", "-rf", path))
+  end
+end
 function surround(x, ...)
-  local _r = unstash({...})
-  local _id = _r
+  local _r3 = unstash({...})
+  local _id = _r3
   local lh = _id.lh
   local rh = _id.rh
   return((lh or "\"") .. x .. (rh or "\""))
 end
 function docmd(cmdline)
-  prn(cmdline)
-  local _x1 = nil
+  local _x3 = nil
   local _msg = nil
   local _e = xpcall(function ()
-    _x1 = shell(cmdline)
-    return(_x1)
+    _x3 = shell(cmdline)
+    return(_x3)
   end, function (m)
     _msg = _37message_handler(m)
     return(_msg)
   end)
   local _e1
   if _e then
-    _e1 = _x1
+    _e1 = _x3
   else
     _e1 = _msg
   end
@@ -1419,8 +1436,12 @@ end
 function ws63(s)
   return(search(s, " ") or search(s, "\t"))
 end
-function cmd(...)
+function _36(...)
   local args = unstash({...})
+  local quiet = args.quiet
+  if quiet then
+    args.quiet = nil
+  end
   local c = ""
   local cmds = {}
   local _o = args
@@ -1449,15 +1470,59 @@ function cmd(...)
   if some63(c) then
     add(cmds, c)
   end
-  return(docmd(apply(cat, intersperse("; ", cmds))))
-end
-function fetch(repo, subdir, revision)
-  cmd("mkdir -p", subdir)
-  cmd("git clone", "https://github.com/" .. repo, subdir)
-  cmd("cd", subdir, ";", "git reset", "--", ".", ";", "git checkout", "--", ".")
-  if revision then
-    return(cmd("cd", subdir, ";", "git checkout", revision, "."))
+  local cmdline = apply(cat, intersperse("; ", cmds))
+  if not quiet then
+    prn(cmdline)
   end
+  return(docmd(cmdline))
+end
+function git63(path)
+  return(dir63(j(path, ".git")))
+end
+function git(path, what, ...)
+  local _r9 = unstash({...})
+  local _id1 = _r9
+  local args = cut(_id1, 0)
+  if not( what == "clone") then
+    if not git63(path) then
+      error("no .git at " .. path)
+    end
+  end
+  return(apply(_36, join({"cd", path, ";", "git", what}, args)))
+end
+function realpath(path)
+  if not dir63(path) then
+    error("no such dir: " .. path)
+  end
+  local s = _36("cd", path, ";", "pwd")
+  return(clip(s, 0, _35(s) - 1))
+end
+function ln(src, dst)
+  if exists63(dst) then
+    error("ln: path already exists: " .. dst)
+  end
+  return(_36("ln", "-s", src, dst))
+end
+function fetch(repo, dst, revision)
+  local dstgit = j(".monki", dst)
+  if not git63(dstgit) then
+    _36("mkdir", "-p", ".monki")
+    git(".monki", "clone", "-n", "https://github.com/" .. repo, dst)
+  end
+  if not git63(dstgit) then
+    error("could not clone " .. repo .. " to " .. dstgit)
+  end
+  _36("mkdir", "-p", dst)
+  local gitdir = realpath(j(".monki", dst, ".git"))
+  _36("cd", dst, ";", "rm", "-f", ".git")
+  _36("cd", dst, ";", "ln", "-s", gitdir, ".git")
+  git(dst, "reset", "--", ".")
+  git(dst, "checkout", "--", ".")
+  git(dst, "pull")
+  if revision then
+    git(dst, "checkout", revision, ".")
+  end
+  return(_36("rm", j(dst, ".git")))
 end
 function monki(file)
   return(load(file, {_stash = true, verbose = true}))
