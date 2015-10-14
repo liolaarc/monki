@@ -1335,8 +1335,8 @@ if host63("luajit") then
     return(nil)
   end
 end
-local popen = io.popen
 function shell(cmd)
+  local popen = io.popen
   local h = popen(cmd)
   local _g2 = h.read(h, "*a")
   h.close(h)
@@ -1344,7 +1344,22 @@ function shell(cmd)
 end
 function fetch(repo, subdir)
   shell("mkdir -p " .. subdir)
-  return(shell("git clone https://github.com/" .. repo .. " " .. subdir))
+  local _x36 = nil
+  local _msg = nil
+  local _e = xpcall(function ()
+    _x36 = shell("git clone https://github.com/" .. repo .. " " .. subdir)
+    return(_x36)
+  end, function (m)
+    _msg = _37message_handler(m)
+    return(_msg)
+  end)
+  local _e1
+  if _e then
+    _e1 = _x36
+  else
+    _e1 = _msg
+  end
+  return({_e, _e1})
 end
 local __o = args()
 local _i = nil

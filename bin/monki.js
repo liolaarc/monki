@@ -1426,15 +1426,22 @@ host63 = function (x) {
 setenv("import", {_stash: true, macro: function (name) {
   return(["def", name, ["require", ["quote", name]]]);
 }});
-var childproc = require("child_process");
-var exec = childproc.execSync;
 shell = function (cmd) {
+  var childproc = require("child_process");
+  var exec = childproc.execSync;
   var o = exec(cmd);
   return(o.toString());
 };
 fetch = function (repo, subdir) {
   shell("mkdir -p " + subdir);
-  return(shell("git clone https://github.com/" + repo + " " + subdir));
+  return((function () {
+    try {
+      return([true, shell("git clone https://github.com/" + repo + " " + subdir)]);
+    }
+    catch (_e1) {
+      return([false, _e1.message]);
+    }
+  })());
 };
 var __o = args();
 var _i = undefined;
