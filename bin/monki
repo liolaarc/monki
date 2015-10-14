@@ -36,7 +36,9 @@ if [ ! -z "${REBUILD}" ]; then
   if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
 
   for target in "js" "lua"; do
-      git checkout "${bin}/"*.${target}
+      cd "${bin}"
+      git checkout *.${target}
+      cd "${dir}"
       cp "${lumen_bin}/"*.${target} "${bin}/"
   done
 
@@ -56,10 +58,14 @@ if [ ! -z "${REBUILD}" ]; then
   done
 fi
 
+if [ -z "${REPL}" ]; then
+  args="-e nil"
+fi
+
 rlwrap="`which rlwrap`"
 if [ ! -z "$rlwrap" ]; then
-  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"
+  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}" $args
 else
-  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}"
+  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}" $args
 fi
 
