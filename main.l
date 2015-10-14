@@ -5,7 +5,7 @@
 
 (each file (args)
   (prn file)
-  (iflet code (readfile file))
-   (do (prn code)
-      (eval code)))
+  (iflet exprs (readfile file))
+   (do (prn exprs)
+      (eval exprs)))
 
