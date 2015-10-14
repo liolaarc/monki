@@ -193,15 +193,12 @@
 (def args () (split (env 'cmdline) " "))
 (def host () (env "LUMEN_HOST"))
 (def host? (x) (search (host) x))
-;
-; Imports.
-;
 
 (mac import (name)
   `(def ,name (require ',name)))
 
 ;
-; Externals (LuaJIT only)
+; These run only on LuaJIT.
 ;
 
 (target lua:
@@ -223,32 +220,28 @@
       (do (usleep (* secs 1000000)) nil))))
 
 ;
-; Externals (All hosts)
+; These run on all hosts.
 ;
 
 ; (shell cmd) to execute a shell command.
 ; E.g.
 ;   (shell "echo hi") => "hi\n"
-(target js: (do
-  (define childproc (require 'child_process))
-  (define exec (get childproc 'execSync))
-  (def shell (cmd)
-       ; http://stackoverflow.com/questions/20643470/execute-a-command-line-binary-with-node-js
-       ; https://nodejs.org/api/child_process.html#child_process_child_process_execsync_command_options
-       ;
-       ; Returns the stdout of the command.  Throws if the process
-       ; times out or has a non-zero exit code.
-       (let o (exec cmd)
-         ; ((get o 'toString)) ; TODO: Research why this breaks.
-         ((get o "toString"))))))
-(target lua: (do
-  (define popen (get io 'popen))
-  (def shell (cmd)
-       ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
-       (let h (popen cmd)
-         (do1 ((get h 'read) h "*a")
-              ((get h 'close) h))))))
-
-
-
+(def shell (cmd)
+  (target js: (do
+    (define childproc (require 'child_process))
+    (define exec (get childproc 'execSync))
+         ; http://stackoverflow.com/questions/20643470/execute-a-command-line-binary-with-node-js
+         ; https://nodejs.org/api/child_process.html#child_process_child_process_execsync_command_options
+         ;
+         ; Returns the stdout of the command.  Throws if the process
+         ; times out or has a non-zero exit code.
+         (let o (exec cmd)
+           ; ((get o 'toString)) ; TODO: Research why this breaks.
+           ((get o "toString")))))
+  (target lua: (do
+    (define popen (get io 'popen))
+         ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
+         (let h (popen cmd)
+           (do1 ((get h 'read) h "*a")
+                ((get h 'close) h))))))
 

@@ -1,7 +1,7 @@
 
 (def fetch (repo subdir)
   (shell (cat "mkdir -p " subdir))
-  (shell (cat "git clone https://github.com/" repo " " subdir)))
+  (guard (shell (cat "git clone https://github.com/" repo " " subdir))))
 
 (each file (args)
   (prn file)
