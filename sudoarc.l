@@ -35,7 +35,7 @@
       (unless ok
         (prn "Error in " file ": ")
         (prn "   " x)
-        (prn "At code: ")
+        (prn "The error occurred while evaluating: ")
         (prn expr)))))
 
 (define-macro mac l
