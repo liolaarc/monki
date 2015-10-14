@@ -1085,9 +1085,9 @@ function read_str(s)
   return(join({"do"}, read_all(reader_stream(s))))
 end
 function reload(file)
-  local code = read_str(read_file(file))
-  comp(code)
-  eval(code)
+  local exprs = read_str(read_file(file))
+  comp(exprs)
+  eval(exprs)
   return(print("Reloaded " .. file))
 end
 local system = require("system")
@@ -1308,39 +1308,38 @@ env = system["get-environment-variable"]
 function args()
   return(split(env("cmdline"), " "))
 end
+function host()
+  return(env("LUMEN_HOST"))
+end
+function host63(x)
+  return(search(host(), x))
+end
 setenv("import", {_stash = true, macro = function (name)
   return({"def", name, {"require", {"quote", name}}})
 end})
-setenv("mcall", {_stash = true, macro = function (o, method, ...)
-  local _r39 = unstash({...})
-  local _id16 = _r39
-  local _args1 = cut(_id16, 0)
-  local g = unique("g")
-  return({"let", g, o, join({{"get", g, method}, g}, _args1)})
-end})
-ffi = require("ffi")
-setenv("defc", {_stash = true, macro = function (name, val)
-  local _e5
-  if id_literal63(val) then
-    _e5 = inner(val)
-  else
-    _e5 = val
+if host63("luajit") then
+  ffi = require("ffi")
+  setenv("defc", {_stash = true, macro = function (name, val)
+    local _e5
+    if id_literal63(val) then
+      _e5 = inner(val)
+    else
+      _e5 = val
+    end
+    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e5}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+  end})
+  ffi.cdef("int usleep (unsigned int usecs)")
+  usleep = ffi.C.usleep
+  function sleep(secs)
+    usleep(secs * 1000000)
+    return(nil)
   end
-  return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e5}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
-end})
-ffi.cdef("int usleep (unsigned int usecs)")
-usleep = ffi.C.usleep
-function sleep(secs)
-  usleep(secs * 1000000)
-  return(nil)
 end
 local popen = io.popen
 function shell(cmd)
   local h = popen(cmd)
-  local _g3 = h
-  local _g2 = _g3.read(_g3, "*a")
-  local _g4 = h
-  _g4.close(_g4)
+  local _g2 = h.read(h, "*a")
+  h.close(h)
   return(_g2)
 end
 function fetch(repo, subdir)
@@ -1352,8 +1351,8 @@ local _i = nil
 for _i in next, __o do
   local file = __o[_i]
   prn(file)
-  local code = readfile(file)
-  prn(code)
-  eval(code)
+  local exprs = readfile(file)
+  prn(exprs)
+  eval(exprs)
 end
 main()

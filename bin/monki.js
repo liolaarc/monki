@@ -1187,9 +1187,9 @@ read_str = function (s) {
   return(join(["do"], read_all(reader_stream(s))));
 };
 reload = function (file) {
-  var code = read_str(read_file(file));
-  comp(code);
-  eval(code);
+  var exprs = read_str(read_file(file));
+  comp(exprs);
+  eval(exprs);
   return(print("Reloaded " + file));
 };
 var system = require("system");
@@ -1417,15 +1417,14 @@ env = system["get-environment-variable"];
 args = function () {
   return(split(env("cmdline"), " "));
 };
+host = function () {
+  return(env("LUMEN_HOST"));
+};
+host63 = function (x) {
+  return(search(host(), x));
+};
 setenv("import", {_stash: true, macro: function (name) {
   return(["def", name, ["require", ["quote", name]]]);
-}});
-setenv("mcall", {_stash: true, macro: function (o, method) {
-  var _r39 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id16 = _r39;
-  var _args1 = cut(_id16, 0);
-  var g = unique("g");
-  return(["let", g, o, join([["get", g, method], g], _args1)]);
 }});
 var childproc = require("child_process");
 var exec = childproc.execSync;
@@ -1449,8 +1448,8 @@ for (_i in __o) {
   }
   var __i = _e;
   prn(file);
-  var code = readfile(file);
-  prn(code);
-  eval(code);
+  var exprs = readfile(file);
+  prn(exprs);
+  eval(exprs);
 }
 main()
