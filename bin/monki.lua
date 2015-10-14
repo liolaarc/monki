@@ -1081,18 +1081,51 @@ end
 local reader = require("reader")
 local reader_stream = reader.stream
 local read_all = reader["read-all"]
-function read_str(s)
-  return(join({"do"}, read_all(reader_stream(s))))
-end
-function reload(file)
-  local exprs = read_str(read_file(file))
-  comp(exprs)
-  eval(exprs)
-  return(print("Reloaded " .. file))
-end
 local system = require("system")
 local write = system.write
 local read_file = system["read-file"]
+function readstr(s)
+  return(read_all(reader_stream(s)))
+end
+function load(file, ...)
+  local _r2 = unstash({...})
+  local _id = _r2
+  local verbose = _id.verbose
+  if verbose then
+    print("Loading " .. file)
+  end
+  local _x1 = readstr(read_file(file))
+  local _n = _35(_x1)
+  local _i = 0
+  while _i < _n do
+    local expr = _x1[_i + 1]
+    local _x2 = nil
+    local _msg = nil
+    local _e = xpcall(function ()
+      _x2 = eval(expr)
+      return(_x2)
+    end, function (m)
+      _msg = _37message_handler(m)
+      return(_msg)
+    end)
+    local _e3
+    if _e then
+      _e3 = _x2
+    else
+      _e3 = _msg
+    end
+    local _id1 = {_e, _e3}
+    local ok = _id1[1]
+    local x = _id1[2]
+    if not ok then
+      prn("Error in ", file, ": ")
+      prn("   ", x)
+      prn("At code: ")
+      prn(expr)
+    end
+    _i = _i + 1
+  end
+end
 setenv("mac", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"define-macro"}, l))
@@ -1102,9 +1135,9 @@ setenv("len", {_stash = true, macro = function (...)
   return(join({"#"}, l))
 end})
 setenv("letmac", {_stash = true, macro = function (name, args, body, ...)
-  local _r4 = unstash({...})
-  local _id1 = _r4
-  local l = cut(_id1, 0)
+  local _r6 = unstash({...})
+  local _id3 = _r6
+  local l = cut(_id3, 0)
   return(join({"let-macro", {{name, args, body}}}, l))
 end})
 setenv("def", {_stash = true, macro = function (...)
@@ -1115,9 +1148,9 @@ idfn = function (x)
   return(x)
 end
 setenv("w/uniq", {_stash = true, macro = function (x, ...)
-  local _r7 = unstash({...})
-  local _id3 = _r7
-  local body = cut(_id3, 0)
+  local _r9 = unstash({...})
+  local _id5 = _r9
+  local body = cut(_id5, 0)
   if atom63(x) then
     return(join({"let-unique", {x}}, body))
   else
@@ -1129,15 +1162,15 @@ setenv("void", {_stash = true, macro = function (...)
   return(join({"do"}, l, {"nil"}))
 end})
 setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
-  local _r9 = unstash({...})
-  local _id5 = _r9
-  local l = cut(_id5, 0)
+  local _r11 = unstash({...})
+  local _id7 = _r11
+  local l = cut(_id7, 0)
   return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, l))
 end})
 setenv("accum", {_stash = true, macro = function (name, ...)
-  local _r11 = unstash({...})
-  local _id7 = _r11
-  local body = cut(_id7, 0)
+  local _r13 = unstash({...})
+  local _id9 = _r13
+  local body = cut(_id9, 0)
   local g = unique("g")
   return({"let", g, join(), join({"lfn", name, {"item"}, {"add", g, "item"}}, body), g})
 end})
@@ -1145,12 +1178,6 @@ setenv("acc", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"accum", "a"}, l))
 end})
-local __o = {"let", "each", "step", "for", "when", "while"}
-local _i = nil
-for _i in next, __o do
-  local form = __o[_i]
-  eval({"mac", "acc:" .. form, "l", {"quasiquote", {"acc", {{"unquote", {"quote", form}}, {"unquote-splicing", "l"}}}}})
-end
 setenv("nor", {_stash = true, macro = function (...)
   local l = unstash({...})
   return({"not", join({"or"}, l)})
@@ -1162,21 +1189,21 @@ function any63(x)
   return(lst63(x) and some63(x))
 end
 setenv("iflet", {_stash = true, macro = function (name, ...)
-  local _r15 = unstash({...})
-  local _id10 = _r15
-  local l = cut(_id10, 0)
+  local _r17 = unstash({...})
+  local _id12 = _r17
+  local l = cut(_id12, 0)
   if some63(l) then
-    local _id11 = l
-    local x = _id11[1]
-    local a = _id11[2]
-    local bs = cut(_id11, 2)
-    local _e2
+    local _id13 = l
+    local x = _id13[1]
+    local a = _id13[2]
+    local bs = cut(_id13, 2)
+    local _e4
     if one63(l) then
-      _e2 = name
+      _e4 = name
     else
-      _e2 = {"if", name, a, join({"iflet", name}, bs)}
+      _e4 = {"if", name, a, join({"iflet", name}, bs)}
     end
-    return({"let", name, x, _e2})
+    return({"let", name, x, _e4})
   end
 end})
 setenv("aif", {_stash = true, macro = function (...)
@@ -1217,30 +1244,50 @@ function cons(x, y)
 end
 function intersperse(x, lst)
   local sep = nil
-  local _e3
-  if sep then
-    _e3 = a(sep)
-  else
-    sep = x
-    _e3 = sep
+  local _g = {}
+  local a = nil
+  a = function (item)
+    return(add(_g, item))
   end
-  return(acc58each(item, lst, _e3, a(item)))
+  local _o = lst
+  local _i1 = nil
+  for _i1 in next, _o do
+    local item = _o[_i1]
+    if sep then
+      a(sep)
+    else
+      sep = x
+    end
+    a(item)
+  end
+  return(_g)
 end
 setenv("complement", {_stash = true, macro = function (f)
   local g = unique("g")
   return({"fn", g, {"not", {"apply", f, g}}})
 end})
 function keep(f, xs)
-  local _e4
-  if f(x) then
-    _e4 = a(x)
+  local _g1 = {}
+  local a = nil
+  a = function (item)
+    return(add(_g1, item))
   end
-  return(acc58step(x, xs, _e4))
+  local _x89 = xs
+  local _n2 = _35(_x89)
+  local _i2 = 0
+  while _i2 < _n2 do
+    local x = _x89[_i2 + 1]
+    if f(x) then
+      a(x)
+    end
+    _i2 = _i2 + 1
+  end
+  return(_g1)
 end
 function rem(f, xs)
   return(keep(function (...)
-    local _g = unstash({...})
-    return(not apply(f, _g))
+    local _g2 = unstash({...})
+    return(not apply(f, _g2))
   end, xs))
 end
 function str(x)
@@ -1251,33 +1298,33 @@ function str(x)
   end
 end
 function pr(...)
-  local _r30 = unstash({...})
-  local _id12 = _r30
-  local sep = _id12.sep
-  local l = cut(_id12, 0)
+  local _r34 = unstash({...})
+  local _id14 = _r34
+  local sep = _id14.sep
+  local l = cut(_id14, 0)
   local c = nil
   if sep then
-    local _x96 = l
-    local _n1 = _35(_x96)
-    local _i1 = 0
-    while _i1 < _n1 do
-      local x = _x96[_i1 + 1]
+    local _x92 = l
+    local _n3 = _35(_x92)
+    local _i3 = 0
+    while _i3 < _n3 do
+      local x = _x92[_i3 + 1]
       if c then
         write(c)
       else
         c = str(sep)
       end
       write(str(x))
-      _i1 = _i1 + 1
+      _i3 = _i3 + 1
     end
   else
-    local _x97 = l
-    local _n2 = _35(_x97)
-    local _i2 = 0
-    while _i2 < _n2 do
-      local x = _x97[_i2 + 1]
+    local _x93 = l
+    local _n4 = _35(_x93)
+    local _i4 = 0
+    while _i4 < _n4 do
+      local x = _x93[_i4 + 1]
       write(str(x))
-      _i2 = _i2 + 1
+      _i4 = _i4 + 1
     end
   end
   if l then
@@ -1285,22 +1332,21 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r32 = unstash({...})
-  local _id14 = _r32
-  local bs = cut(_id14, 0)
+  local _r36 = unstash({...})
+  local _id16 = _r36
+  local bs = cut(_id16, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
 end})
 function prn(...)
   local l = unstash({...})
-  local _g1 = apply(pr, l)
+  local _g3 = apply(pr, l)
   pr("\n")
-  return(_g1)
+  return(_g3)
 end
 function filechars(path)
   return(read_file(path))
 end
-readstr = read_str
 function readfile(path)
   return(readstr(filechars(path)))
 end
@@ -1338,36 +1384,88 @@ end
 function shell(cmd)
   local popen = io.popen
   local h = popen(cmd)
-  local _g2 = h.read(h, "*a")
+  local _g4 = h.read(h, "*a")
   h.close(h)
-  return(_g2)
+  return(_g4)
 end
-function fetch(repo, subdir)
-  shell("mkdir -p " .. subdir)
-  local _x36 = nil
+compiler = require("compiler")
+eval = compiler.eval
+function surround(x, ...)
+  local _r = unstash({...})
+  local _id = _r
+  local lh = _id.lh
+  local rh = _id.rh
+  return((lh or "\"") .. x .. (rh or "\""))
+end
+function docmd(cmdline)
+  prn(cmdline)
+  local _x1 = nil
   local _msg = nil
   local _e = xpcall(function ()
-    _x36 = shell("git clone https://github.com/" .. repo .. " " .. subdir)
-    return(_x36)
+    _x1 = shell(cmdline)
+    return(_x1)
   end, function (m)
     _msg = _37message_handler(m)
     return(_msg)
   end)
   local _e1
   if _e then
-    _e1 = _x36
+    _e1 = _x1
   else
     _e1 = _msg
   end
-  return({_e, _e1})
+  return(({_e, _e1})[2])
 end
-local __o = args()
-local _i = nil
-for _i in next, __o do
-  local file = __o[_i]
-  prn(file)
-  local exprs = readfile(file)
-  prn(exprs)
-  eval(exprs)
+function ws63(s)
+  return(search(s, " ") or search(s, "\t"))
+end
+function cmd(...)
+  local args = unstash({...})
+  local c = ""
+  local cmds = {}
+  local _o = args
+  local _i = nil
+  for _i in next, _o do
+    local arg = _o[_i]
+    if arg == ";" then
+      add(cmds, c)
+      c = ""
+    else
+      if c == "" then
+        c = c .. arg
+        c = c .. " "
+      else
+        local _e2
+        if ws63(arg) then
+          _e2 = surround(arg)
+        else
+          _e2 = arg
+        end
+        c = c .. _e2
+        c = c .. " "
+      end
+    end
+  end
+  if some63(c) then
+    add(cmds, c)
+  end
+  return(docmd(apply(cat, intersperse("; ", cmds))))
+end
+function fetch(repo, subdir, revision)
+  cmd("mkdir -p", subdir)
+  cmd("git clone", "https://github.com/" .. repo, subdir)
+  cmd("cd", subdir, ";", "git reset", "--", ".", ";", "git checkout", "--", ".")
+  if revision then
+    return(cmd("cd", subdir, ";", "git checkout", revision, "."))
+  end
+end
+function monki(file)
+  return(load(file, {_stash = true, verbose = true}))
+end
+local __o1 = args()
+local _i1 = nil
+for _i1 in next, __o1 do
+  local file = __o1[_i1]
+  monki(file)
 end
 main()
