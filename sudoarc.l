@@ -138,6 +138,12 @@
 (def cons (x y)
   (join (list x) y))
 
+(def copylist (xs)
+  (let l ()
+    (each (k v) xs
+      (set (get l k) v))
+    l))
+
 (def intersperse (x lst)
   (let sep nil
     (acc (each item lst
