@@ -70,9 +70,10 @@
     (clip s 0 (- (len s) 1)))) 
 
 (def fetch (repo dst revision)
+  ($ "mkdir" "-p" ".monki")
+  ($ "echo" "'*'" ">" (j ".monki" ".gitignore"))
   (let dstgit (j ".monki" dst)
     (unless (git? dstgit)
-      ($ "mkdir" "-p" ".monki")
       (git ".monki" "clone" "-n" (cat "https://github.com/" repo) dst))
     (unless (git? dstgit)
       (error (cat "could not clone " repo " to " dstgit))))

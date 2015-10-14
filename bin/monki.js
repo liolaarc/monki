@@ -1373,11 +1373,11 @@ keep = function (f, xs) {
   a = function (item) {
     return(add(_g1, item));
   };
-  var _x74 = xs;
-  var _n2 = _35(_x74);
+  var _x61 = xs;
+  var _n2 = _35(_x61);
   var _i2 = 0;
   while (_i2 < _n2) {
-    var x = _x74[_i2];
+    var x = _x61[_i2];
     if (f(x)) {
       a(x);
     }
@@ -1405,11 +1405,11 @@ pr = function () {
   var l = cut(_id14, 0);
   var c = undefined;
   if (sep) {
-    var _x75 = l;
-    var _n3 = _35(_x75);
+    var _x62 = l;
+    var _n3 = _35(_x62);
     var _i3 = 0;
     while (_i3 < _n3) {
-      var x = _x75[_i3];
+      var x = _x62[_i3];
       if (c) {
         write(c);
       } else {
@@ -1419,11 +1419,11 @@ pr = function () {
       _i3 = _i3 + 1;
     }
   } else {
-    var _x76 = l;
-    var _n4 = _35(_x76);
+    var _x63 = l;
+    var _n4 = _35(_x63);
     var _i4 = 0;
     while (_i4 < _n4) {
-      var x = _x76[_i4];
+      var x = _x63[_i4];
       write(str(x));
       _i4 = _i4 + 1;
     }
@@ -1468,7 +1468,7 @@ shell = function (cmd) {
   var childproc = require("child_process");
   var exec = childproc.execSync;
   var o = exec(cmd);
-  return(o.toString());
+  return(o["toString"]());
 };
 var _x = require("compiler");
 eval = _x.eval;
@@ -1578,16 +1578,11 @@ realpath = function (path) {
   var s = _36("cd", path, ";", "pwd");
   return(clip(s, 0, _35(s) - 1));
 };
-ln = function (src, dst) {
-  if (exists63(dst)) {
-    throw new Error("ln: path already exists: " + dst);
-  }
-  return(_36("ln", "-s", src, dst));
-};
 fetch = function (repo, dst, revision) {
+  _36("mkdir", "-p", ".monki");
+  _36("echo", "'*'", ">", j(".monki", ".gitignore"));
   var dstgit = j(".monki", dst);
   if (! git63(dstgit)) {
-    _36("mkdir", "-p", ".monki");
     git(".monki", "clone", "-n", "https://github.com/" + repo, dst);
   }
   if (! git63(dstgit)) {

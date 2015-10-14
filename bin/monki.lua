@@ -1272,11 +1272,11 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x89 = xs
-  local _n2 = _35(_x89)
+  local _x76 = xs
+  local _n2 = _35(_x76)
   local _i2 = 0
   while _i2 < _n2 do
-    local x = _x89[_i2 + 1]
+    local x = _x76[_i2 + 1]
     if f(x) then
       a(x)
     end
@@ -1304,11 +1304,11 @@ function pr(...)
   local l = cut(_id14, 0)
   local c = nil
   if sep then
-    local _x92 = l
-    local _n3 = _35(_x92)
+    local _x79 = l
+    local _n3 = _35(_x79)
     local _i3 = 0
     while _i3 < _n3 do
-      local x = _x92[_i3 + 1]
+      local x = _x79[_i3 + 1]
       if c then
         write(c)
       else
@@ -1318,11 +1318,11 @@ function pr(...)
       _i3 = _i3 + 1
     end
   else
-    local _x93 = l
-    local _n4 = _35(_x93)
+    local _x80 = l
+    local _n4 = _35(_x80)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x93[_i4 + 1]
+      local x = _x80[_i4 + 1]
       write(str(x))
       _i4 = _i4 + 1
     end
@@ -1497,16 +1497,11 @@ function realpath(path)
   local s = _36("cd", path, ";", "pwd")
   return(clip(s, 0, _35(s) - 1))
 end
-function ln(src, dst)
-  if exists63(dst) then
-    error("ln: path already exists: " .. dst)
-  end
-  return(_36("ln", "-s", src, dst))
-end
 function fetch(repo, dst, revision)
+  _36("mkdir", "-p", ".monki")
+  _36("echo", "'*'", ">", j(".monki", ".gitignore"))
   local dstgit = j(".monki", dst)
   if not git63(dstgit) then
-    _36("mkdir", "-p", ".monki")
     git(".monki", "clone", "-n", "https://github.com/" .. repo, dst)
   end
   if not git63(dstgit) then
