@@ -15,22 +15,28 @@
 (define reader-stream (get reader 'stream))
 (define read-all (get reader 'read-all))
 
-(define-global read-str (s)
-    `(do ,@(read-all (reader-stream s))))
+(define system (require 'system))
+(define write (get system 'write))
+(define read-file (get system 'read-file))
 
-(define-global reload (file)
-  (let exprs (read-str (read-file file))
-    (comp exprs)
-    (eval exprs)
-    (print (cat "Reloaded " file))))
+(define-global readstr (s)
+    (read-all (reader-stream s)))
 
 ;
 ; Let's see how far we can push Lumen in the direction of Arc.
 ;
 
-(define system (require 'system))
-(define write (get system 'write))
-(define read-file (get system 'read-file))
+(define-global load (file :verbose)
+  (when verbose
+    (print (cat "Loading " file)))
+  (step expr (readstr (read-file file))
+    ; (comp expr)
+    (let ((ok x) (guard (eval expr)))
+      (unless ok
+        (prn "Error in " file ": ")
+        (prn "   " x)
+        (prn "At code: ")
+        (prn expr)))))
 
 (define-macro mac l
   `(define-macro ,@l))
@@ -73,9 +79,9 @@
 ; probably better ways to write it, and the idea isn't very good in
 ; this case.  But it's a general technique worth knowing.
 
-(each form (list "let" "each" "step" "for" "when" "while")
-  (eval `(mac ,(cat "acc:" form) l
-           `(acc (,',form ,@l)))))
+; (each form (list "let" "each" "step" "for" "when" "while")
+;   (eval `(mac ,(cat "acc:" form) l
+;            `(acc (,',form ,@l)))))
 
 ; (eval (acc:let x 42 (a '+) (a x) (a 2))) ; gives 44
 ; (map print (acc:for i 10 (unless (= i 2) (a (cat "Current line is " i)))))
@@ -134,19 +140,19 @@
 
 (def intersperse (x lst)
   (let sep nil
-    (acc:each item lst
+    (acc (each item lst
       (if sep (a sep)
         (set sep x))
-      (a item))))
+      (a item)))))
 
 (mac complement (f)
   (w/uniq g
     `(fn ,g (not (apply ,f ,g)))))
 
 (def keep (f xs)
-  (acc:step x xs
+  (acc (step x xs
     (when (f x)
-      (a x))))
+      (a x)))))
 
 (def rem (f xs)
   (keep (complement f) xs))
@@ -186,7 +192,6 @@
 (def filechars (path)
   (read-file path))
 
-(def readstr read-str)
 (def readfile (path) (readstr (filechars path)))
 
 (def env (get system 'get-environment-variable))
