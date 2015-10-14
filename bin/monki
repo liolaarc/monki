@@ -5,10 +5,6 @@ cd "$(dirname "$0")"
 cd ..
 home="$(pwd)"
 bin="${home}/bin"
-obj="${home}/obj"
-lumen_bin="${home}/lumen/bin"
-lumen="${home}/lumen/bin/lumen"
-if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
 cd "${dir}"
 
 if [ ! -z ${LUMEN_HOST} ]; then host=${LUMEN_HOST}
@@ -16,7 +12,7 @@ elif luajit -v > /dev/null 2>&1; then host=luajit
 elif    lua -v > /dev/null 2>&1; then host=lua
 elif   node -v > /dev/null 2>&1; then host=node
 else
-    1>&2 echo "no Lumen host found"
+    1>&2 echo "no host found"
     exit 1
 fi
 export LUMEN_HOST="${host}"
@@ -30,30 +26,40 @@ case $host in
         export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
 esac
 
-for target in "js" "lua"; do
-    git checkout "${bin}/"*.${target}
-    cp "${lumen_bin}/"*.${target} "${bin}/"
-done
+if [ ! -z "${REBUILD}" ]; then
+  #
+  # Rebuild Monki.
+  #
+  obj="${home}/obj"
+  lumen_bin="${home}/lumen/bin"
+  lumen="${home}/lumen/bin/lumen"
+  if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
 
-rm -f "${obj}/"*.js "${obj}/"*.lua
-
-for target in "js" "lua"; do
-    "${lumen}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
-done
-
-for target in "js" "lua"; do
-  "${lumen}" "${obj}/sudoarc.${ext}" -c "${home}/main.l" -o "${obj}/main.${target}" -t ${target}
-  cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${bin}/monki.${target}"
-  for src in "sudoarc" "main"; do
-      cat "${obj}/${src}.${target}" >> "${bin}/monki.${target}"
+  for target in "js" "lua"; do
+      git checkout "${bin}/"*.${target}
+      cp "${lumen_bin}/"*.${target} "${bin}/"
   done
-  echo "main()" >> "${bin}/monki.${target}"
-done
+
+  rm -f "${obj}/"*.js "${obj}/"*.lua
+
+  for target in "js" "lua"; do
+      "${lumen}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+  done
+
+  for target in "js" "lua"; do
+    "${lumen}" "${obj}/sudoarc.${ext}" -c "${home}/main.l" -o "${obj}/main.${target}" -t ${target}
+    cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${bin}/monki.${target}"
+    for src in "sudoarc" "main"; do
+        cat "${obj}/${src}.${target}" >> "${bin}/monki.${target}"
+    done
+    echo "main()" >> "${bin}/monki.${target}"
+  done
+fi
 
 rlwrap="`which rlwrap`"
 if [ ! -z "$rlwrap" ]; then
-  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"     
+  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}"
 else
-  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}"     
+  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}"
 fi
 
