@@ -1205,8 +1205,8 @@ load = function (file) {
       try {
         return([true, eval(expr)]);
       }
-      catch (_e3) {
-        return([false, _e3.message]);
+      catch (_e4) {
+        return([false, _e4.message]);
       }
     })();
     var ok = _id1[0];
@@ -1336,6 +1336,23 @@ cddr = function (x) {
 cons = function (x, y) {
   return(join([x], y));
 };
+copylist = function (xs) {
+  var l = [];
+  var _o = xs;
+  var k = undefined;
+  for (k in _o) {
+    var v = _o[k];
+    var _e2;
+    if (numeric63(k)) {
+      _e2 = parseInt(k);
+    } else {
+      _e2 = k;
+    }
+    var _k = _e2;
+    l[_k] = v;
+  }
+  return(l);
+};
 intersperse = function (x, lst) {
   var sep = undefined;
   var _g = [];
@@ -1343,17 +1360,17 @@ intersperse = function (x, lst) {
   a = function (item) {
     return(add(_g, item));
   };
-  var _o = lst;
-  var _i1 = undefined;
-  for (_i1 in _o) {
-    var item = _o[_i1];
-    var _e2;
-    if (numeric63(_i1)) {
-      _e2 = parseInt(_i1);
+  var _o1 = lst;
+  var _i2 = undefined;
+  for (_i2 in _o1) {
+    var item = _o1[_i2];
+    var _e3;
+    if (numeric63(_i2)) {
+      _e3 = parseInt(_i2);
     } else {
-      _e2 = _i1;
+      _e3 = _i2;
     }
-    var __i1 = _e2;
+    var __i2 = _e3;
     if (sep) {
       a(sep);
     } else {
@@ -1374,14 +1391,14 @@ keep = function (f, xs) {
     return(add(_g1, item));
   };
   var _x61 = xs;
-  var _n2 = _35(_x61);
-  var _i2 = 0;
-  while (_i2 < _n2) {
-    var x = _x61[_i2];
+  var _n3 = _35(_x61);
+  var _i3 = 0;
+  while (_i3 < _n3) {
+    var x = _x61[_i3];
     if (f(x)) {
       a(x);
     }
-    _i2 = _i2 + 1;
+    _i3 = _i3 + 1;
   }
   return(_g1);
 };
@@ -1399,33 +1416,33 @@ str = function (x) {
   }
 };
 pr = function () {
-  var _r33 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id14 = _r33;
+  var _r34 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id14 = _r34;
   var sep = _id14.sep;
   var l = cut(_id14, 0);
   var c = undefined;
   if (sep) {
     var _x62 = l;
-    var _n3 = _35(_x62);
-    var _i3 = 0;
-    while (_i3 < _n3) {
-      var x = _x62[_i3];
+    var _n4 = _35(_x62);
+    var _i4 = 0;
+    while (_i4 < _n4) {
+      var x = _x62[_i4];
       if (c) {
         write(c);
       } else {
         c = str(sep);
       }
       write(str(x));
-      _i3 = _i3 + 1;
+      _i4 = _i4 + 1;
     }
   } else {
     var _x63 = l;
-    var _n4 = _35(_x63);
-    var _i4 = 0;
-    while (_i4 < _n4) {
-      var x = _x63[_i4];
+    var _n5 = _35(_x63);
+    var _i5 = 0;
+    while (_i5 < _n5) {
+      var x = _x63[_i5];
       write(str(x));
-      _i4 = _i4 + 1;
+      _i5 = _i5 + 1;
     }
   }
   if (l) {
@@ -1433,8 +1450,8 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r35 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id16 = _r35;
+  var _r36 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id16 = _r36;
   var bs = cut(_id16, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
@@ -1470,17 +1487,43 @@ shell = function (cmd) {
   var o = exec(cmd);
   return(o["toString"]());
 };
-var _x = require("compiler");
-eval = _x.eval;
-macex = _x.expand;
-var _x1 = require("system");
-j = _x1["path-join"];
-file63 = _x1["file-exists?"];
+var _sys = require("system");
+j = _sys["path-join"];
+file63 = _sys["file-exists?"];
+wschars = [" ", "\t", "\n", "\r"];
+ws63 = function (s) {
+  var i = 0;
+  while (i < _35(s)) {
+    var c = char(s, i);
+    if (in63(c, wschars)) {
+      return(true);
+    }
+    i = i + 1;
+  }
+};
+rtrim = function (s) {
+  while (ws63(char(s, _35(s) - 1))) {
+    s = clip(s, 0, _35(s) - 1);
+  }
+  return(s);
+};
 dir63 = function (path) {
-  return("1\n" === docmd("sh -c 'if [ -d " + escape(path) + " ]; then echo 1; fi'"));
+  return("1" === _36("sh", "-c", "if [ -d " + escape(path) + " ]; then echo 1; fi", {_stash: true, hush: true}));
 };
 exists63 = function (path) {
   return(dir63(path) || file63(path));
+};
+dirname = function (file) {
+  return(_36("dirname", file, {_stash: true, hush: true}));
+};
+basename = function (file) {
+  return(_36("basename", file, {_stash: true, hush: true}));
+};
+realpath = function (path) {
+  if (! dir63(path)) {
+    throw new Error("no such dir: " + path);
+  }
+  return(_36("cd", path, ";", "pwd"));
 };
 rmrf = function (path) {
   if (0 === search(path, "/")) {
@@ -1491,44 +1534,86 @@ rmrf = function (path) {
   }
 };
 surround = function (x) {
-  var _r3 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id = _r3;
+  var _r8 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id = _r8;
   var lh = _id.lh;
   var rh = _id.rh;
-  return((lh || "\"") + x + (rh || "\""));
+  return((lh || "") + x + (rh || ""));
+};
+q = function (x) {
+  if (ws63(x)) {
+    return(surround(x, {_stash: true, lh: "\'", rh: "\'"}));
+  } else {
+    return(x);
+  }
 };
 docmd = function (cmdline) {
   return((function () {
     try {
       return([true, shell(cmdline)]);
     }
-    catch (_e3) {
-      return([false, _e3.message]);
+    catch (_e1) {
+      return([false, _e1.message]);
     }
   })()[1]);
 };
-ws63 = function (s) {
-  return(search(s, " ") || search(s, "\t"));
+cwd = ".";
+pushds = [];
+pushd = function (path) {
+  add(pushds, pwd());
+  return(cd(path));
 };
+popd = function () {
+  if (none63(pushds)) {
+    throw new Error("popd: directory stack empty");
+  }
+  var i = edge(pushds);
+  cd(pushds[i]);
+  pushds = cut(pushds, 0, i);
+  return(pwd());
+};
+cd = function (path) {
+  if (path) {
+    cwd = _36("cd", path, ";", "pwd", {_stash: true, hush: true});
+  } else {
+    cwd = ".";
+  }
+  return(pwd());
+};
+resetcwd = function () {
+  cwd = ".";
+  pushds = [];
+  return(pushds);
+};
+pwd = function () {
+  return(_36("pwd", {_stash: true, hush: true}));
+};
+setenv("w/pushd", {_stash: true, macro: function (path) {
+  var _r18 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id2 = _r18;
+  var body = cut(_id2, 0);
+  return(join(["do", ["pushd", path]], body, [["popd"]]));
+}});
+mkdir = function (path) {
+  return(_36("mkdir", "-p", path));
+};
+setenv("w/mkdir", {_stash: true, macro: function (path) {
+  var _r21 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id4 = _r21;
+  var body = cut(_id4, 0);
+  var g = unique("g");
+  return(join(["let", g, path, ["mkdir", g], ["pushd", g]], body, [["popd"]]));
+}});
 _36 = function () {
   var args = unstash(Array.prototype.slice.call(arguments, 0));
-  var quiet = args.quiet;
-  if (quiet) {
-    args.quiet = undefined;
-  }
+  var hush = args.hush;
   var c = "";
   var cmds = [];
-  var _o = args;
-  var _i = undefined;
-  for (_i in _o) {
-    var arg = _o[_i];
-    var _e;
-    if (numeric63(_i)) {
-      _e = parseInt(_i);
-    } else {
-      _e = _i;
-    }
-    var __i = _e;
+  var _x20 = args;
+  var _n = _35(_x20);
+  var _i = 0;
+  while (_i < _n) {
+    var arg = _x20[_i];
     if (arg === ";") {
       add(cmds, c);
       c = "";
@@ -1537,83 +1622,83 @@ _36 = function () {
         c = c + arg;
         c = c + " ";
       } else {
-        var _e1;
-        if (ws63(arg)) {
-          _e1 = surround(arg);
-        } else {
-          _e1 = arg;
-        }
-        c = c + _e1;
+        c = c + q(arg);
         c = c + " ";
       }
     }
+    _i = _i + 1;
   }
   if (some63(c)) {
     add(cmds, c);
   }
   var cmdline = apply(cat, intersperse("; ", cmds));
-  if (! quiet) {
+  if (!( cwd === ".")) {
+    cmdline = "cd " + q(cwd) + "; " + cmdline;
+  }
+  if (! hush) {
     prn(cmdline);
   }
-  return(docmd(cmdline));
+  return(rtrim(docmd(cmdline)));
 };
 git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r8 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id1 = _r8;
-  var args = cut(_id1, 0);
+  var _r23 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id5 = _r23;
+  var args = cut(_id5, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
       throw new Error("no .git at " + path);
     }
   }
-  return(apply(_36, join(["cd", path, ";", "git", what], args)));
+  return(apply(_36, join(["git", "--git-dir=" + q(j(path, ".git")), what], args)));
 };
-realpath = function (path) {
-  if (! dir63(path)) {
-    throw new Error("no such dir: " + path);
+clone = function (repo, revision) {
+  if (! repo || none63(repo)) {
+    throw new Error("fetch: bad repo");
   }
-  var s = _36("cd", path, ";", "pwd");
-  return(clip(s, 0, _35(s) - 1));
-};
-fetch = function (repo, dst, revision) {
-  _36("mkdir", "-p", ".monki");
+  if (!( "." === char(repo, 0) || 0 === search(repo, "://"))) {
+    repo = "https://github.com/" + repo;
+  }
+  mkdir(j(".monki", "git"));
   _36("echo", "'*'", ">", j(".monki", ".gitignore"));
-  var dstgit = j(".monki", dst);
-  if (! git63(dstgit)) {
-    git(".monki", "clone", "-n", "https://github.com/" + repo, dst);
+  var dst = j(".monki", "git");
+  if (! git63(dst)) {
+    _36("git", "clone", "-n", repo, dst);
   }
-  if (! git63(dstgit)) {
-    throw new Error("could not clone " + repo + " to " + dstgit);
+  if (! git63(dst)) {
+    throw new Error("could not clone " + repo + " to " + dst);
   }
-  _36("mkdir", "-p", dst);
-  var gitdir = realpath(j(".monki", dst, ".git"));
-  _36("cd", dst, ";", "rm", "-f", ".git");
-  _36("cd", dst, ";", "ln", "-s", gitdir, ".git");
   git(dst, "reset", "--", ".");
   git(dst, "checkout", "--", ".");
   git(dst, "pull");
   if (revision) {
-    git(dst, "checkout", revision, ".");
+    return(git(dst, "checkout", revision, "."));
   }
-  return(_36("rm", j(dst, ".git")));
 };
-monki = function (file) {
-  return(load(file, {_stash: true, verbose: true}));
+monki = function (path) {
+  var dir = dirname(path);
+  var file = basename(path);
+  cd(dir);
+  _36("mkdir", "-p", j(".monki", "tmp"));
+  _36("cp", file, j(".monki", "tmp"));
+  load(path, {_stash: true, verbose: true});
+  _36("cp", j(".monki", "tmp", file), file);
+  _36("rm", j(".monki", "tmp", file));
+  return(resetcwd());
 };
-var __o1 = args();
+var __o = args();
 var _i1 = undefined;
-for (_i1 in __o1) {
-  var file = __o1[_i1];
-  var _e2;
+for (_i1 in __o) {
+  var file = __o[_i1];
+  var _e;
   if (numeric63(_i1)) {
-    _e2 = parseInt(_i1);
+    _e = parseInt(_i1);
   } else {
-    _e2 = _i1;
+    _e = _i1;
   }
-  var __i1 = _e2;
+  var __i1 = _e;
   monki(file);
 }
 main()

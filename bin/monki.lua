@@ -1242,6 +1242,16 @@ end
 function cons(x, y)
   return(join({x}, y))
 end
+function copylist(xs)
+  local l = {}
+  local _o = xs
+  local k = nil
+  for k in next, _o do
+    local v = _o[k]
+    l[k] = v
+  end
+  return(l)
+end
 function intersperse(x, lst)
   local sep = nil
   local _g = {}
@@ -1249,10 +1259,10 @@ function intersperse(x, lst)
   a = function (item)
     return(add(_g, item))
   end
-  local _o = lst
-  local _i1 = nil
-  for _i1 in next, _o do
-    local item = _o[_i1]
+  local _o1 = lst
+  local _i2 = nil
+  for _i2 in next, _o1 do
+    local item = _o1[_i2]
     if sep then
       a(sep)
     else
@@ -1273,14 +1283,14 @@ function keep(f, xs)
     return(add(_g1, item))
   end
   local _x76 = xs
-  local _n2 = _35(_x76)
-  local _i2 = 0
-  while _i2 < _n2 do
-    local x = _x76[_i2 + 1]
+  local _n3 = _35(_x76)
+  local _i3 = 0
+  while _i3 < _n3 do
+    local x = _x76[_i3 + 1]
     if f(x) then
       a(x)
     end
-    _i2 = _i2 + 1
+    _i3 = _i3 + 1
   end
   return(_g1)
 end
@@ -1298,33 +1308,33 @@ function str(x)
   end
 end
 function pr(...)
-  local _r34 = unstash({...})
-  local _id14 = _r34
+  local _r35 = unstash({...})
+  local _id14 = _r35
   local sep = _id14.sep
   local l = cut(_id14, 0)
   local c = nil
   if sep then
     local _x79 = l
-    local _n3 = _35(_x79)
-    local _i3 = 0
-    while _i3 < _n3 do
-      local x = _x79[_i3 + 1]
+    local _n4 = _35(_x79)
+    local _i4 = 0
+    while _i4 < _n4 do
+      local x = _x79[_i4 + 1]
       if c then
         write(c)
       else
         c = str(sep)
       end
       write(str(x))
-      _i3 = _i3 + 1
+      _i4 = _i4 + 1
     end
   else
     local _x80 = l
-    local _n4 = _35(_x80)
-    local _i4 = 0
-    while _i4 < _n4 do
-      local x = _x80[_i4 + 1]
+    local _n5 = _35(_x80)
+    local _i5 = 0
+    while _i5 < _n5 do
+      local x = _x80[_i5 + 1]
       write(str(x))
-      _i4 = _i4 + 1
+      _i5 = _i5 + 1
     end
   end
   if l then
@@ -1332,8 +1342,8 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r36 = unstash({...})
-  local _id16 = _r36
+  local _r37 = unstash({...})
+  local _id16 = _r37
   local bs = cut(_id16, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
@@ -1388,17 +1398,43 @@ function shell(cmd)
   h.close(h)
   return(_g4)
 end
-local _x = require("compiler")
-eval = _x.eval
-macex = _x.expand
-local _x1 = require("system")
-j = _x1["path-join"]
-file63 = _x1["file-exists?"]
+local _sys = require("system")
+j = _sys["path-join"]
+file63 = _sys["file-exists?"]
+wschars = {" ", "\t", "\n", "\r"}
+function ws63(s)
+  local i = 0
+  while i < _35(s) do
+    local c = char(s, i)
+    if in63(c, wschars) then
+      return(true)
+    end
+    i = i + 1
+  end
+end
+function rtrim(s)
+  while ws63(char(s, _35(s) - 1)) do
+    s = clip(s, 0, _35(s) - 1)
+  end
+  return(s)
+end
 function dir63(path)
-  return("1\n" == docmd("sh -c 'if [ -d " .. escape(path) .. " ]; then echo 1; fi'"))
+  return("1" == _36("sh", "-c", "if [ -d " .. escape(path) .. " ]; then echo 1; fi", {_stash = true, hush = true}))
 end
 function exists63(path)
   return(dir63(path) or file63(path))
+end
+function dirname(file)
+  return(_36("dirname", file, {_stash = true, hush = true}))
+end
+function basename(file)
+  return(_36("basename", file, {_stash = true, hush = true}))
+end
+function realpath(path)
+  if not dir63(path) then
+    error("no such dir: " .. path)
+  end
+  return(_36("cd", path, ";", "pwd"))
 end
 function rmrf(path)
   if 0 == search(path, "/") then
@@ -1409,45 +1445,94 @@ function rmrf(path)
   end
 end
 function surround(x, ...)
-  local _r3 = unstash({...})
-  local _id = _r3
+  local _r8 = unstash({...})
+  local _id = _r8
   local lh = _id.lh
   local rh = _id.rh
-  return((lh or "\"") .. x .. (rh or "\""))
+  return((lh or "") .. x .. (rh or ""))
+end
+function q(x)
+  if ws63(x) then
+    return(surround(x, {_stash = true, lh = "\'", rh = "\'"}))
+  else
+    return(x)
+  end
 end
 function docmd(cmdline)
-  local _x3 = nil
+  local _x2 = nil
   local _msg = nil
   local _e = xpcall(function ()
-    _x3 = shell(cmdline)
-    return(_x3)
+    _x2 = shell(cmdline)
+    return(_x2)
   end, function (m)
     _msg = _37message_handler(m)
     return(_msg)
   end)
   local _e1
   if _e then
-    _e1 = _x3
+    _e1 = _x2
   else
     _e1 = _msg
   end
   return(({_e, _e1})[2])
 end
-function ws63(s)
-  return(search(s, " ") or search(s, "\t"))
+cwd = "."
+pushds = {}
+function pushd(path)
+  add(pushds, pwd())
+  return(cd(path))
 end
+function popd()
+  if none63(pushds) then
+    error("popd: directory stack empty")
+  end
+  local i = edge(pushds)
+  cd(pushds[i + 1])
+  pushds = cut(pushds, 0, i)
+  return(pwd())
+end
+function cd(path)
+  if path then
+    cwd = _36("cd", path, ";", "pwd", {_stash = true, hush = true})
+  else
+    cwd = "."
+  end
+  return(pwd())
+end
+function resetcwd()
+  cwd = "."
+  pushds = {}
+  return(pushds)
+end
+function pwd()
+  return(_36("pwd", {_stash = true, hush = true}))
+end
+setenv("w/pushd", {_stash = true, macro = function (path, ...)
+  local _r19 = unstash({...})
+  local _id2 = _r19
+  local body = cut(_id2, 0)
+  return(join({"do", {"pushd", path}}, body, {{"popd"}}))
+end})
+function mkdir(path)
+  return(_36("mkdir", "-p", path))
+end
+setenv("w/mkdir", {_stash = true, macro = function (path, ...)
+  local _r22 = unstash({...})
+  local _id4 = _r22
+  local body = cut(_id4, 0)
+  local g = unique("g")
+  return(join({"let", g, path, {"mkdir", g}, {"pushd", g}}, body, {{"popd"}}))
+end})
 function _36(...)
   local args = unstash({...})
-  local quiet = args.quiet
-  if quiet then
-    args.quiet = nil
-  end
+  local hush = args.hush
   local c = ""
   local cmds = {}
-  local _o = args
-  local _i = nil
-  for _i in next, _o do
-    local arg = _o[_i]
+  local _x25 = args
+  local _n = _35(_x25)
+  local _i = 0
+  while _i < _n do
+    local arg = _x25[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1456,76 +1541,76 @@ function _36(...)
         c = c .. arg
         c = c .. " "
       else
-        local _e2
-        if ws63(arg) then
-          _e2 = surround(arg)
-        else
-          _e2 = arg
-        end
-        c = c .. _e2
+        c = c .. q(arg)
         c = c .. " "
       end
     end
+    _i = _i + 1
   end
   if some63(c) then
     add(cmds, c)
   end
   local cmdline = apply(cat, intersperse("; ", cmds))
-  if not quiet then
+  if not( cwd == ".") then
+    cmdline = "cd " .. q(cwd) .. "; " .. cmdline
+  end
+  if not hush then
     prn(cmdline)
   end
-  return(docmd(cmdline))
+  return(rtrim(docmd(cmdline)))
 end
 function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r9 = unstash({...})
-  local _id1 = _r9
-  local args = cut(_id1, 0)
+  local _r24 = unstash({...})
+  local _id5 = _r24
+  local args = cut(_id5, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  return(apply(_36, join({"cd", path, ";", "git", what}, args)))
+  return(apply(_36, join({"git", "--git-dir=" .. q(j(path, ".git")), what}, args)))
 end
-function realpath(path)
-  if not dir63(path) then
-    error("no such dir: " .. path)
+function clone(repo, revision)
+  if not repo or none63(repo) then
+    error("fetch: bad repo")
   end
-  local s = _36("cd", path, ";", "pwd")
-  return(clip(s, 0, _35(s) - 1))
-end
-function fetch(repo, dst, revision)
-  _36("mkdir", "-p", ".monki")
+  if not( "." == char(repo, 0) or 0 == search(repo, "://")) then
+    repo = "https://github.com/" .. repo
+  end
+  mkdir(j(".monki", "git"))
   _36("echo", "'*'", ">", j(".monki", ".gitignore"))
-  local dstgit = j(".monki", dst)
-  if not git63(dstgit) then
-    git(".monki", "clone", "-n", "https://github.com/" .. repo, dst)
+  local dst = j(".monki", "git")
+  if not git63(dst) then
+    _36("git", "clone", "-n", repo, dst)
   end
-  if not git63(dstgit) then
-    error("could not clone " .. repo .. " to " .. dstgit)
+  if not git63(dst) then
+    error("could not clone " .. repo .. " to " .. dst)
   end
-  _36("mkdir", "-p", dst)
-  local gitdir = realpath(j(".monki", dst, ".git"))
-  _36("cd", dst, ";", "rm", "-f", ".git")
-  _36("cd", dst, ";", "ln", "-s", gitdir, ".git")
   git(dst, "reset", "--", ".")
   git(dst, "checkout", "--", ".")
   git(dst, "pull")
   if revision then
-    git(dst, "checkout", revision, ".")
+    return(git(dst, "checkout", revision, "."))
   end
-  return(_36("rm", j(dst, ".git")))
 end
-function monki(file)
-  return(load(file, {_stash = true, verbose = true}))
+function monki(path)
+  local dir = dirname(path)
+  local file = basename(path)
+  cd(dir)
+  _36("mkdir", "-p", j(".monki", "tmp"))
+  _36("cp", file, j(".monki", "tmp"))
+  load(path, {_stash = true, verbose = true})
+  _36("cp", j(".monki", "tmp", file), file)
+  _36("rm", j(".monki", "tmp", file))
+  return(resetcwd())
 end
-local __o1 = args()
+local __o = args()
 local _i1 = nil
-for _i1 in next, __o1 do
-  local file = __o1[_i1]
+for _i1 in next, __o do
+  local file = __o[_i1]
   monki(file)
 end
 main()
