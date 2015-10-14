@@ -752,7 +752,7 @@ setenv("define-global", {_stash = true, macro = function (name, x, ...)
   local _r35 = unstash({...})
   local _id29 = _r35
   local body = cut(_id29, 0)
-  setenv(name, {_stash = true, toplevel = true, variable = true})
+  setenv(name, {_stash = true, variable = true, toplevel = true})
   if some63(body) then
     return(join({"%global-function", name}, bind42(x, body)))
   else
@@ -1282,11 +1282,11 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x76 = xs
-  local _n3 = _35(_x76)
+  local _x89 = xs
+  local _n3 = _35(_x89)
   local _i3 = 0
   while _i3 < _n3 do
-    local x = _x76[_i3 + 1]
+    local x = _x89[_i3 + 1]
     if f(x) then
       a(x)
     end
@@ -1314,11 +1314,11 @@ function pr(...)
   local l = cut(_id14, 0)
   local c = nil
   if sep then
-    local _x79 = l
-    local _n4 = _35(_x79)
+    local _x92 = l
+    local _n4 = _35(_x92)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x79[_i4 + 1]
+      local x = _x92[_i4 + 1]
       if c then
         write(c)
       else
@@ -1328,11 +1328,11 @@ function pr(...)
       _i4 = _i4 + 1
     end
   else
-    local _x80 = l
-    local _n5 = _35(_x80)
+    local _x93 = l
+    local _n5 = _35(_x93)
     local _i5 = 0
     while _i5 < _n5 do
-      local x = _x80[_i5 + 1]
+      local x = _x93[_i5 + 1]
       write(str(x))
       _i5 = _i5 + 1
     end
@@ -1528,11 +1528,11 @@ function _36(...)
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x25 = args
-  local _n = _35(_x25)
+  local _x27 = args
+  local _n = _35(_x27)
   local _i = 0
   while _i < _n do
-    local arg = _x25[_i + 1]
+    local arg = _x27[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""

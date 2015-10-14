@@ -853,7 +853,7 @@ setenv("define-global", {_stash: true, macro: function (name, x) {
   var _r35 = unstash(Array.prototype.slice.call(arguments, 2));
   var _id29 = _r35;
   var body = cut(_id29, 0);
-  setenv(name, {_stash: true, toplevel: true, variable: true});
+  setenv(name, {_stash: true, variable: true, toplevel: true});
   if (some63(body)) {
     return(join(["%global-function", name], bind42(x, body)));
   } else {
@@ -1390,11 +1390,11 @@ keep = function (f, xs) {
   a = function (item) {
     return(add(_g1, item));
   };
-  var _x61 = xs;
-  var _n3 = _35(_x61);
+  var _x74 = xs;
+  var _n3 = _35(_x74);
   var _i3 = 0;
   while (_i3 < _n3) {
-    var x = _x61[_i3];
+    var x = _x74[_i3];
     if (f(x)) {
       a(x);
     }
@@ -1422,11 +1422,11 @@ pr = function () {
   var l = cut(_id14, 0);
   var c = undefined;
   if (sep) {
-    var _x62 = l;
-    var _n4 = _35(_x62);
+    var _x75 = l;
+    var _n4 = _35(_x75);
     var _i4 = 0;
     while (_i4 < _n4) {
-      var x = _x62[_i4];
+      var x = _x75[_i4];
       if (c) {
         write(c);
       } else {
@@ -1436,11 +1436,11 @@ pr = function () {
       _i4 = _i4 + 1;
     }
   } else {
-    var _x63 = l;
-    var _n5 = _35(_x63);
+    var _x76 = l;
+    var _n5 = _35(_x76);
     var _i5 = 0;
     while (_i5 < _n5) {
-      var x = _x63[_i5];
+      var x = _x76[_i5];
       write(str(x));
       _i5 = _i5 + 1;
     }
@@ -1485,7 +1485,7 @@ shell = function (cmd) {
   var childproc = require("child_process");
   var exec = childproc.execSync;
   var o = exec(cmd);
-  return(o["toString"]());
+  return(o.toString());
 };
 var _sys = require("system");
 j = _sys["path-join"];
@@ -1609,11 +1609,11 @@ _36 = function () {
   var hush = args.hush;
   var c = "";
   var cmds = [];
-  var _x20 = args;
-  var _n = _35(_x20);
+  var _x22 = args;
+  var _n = _35(_x22);
   var _i = 0;
   while (_i < _n) {
-    var arg = _x20[_i];
+    var arg = _x22[_i];
     if (arg === ";") {
       add(cmds, c);
       c = "";
