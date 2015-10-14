@@ -8,9 +8,13 @@
   (def file? (get x 'file-exists?)))
 
 (def dir? (path)
-  ; There isn't any way to determine whether a directory exists in plain
-  ; Lua without resorting to third-party libraries.
-  ; This hack is slow and silly, but it works on all hosts.  TODO: Fix.
+  ; There isn't any way to determine whether a directory exists in
+  ; plain Lua without resorting to third-party libraries.
+  ;
+  ; This hack is silly, but it works on all hosts.  It's also
+  ; vulnerable to shell injection. (Monki scripts are already code
+  ; execution, so maybe this doesn't matter, but fix it anyway.)
+  ; TODO: Remove this hack.
   (= "1\n" (docmd (cat "sh -c 'if [ -d " (escape path) " ]; then echo 1; fi'"))))
 
 (def exists? (path)
@@ -28,9 +32,13 @@
 (def docmd (cmdline)
   (at (guard (shell cmdline)) 1))
 
+(def wschars (list " " "\t" "\n" "\r"))
+
 (def ws? (s)
-  (or (search s " ")
-      (search s "\t")))
+  (for i (len s)
+    (let c (char s i)
+      (when (in? c wschars)
+        (return true)))))
 
 (def $ args
   (let quiet (get args 'quiet)
