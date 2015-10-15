@@ -163,7 +163,7 @@
     (prn file)
     (monki file)))
 
-(def monkiusage ()
+(def musage ()
   (prn "  to run all monki.l files beneath a dir:")
   (prn "    monki <dir>")
   (prn "  to clone a git repo at a subdir:")
@@ -171,14 +171,15 @@
   (prn "")
   (prn " e.g.  monki clone laarc/monki monki"))
 
-(def monkimain (argv)
+(def mmain (argv)
   (when (none? (or argv ()))
     (return (monkitree (pwd))))
   (when (in? (at argv 0) (list "-h" "--help" "help"))
+    (musage)
     (return))
   (when (= (at argv 0) "clone")
     (unless (> (len argv) 1)
-      (monkiusage)
+      (musage)
       (return))
     (let dst (at argv (edge argv))
       (when (dir? dst)
@@ -191,5 +192,5 @@
     (if (dir? arg) (monkitree arg)
         (endswith arg ".l") (monki arg)
         (error (cat "unknown cmd " arg)))))
-(monkimain (args))
+(mmain (args))
 

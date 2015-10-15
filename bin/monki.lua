@@ -1653,7 +1653,7 @@ function monkitree(path)
     monki(file)
   end
 end
-function monkiusage()
+function musage()
   prn("  to run all monki.l files beneath a dir:")
   prn("    monki <dir>")
   prn("  to clone a git repo at a subdir:")
@@ -1661,16 +1661,17 @@ function monkiusage()
   prn("")
   return(prn(" e.g.  monki clone laarc/monki monki"))
 end
-function monkimain(argv)
+function mmain(argv)
   if none63(argv or {}) then
     return(monkitree(pwd()))
   end
   if in63(argv[1], {"-h", "--help", "help"}) then
+    musage()
     return
   end
   if argv[1] == "clone" then
     if not( _35(argv) > 1) then
-      monkiusage()
+      musage()
       return
     end
     local dst = argv[edge(argv) + 1]
@@ -1698,5 +1699,5 @@ function monkimain(argv)
     _i2 = _i2 + 1
   end
 end
-monkimain(args())
+mmain(args())
 main()

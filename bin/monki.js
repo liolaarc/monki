@@ -1741,7 +1741,7 @@ monkitree = function (path) {
     monki(file);
   }
 };
-monkiusage = function () {
+musage = function () {
   prn("  to run all monki.l files beneath a dir:");
   prn("    monki <dir>");
   prn("  to clone a git repo at a subdir:");
@@ -1749,16 +1749,17 @@ monkiusage = function () {
   prn("");
   return(prn(" e.g.  monki clone laarc/monki monki"));
 };
-monkimain = function (argv) {
+mmain = function (argv) {
   if (none63(argv || [])) {
     return(monkitree(pwd()));
   }
   if (in63(argv[0], ["-h", "--help", "help"])) {
+    musage();
     return;
   }
   if (argv[0] === "clone") {
     if (!( _35(argv) > 1)) {
-      monkiusage();
+      musage();
       return;
     }
     var dst = argv[edge(argv)];
@@ -1786,5 +1787,5 @@ monkimain = function (argv) {
     _i2 = _i2 + 1;
   }
 };
-monkimain(args());
+mmain(args());
 main()
