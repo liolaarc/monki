@@ -18,6 +18,7 @@
 (define system (require 'system))
 (define write (get system 'write))
 (define read-file (get system 'read-file))
+(define-global env (get system 'get-environment-variable))
 
 (define-global readstr (s)
     (read-all (reader-stream s)))
@@ -29,14 +30,16 @@
 (define-global load (file :verbose)
   (when verbose
     (print (cat "Loading " file)))
-  (step expr (readstr (read-file file))
-    ; (comp expr)
-    (let ((ok x) (guard (eval expr)))
-      (unless ok
-        (prn "Error in " file ": ")
-        (prn "   " x)
-        (prn "The error occurred while evaluating: ")
-        (prn expr)))))
+  (let noisy (env "VERBOSE")
+    (step expr (readstr (read-file file))
+      (when noisy (prn (string expr)))
+      (when noisy (prn (comp expr)))
+      (let ((ok x) (guard (eval expr)))
+        (unless ok
+          (prn "Error in " file ": ")
+          (prn "   " x)
+          (prn "The error occurred while evaluating: ")
+          (prn expr))))))
 
 (define-macro mac l
   `(define-macro ,@l))
@@ -225,7 +228,6 @@
 
 (def readfile (path) (readstr (filechars path)))
 
-(def env (get system 'get-environment-variable))
 (def args () (split (env 'cmdline) " "))
 (def host () (env "LUMEN_HOST"))
 (def host? (x) (search (host) x))
