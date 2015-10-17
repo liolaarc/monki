@@ -67,7 +67,11 @@
 (mac lfn (name args body rest: l)
   `(let ,name nil
      (set ,name (fn ,args ,body))
-     ,@l))
+     ,@(if (some? l) l
+         (list name))))
+
+(mac afn (args body rest: l)
+  `(lfn self ,args ,body ,@l))
 
 (mac accum (name rest: body)
   (w/uniq g
