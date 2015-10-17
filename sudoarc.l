@@ -44,6 +44,9 @@
 (define-macro mac l
   `(define-macro ,@l))
 
+(mac macex (e)
+  `(macroexpand ,e))
+
 (mac len l
   `(# ,@l))
 
