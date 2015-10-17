@@ -1116,13 +1116,13 @@ function load(file, ...)
       _msg = _37message_handler(m)
       return(_msg)
     end)
-    local _e3
+    local _e4
     if _e then
-      _e3 = _x2
+      _e4 = _x2
     else
-      _e3 = _msg
+      _e4 = _msg
     end
-    local _id1 = {_e, _e3}
+    local _id1 = {_e, _e4}
     local ok = _id1[1]
     local x = _id1[2]
     if not ok then
@@ -1138,13 +1138,16 @@ setenv("mac", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"define-macro"}, l))
 end})
+setenv("macex", {_stash = true, macro = function (e)
+  return({"macroexpand", e})
+end})
 setenv("len", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"#"}, l))
 end})
 setenv("letmac", {_stash = true, macro = function (name, args, body, ...)
-  local _r6 = unstash({...})
-  local _id3 = _r6
+  local _r8 = unstash({...})
+  local _id3 = _r8
   local l = cut(_id3, 0)
   return(join({"let-macro", {{name, args, body}}}, l))
 end})
@@ -1156,8 +1159,8 @@ idfn = function (x)
   return(x)
 end
 setenv("w/uniq", {_stash = true, macro = function (x, ...)
-  local _r9 = unstash({...})
-  local _id5 = _r9
+  local _r11 = unstash({...})
+  local _id5 = _r11
   local body = cut(_id5, 0)
   if atom63(x) then
     return(join({"let-unique", {x}}, body))
@@ -1170,15 +1173,27 @@ setenv("void", {_stash = true, macro = function (...)
   return(join({"do"}, l, {"nil"}))
 end})
 setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
-  local _r11 = unstash({...})
-  local _id7 = _r11
+  local _r13 = unstash({...})
+  local _id7 = _r13
   local l = cut(_id7, 0)
-  return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, l))
+  local _e5
+  if some63(l) then
+    _e5 = l
+  else
+    _e5 = {name}
+  end
+  return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, _e5))
+end})
+setenv("afn", {_stash = true, macro = function (args, body, ...)
+  local _r15 = unstash({...})
+  local _id9 = _r15
+  local l = cut(_id9, 0)
+  return(join({"lfn", "self", args, body}, l))
 end})
 setenv("accum", {_stash = true, macro = function (name, ...)
-  local _r13 = unstash({...})
-  local _id9 = _r13
-  local body = cut(_id9, 0)
+  local _r17 = unstash({...})
+  local _id11 = _r17
+  local body = cut(_id11, 0)
   local g = unique("g")
   return({"let", g, join(), join({"lfn", name, {"item"}, {"add", g, "item"}}, body), g})
 end})
@@ -1197,21 +1212,21 @@ function any63(x)
   return(lst63(x) and some63(x))
 end
 setenv("iflet", {_stash = true, macro = function (name, ...)
-  local _r17 = unstash({...})
-  local _id12 = _r17
-  local l = cut(_id12, 0)
+  local _r21 = unstash({...})
+  local _id14 = _r21
+  local l = cut(_id14, 0)
   if some63(l) then
-    local _id13 = l
-    local x = _id13[1]
-    local a = _id13[2]
-    local bs = cut(_id13, 2)
-    local _e4
+    local _id15 = l
+    local x = _id15[1]
+    local a = _id15[2]
+    local bs = cut(_id15, 2)
+    local _e6
     if one63(l) then
-      _e4 = name
+      _e6 = name
     else
-      _e4 = {"if", name, a, join({"iflet", name}, bs)}
+      _e6 = {"if", name, a, join({"iflet", name}, bs)}
     end
-    return({"let", name, x, _e4})
+    return({"let", name, x, _e6})
   end
 end})
 setenv("aif", {_stash = true, macro = function (...)
@@ -1290,11 +1305,11 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x89 = xs
-  local _n3 = _35(_x89)
+  local _x97 = xs
+  local _n3 = _35(_x97)
   local _i3 = 0
   while _i3 < _n3 do
-    local x = _x89[_i3 + 1]
+    local x = _x97[_i3 + 1]
     if f(x) then
       a(x)
     end
@@ -1327,18 +1342,18 @@ function ws63(s)
   end
 end
 function rtrim(s, ...)
-  local _r36 = unstash({...})
-  local _id14 = _r36
-  local f = _id14.f
+  local _r40 = unstash({...})
+  local _id16 = _r40
+  local f = _id16.f
   while some63(s) and (f or ws63)(char(s, edge(s))) do
     s = clip(s, 0, edge(s))
   end
   return(s)
 end
 function ltrim(s, ...)
-  local _r37 = unstash({...})
-  local _id15 = _r37
-  local f = _id15.f
+  local _r41 = unstash({...})
+  local _id17 = _r41
+  local f = _id17.f
   while some63(s) and (f or ws63)(char(s, 0)) do
     s = clip(s, 1, _35(s))
   end
@@ -1352,17 +1367,17 @@ function startswith(s, prefix)
   return(search(s, prefix) == 0)
 end
 function pr(...)
-  local _r40 = unstash({...})
-  local _id16 = _r40
-  local sep = _id16.sep
-  local l = cut(_id16, 0)
+  local _r44 = unstash({...})
+  local _id18 = _r44
+  local sep = _id18.sep
+  local l = cut(_id18, 0)
   local c = nil
   if sep then
-    local _x95 = l
-    local _n4 = _35(_x95)
+    local _x103 = l
+    local _n4 = _35(_x103)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x95[_i4 + 1]
+      local x = _x103[_i4 + 1]
       if c then
         write(c)
       else
@@ -1372,11 +1387,11 @@ function pr(...)
       _i4 = _i4 + 1
     end
   else
-    local _x96 = l
-    local _n5 = _35(_x96)
+    local _x104 = l
+    local _n5 = _35(_x104)
     local _i5 = 0
     while _i5 < _n5 do
-      local x = _x96[_i5 + 1]
+      local x = _x104[_i5 + 1]
       write(str(x))
       _i5 = _i5 + 1
     end
@@ -1386,9 +1401,9 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r42 = unstash({...})
-  local _id18 = _r42
-  local bs = cut(_id18, 0)
+  local _r46 = unstash({...})
+  local _id20 = _r46
+  local bs = cut(_id20, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
 end})
@@ -1419,13 +1434,13 @@ end})
 if host63("luajit") then
   ffi = require("ffi")
   setenv("defc", {_stash = true, macro = function (name, val)
-    local _e5
+    local _e7
     if id_literal63(val) then
-      _e5 = inner(val)
+      _e7 = inner(val)
     else
-      _e5 = val
+      _e7 = val
     end
-    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e5}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e7}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
   end})
   ffi.cdef("int usleep (unsigned int usecs)")
   usleep = ffi.C.usleep
@@ -1567,16 +1582,56 @@ function tree(path, ...)
   local s = _e2
   return(split(s, "\n"))
 end
+function unlit(x)
+  if id_literal63(x) then
+    return(inner(x))
+  else
+    return(x)
+  end
+end
+function replacing(str, x, y)
+  local self = nil
+  self = function (str, x, y)
+    local pos = search(str, x)
+    if pos then
+      return(clip(str, 0, pos) .. y .. self(clip(str, pos + _35(x)), x, y))
+    else
+      local _pos = str
+      return(_pos)
+    end
+  end
+  return(self(unlit(str), unlit(x), unlit(y)))
+end
+local _tolit = nil
+_tolit = function (x)
+  if not atom63(x) then
+    return(x)
+  else
+    if id_literal63(x) then
+      return({"quote", inner(x)})
+    else
+      if string63(x) then
+        return(x)
+      else
+        return({"quote", x})
+      end
+    end
+  end
+end
+setenv("replace", {_stash = true, macro = function (str, x, y)
+  return({"replacing", _tolit(str), _tolit(x), _tolit(y)})
+end})
+replace = replacing
 function _36(...)
   local args = unstash({...})
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x27 = args
-  local _n = _35(_x27)
+  local _x31 = args
+  local _n = _35(_x31)
   local _i = 0
   while _i < _n do
-    local arg = _x27[_i + 1]
+    local arg = _x31[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1607,17 +1662,17 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r23 = unstash({...})
-  local _id6 = _r23
+  local _r29 = unstash({...})
+  local _id6 = _r29
   local args = cut(_id6, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x29 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x29.hush = true
-  return(apply(_36, join(_x29, args)))
+  local _x33 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x33.hush = true
+  return(apply(_36, join(_x33, args)))
 end
 function gitdir(path)
   local dst = j(path, ".monki", "git")
@@ -1704,11 +1759,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x32 = argv
-  local _n2 = _35(_x32)
+  local _x36 = argv
+  local _n2 = _35(_x36)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x32[_i2 + 1]
+    local arg = _x36[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else
