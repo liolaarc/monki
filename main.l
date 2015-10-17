@@ -97,10 +97,13 @@
              ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
     (split s "\n")))
 
+;
+; Application.
+;
+
 (def $ args
   (let hush (get args 'hush)
-    (let (c ""
-          cmds ())
+    (let (c "" cmds ())
       (step arg args
         (if (= arg ";") (do (add cmds c)
                             (set c ""))
@@ -124,7 +127,13 @@
   (unless (= what "clone")
     (unless (git? path)
       (error (cat "no .git at " path))))
-  (apply $ (join (list "git" (cat "--git-dir=" (q (j path ".git"))) what) args)))
+  (apply $ (join (list hush: true "git" (cat "--git-dir=" (q (j path ".git"))) what) args)))
+
+(def gitdir (path)
+  (let dst (j path ".monki" "git")
+    (unless (git? dst)
+      (error (cat "no .git at " dst)))
+    dst))
 
 (def clone (repo revision)
   (when (or (not repo) (none? repo))
@@ -172,22 +181,32 @@
   (prn " e.g.  monki clone laarc/monki monki"))
 
 (def mmain (argv)
+  ; eval files in subdirs.
   (when (none? (or argv ()))
     (return (monkitree (pwd))))
+  ; help.
   (when (in? (at argv 0) (list "-h" "--help" "help"))
     (musage)
     (return))
-  (when (= (at argv 0) "clone")
-    (unless (> (len argv) 1)
-      (musage)
-      (return))
-    (let dst (at argv (edge argv))
-      (when (dir? dst)
-        (error (cat "monki clone: already exists: " dst)))
-      (mkdir dst)
-      ($ "echo" (cat "(clone " (inner (string (cut argv 1 (edge argv)))) ")")
-         ">" (j dst "monki.l"))
-      (return (monkitree dst))))
+  (let (op (at argv 0)
+        params (cut argv 1))
+    ; clone.
+    (when (= op "clone")
+      (unless (> (len argv) 1)
+        (musage)
+        (return))
+      (let dst (at argv (edge argv))
+        (when (dir? dst)
+          (error (cat "monki clone: already exists: " dst)))
+        (mkdir dst)
+        ($ "echo" (cat "(clone " (inner (string (cut params 0 (edge params)))) ")")
+           ">" (j dst "monki.l"))
+        (return (monkitree dst))))
+    ; git.
+    (when (= op "git")
+      (prn (apply git (join (list (gitdir (pwd))) (or params ()))))
+      (return)))
+  ; eval files.
   (step arg argv
     (if (dir? arg) (monkitree arg)
         (endswith arg ".l") (monki arg)
