@@ -62,9 +62,10 @@ fi
 
 if [ -z "${REPL}" ]; then
   args="-e nil"
+else
+  rlwrap="`which rlwrap`"
 fi
 
-rlwrap="`which rlwrap`"
 if [ ! -z "$rlwrap" ]; then
   cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}" $args
 else
