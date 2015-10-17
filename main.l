@@ -88,6 +88,7 @@
        ,@body
        (popd))))
 
+
 (def tree (path :match)
   (unless (dir? path)
     (error (cat "tree: not a dir: " path)))
@@ -100,6 +101,30 @@
 ;
 ; Application.
 ;
+
+(def unlit (x)
+  (if (id-literal? x) (inner x)
+    x))
+
+(def replacing (str x y)
+  (lfn self (str x y)
+       (iflet pos (search str x)
+         (cat (clip str 0 pos)
+              y
+              (self (clip str (+ pos (# x))) x y))
+         str)
+    (self (unlit str) (unlit x) (unlit y))))
+
+(lfn tolit (x)
+  (if (not (atom? x)) x
+      (id-literal? x) (list 'quote (inner x))
+      (string? x) x
+    (list 'quote x))
+
+(mac replace (str x y)
+  `(replacing ,(tolit str) ,(tolit x) ,(tolit y))))
+
+(def replace replacing) ; a sneaky hack to make (apply replace '(foo o z)) work.
 
 (def $ args
   (let hush (get args 'hush)
@@ -127,7 +152,9 @@
   (unless (= what "clone")
     (unless (git? path)
       (error (cat "no .git at " path))))
-  (apply $ (join (list hush: true "git" (cat "--git-dir=" (q (j path ".git"))) what) args)))
+  (apply $ (join (list hush: true "git"
+                       (cat "--git-dir=" (q (j path ".git")))
+                       what) args)))
 
 (def gitdir (path)
   (let dst (j path ".monki" "git")
