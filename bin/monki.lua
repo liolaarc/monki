@@ -1084,6 +1084,7 @@ local read_all = reader["read-all"]
 local system = require("system")
 local write = system.write
 local read_file = system["read-file"]
+env = system["get-environment-variable"]
 function readstr(s)
   return(read_all(reader_stream(s)))
 end
@@ -1094,11 +1095,18 @@ function load(file, ...)
   if verbose then
     print("Loading " .. file)
   end
+  local noisy = env("VERBOSE")
   local _x1 = readstr(read_file(file))
   local _n = _35(_x1)
   local _i = 0
   while _i < _n do
     local expr = _x1[_i + 1]
+    if noisy then
+      prn(string(expr))
+    end
+    if noisy then
+      prn(comp(expr))
+    end
     local _x2 = nil
     local _msg = nil
     local _e = xpcall(function ()
@@ -1396,7 +1404,6 @@ end
 function readfile(path)
   return(readstr(filechars(path)))
 end
-env = system["get-environment-variable"]
 function args()
   return(split(env("cmdline"), " "))
 end
@@ -1608,7 +1615,16 @@ function git(path, what, ...)
       error("no .git at " .. path)
     end
   end
-  return(apply(_36, join({"git", "--git-dir=" .. q(j(path, ".git")), what}, args)))
+  local _x29 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x29.hush = true
+  return(apply(_36, join(_x29, args)))
+end
+function gitdir(path)
+  local dst = j(path, ".monki", "git")
+  if not git63(dst) then
+    error("no .git at " .. dst)
+  end
+  return(dst)
 end
 function clone(repo, revision)
   if not repo or none63(repo) then
@@ -1669,7 +1685,9 @@ function mmain(argv)
     musage()
     return
   end
-  if argv[1] == "clone" then
+  local op = argv[1]
+  local params = cut(argv, 1)
+  if op == "clone" then
     if not( _35(argv) > 1) then
       musage()
       return
@@ -1679,14 +1697,18 @@ function mmain(argv)
       error("monki clone: already exists: " .. dst)
     end
     mkdir(dst)
-    _36("echo", "(clone " .. inner(string(cut(argv, 1, edge(argv)))) .. ")", ">", j(dst, "monki.l"))
+    _36("echo", "(clone " .. inner(string(cut(params, 0, edge(params)))) .. ")", ">", j(dst, "monki.l"))
     return(monkitree(dst))
   end
-  local _x31 = argv
-  local _n2 = _35(_x31)
+  if op == "git" then
+    prn(apply(git, join({gitdir(pwd())}, params or {})))
+    return
+  end
+  local _x32 = argv
+  local _n2 = _35(_x32)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x31[_i2 + 1]
+    local arg = _x32[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else

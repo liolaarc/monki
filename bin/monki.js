@@ -1186,6 +1186,7 @@ var read_all = reader["read-all"];
 var system = require("system");
 var write = system.write;
 var read_file = system["read-file"];
+env = system["get-environment-variable"];
 readstr = function (s) {
   return(read_all(reader_stream(s)));
 };
@@ -1196,11 +1197,18 @@ load = function (file) {
   if (verbose) {
     print("Loading " + file);
   }
+  var noisy = env("VERBOSE");
   var _x = readstr(read_file(file));
   var _n = _35(_x);
   var _i = 0;
   while (_i < _n) {
     var expr = _x[_i];
+    if (noisy) {
+      prn(string(expr));
+    }
+    if (noisy) {
+      prn(comp(expr));
+    }
     var _id1 = (function () {
       try {
         return([true, eval(expr)]);
@@ -1504,7 +1512,6 @@ filechars = function (path) {
 readfile = function (path) {
   return(readstr(filechars(path)));
 };
-env = system["get-environment-variable"];
 args = function () {
   return(split(env("cmdline"), " "));
 };
@@ -1689,7 +1696,16 @@ git = function (path, what) {
       throw new Error("no .git at " + path);
     }
   }
-  return(apply(_36, join(["git", "--git-dir=" + q(j(path, ".git")), what], args)));
+  var _x22 = ["git", "--git-dir=" + q(j(path, ".git")), what];
+  _x22.hush = true;
+  return(apply(_36, join(_x22, args)));
+};
+gitdir = function (path) {
+  var dst = j(path, ".monki", "git");
+  if (! git63(dst)) {
+    throw new Error("no .git at " + dst);
+  }
+  return(dst);
 };
 clone = function (repo, revision) {
   if (! repo || none63(repo)) {
@@ -1757,7 +1773,9 @@ mmain = function (argv) {
     musage();
     return;
   }
-  if (argv[0] === "clone") {
+  var op = argv[0];
+  var params = cut(argv, 1);
+  if (op === "clone") {
     if (!( _35(argv) > 1)) {
       musage();
       return;
@@ -1767,14 +1785,18 @@ mmain = function (argv) {
       throw new Error("monki clone: already exists: " + dst);
     }
     mkdir(dst);
-    _36("echo", "(clone " + inner(string(cut(argv, 1, edge(argv)))) + ")", ">", j(dst, "monki.l"));
+    _36("echo", "(clone " + inner(string(cut(params, 0, edge(params)))) + ")", ">", j(dst, "monki.l"));
     return(monkitree(dst));
   }
-  var _x24 = argv;
-  var _n2 = _35(_x24);
+  if (op === "git") {
+    prn(apply(git, join([gitdir(pwd())], params || [])));
+    return;
+  }
+  var _x25 = argv;
+  var _n2 = _35(_x25);
   var _i2 = 0;
   while (_i2 < _n2) {
-    var arg = _x24[_i2];
+    var arg = _x25[_i2];
     if (dir63(arg)) {
       monkitree(arg);
     } else {
