@@ -1437,22 +1437,33 @@ end
 function readfile(path)
   return(readstr(filechars(path)))
 end
+function doshell(...)
+  local args = unstash({...})
+  return(rtrim(shell(apply(cat, intersperse(" ", args)))))
+end
 function mvfile(src, dst)
-  local s = "mv "
-  s = s .. escape(src)
-  s = s .. " "
-  s = s .. escape(dst)
-  shell(s)
+  doshell("mv", escape(src), escape(dst))
   return(dst)
 end
+function getmod(file)
+  return(doshell("stat -r", escape(file), "| awk '{ print $3; }'"))
+end
+function chmod(spec, file)
+  return(doshell("chmod", escape(spec), escape(file)))
+end
+function chmodx(file)
+  return(chmod("+x", file))
+end
 function writefile(path, contents)
+  local spec = getmod(path)
   write_file(path .. ".tmp", contents)
   mvfile(path .. ".tmp", path)
+  chmod(spec, path)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)
-  local _r55 = unstash({...})
-  local _id24 = _r55
+  local _r58 = unstash({...})
+  local _id24 = _r58
   local l = cut(_id24, 0)
   local gp = unique("gp")
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})

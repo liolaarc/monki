@@ -1545,22 +1545,33 @@ filechars = function (path) {
 readfile = function (path) {
   return(readstr(filechars(path)));
 };
+doshell = function () {
+  var args = unstash(Array.prototype.slice.call(arguments, 0));
+  return(rtrim(shell(apply(cat, intersperse(" ", args)))));
+};
 mvfile = function (src, dst) {
-  var s = "mv ";
-  s = s + escape(src);
-  s = s + " ";
-  s = s + escape(dst);
-  shell(s);
+  doshell("mv", escape(src), escape(dst));
   return(dst);
 };
+getmod = function (file) {
+  return(doshell("stat -r", escape(file), "| awk '{ print $3; }'"));
+};
+chmod = function (spec, file) {
+  return(doshell("chmod", escape(spec), escape(file)));
+};
+chmodx = function (file) {
+  return(chmod("+x", file));
+};
 writefile = function (path, contents) {
+  var spec = getmod(path);
   write_file(path + ".tmp", contents);
   mvfile(path + ".tmp", path);
+  chmod(spec, path);
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
-  var _r54 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id24 = _r54;
+  var _r57 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id24 = _r57;
   var l = cut(_id24, 0);
   var gp = unique("gp");
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);

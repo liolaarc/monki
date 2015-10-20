@@ -15,5 +15,4 @@ todo:
     vulnerable version of Monki.
 - Fix (shell cmd) to print to stdout rather than always capture
   stdout.
-- Fix writefile to preserve chmod flags of the target file.
 

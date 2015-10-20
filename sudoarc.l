@@ -248,18 +248,28 @@
 
 (def readfile (path) (readstr (filechars path)))
 
+(def doshell args
+  (rtrim (shell (apply cat (intersperse " " args)))))
+
 (def mvfile (src dst)
-  (let s "mv "
-    (cat! s (escape src))
-    (cat! s " ")
-    (cat! s (escape dst))
-    (shell s)
-    dst)) ; todo: nil for failure, non-nil for success.
+  (doshell "mv" (escape src) (escape dst))
+  dst) ; todo: nil for failure, non-nil for success.
+
+(def getmod (file)
+  (doshell "stat -r" (escape file) "| awk '{ print $3; }'"))
+
+(def chmod (spec file)
+  (doshell "chmod" (escape spec) (escape file)))
+
+(def chmodx (file)
+  (chmod "+x" file))
 
 (def writefile (path contents)
-  (write-file (cat path ".tmp") contents)
-  (mvfile (cat path ".tmp") path)
-  contents)
+  (let spec (getmod path)
+    (write-file (cat path ".tmp") contents)
+    (mvfile (cat path ".tmp") path)
+    (chmod spec path)
+    contents))
 
 (mac w/file (v path rest: l)
   (w/uniq gp
