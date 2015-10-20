@@ -1,5 +1,11 @@
 todo:
 
+- Add a `monki update` command.
+
+- Rename `monki clone` to `monki cp`.
+
+- Alias `monki` to `ki` via a symlink.
+
 - In a monki.l file, check whether the repository url of a clone
   operation has changed.  If so, rm -rf the subtree's .monki dir.
 
