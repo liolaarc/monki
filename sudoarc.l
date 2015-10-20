@@ -35,16 +35,15 @@
 (define-global load (file :verbose)
   (when verbose
     (print (cat "Loading " file)))
-  (let noisy (env "VERBOSE")
-    (step expr (readstr (read-file file))
-      (when noisy (prn (string expr)))
-      (when noisy (prn (comp expr)))
-      (let ((ok x) (guard (eval expr)))
-        (unless ok
-          (prn "Error in " file ": ")
-          (prn "   " x)
-          (prn "The error occurred while evaluating: ")
-          (prn expr))))))
+  (step expr (readstr (read-file file))
+    (when (= "1" (env "VERBOSE")) (prn (string expr)))
+    (when (= "1" (env "COMP")) (prn (comp expr)))
+    (let ((ok x) (guard (eval expr)))
+      (unless ok
+        (prn "Error in " file ": ")
+        (prn "   " x)
+        (prn "The error occurred while evaluating: ")
+        (prn expr)))))
 
 (define-macro mac l
   `(define-macro ,@l))
