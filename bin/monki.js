@@ -1770,10 +1770,10 @@ test = function () {
 };
 rebuild = function (count) {
   clean();
-  var i = 0;
-  while (i < count) {
+  var _g1 = 0;
+  while (_g1 < (count || 1)) {
     build();
-    i = i + 1;
+    _g1 = _g1 + 1;
   }
 };
 unlit = function (x) {
@@ -1941,9 +1941,9 @@ monki = function (path) {
   _36("cp", file, j(".monki", "tmp"));
   load(realpath(file), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
-  var _g1 = _36("rm", j(".monki", "tmp", file));
+  var _g2 = _36("rm", j(".monki", "tmp", file));
   popd();
-  return(_g1);
+  return(_g2);
 };
 monkitree = function (path) {
   var _o = tree(path, "/monki.l$");
@@ -1959,9 +1959,9 @@ monkitree = function (path) {
     var __i1 = _e5;
     pushd(path);
     prn(j(pwd(), file));
-    var _g2 = monki(file);
+    var _g3 = monki(file);
     popd();
-    _g2;
+    _g3;
   }
 };
 musage = function () {

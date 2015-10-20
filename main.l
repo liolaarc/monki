@@ -125,7 +125,7 @@
 
 (def rebuild (count)
   (clean)
-  (for i count
+  (repeat (or count 1)
     (build)))
 
 ;

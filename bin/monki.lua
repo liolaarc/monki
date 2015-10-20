@@ -1691,10 +1691,10 @@ function test()
 end
 function rebuild(count)
   clean()
-  local i = 0
-  while i < count do
+  local _g1 = 0
+  while _g1 < (count or 1) do
     build()
-    i = i + 1
+    _g1 = _g1 + 1
   end
 end
 function unlit(x)
@@ -1862,9 +1862,9 @@ function monki(path)
   _36("cp", file, j(".monki", "tmp"))
   load(realpath(file), {_stash = true, verbose = true})
   _36("cp", j(".monki", "tmp", file), file)
-  local _g1 = _36("rm", j(".monki", "tmp", file))
+  local _g2 = _36("rm", j(".monki", "tmp", file))
   popd()
-  return(_g1)
+  return(_g2)
 end
 function monkitree(path)
   local _o = tree(path, "/monki.l$")
@@ -1873,9 +1873,9 @@ function monkitree(path)
     local file = _o[_i1]
     pushd(path)
     prn(j(pwd(), file))
-    local _g2 = monki(file)
+    local _g3 = monki(file)
     popd()
-    _g2
+    _g3
   end
 end
 function musage()
