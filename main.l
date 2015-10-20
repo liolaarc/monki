@@ -130,6 +130,14 @@
   `(replace1 ,@(map tolit args))))
 (def replace1 replace) ; a sneaky hack to make (apply replace '(foo o z)) work.
 
+(mac patch (file x y)
+  (w/uniq g
+    `(w/file ,g (j (getcwd) ,file)
+       (replace ,g ,x ,y))))
+
+(def touch (files)
+  (apply $ `(touch ,@(listify files))))
+
 (def $ args
   (let hush (get args 'hush)
     (let (c "" cmds ())
