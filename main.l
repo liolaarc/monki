@@ -89,9 +89,8 @@
     `(let ,g ,path
        (mkdir ,g)
        (pushd ,g)
-       ,@body
-       (popd))))
-
+       (do1 (do ,@body)
+         (popd)))))
 
 (def tree (path :match)
   (unless (dir? path)
