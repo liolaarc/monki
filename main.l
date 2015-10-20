@@ -169,10 +169,21 @@
                        what) args)))
 
 (def gitdir (path)
-  (let dst (j path ".monki" "git")
+  (let dst (if path (j path ".monki" "git") (j ".monki" "git"))
     (unless (git? dst)
-      (error (cat "no .git at " dst)))
+      (let errmsg (cat "Error: no .git at " dst)
+        (prn errmsg)))
     dst))
+
+(def giturl (dst)
+  (when (git? dst)
+    (trim ($ "cat" (j dst ".git" "config")
+             "|" "grep" "-o" "url.*=.*"
+             "|" "cut" "-d'='" "-f2-"))))
+
+(def repo-changed? (dst repo)
+  (iflet url (giturl dst)
+    (not (= url repo))))
 
 (def clone (repo revision)
   (when (or (not repo) (none? repo))
@@ -180,9 +191,11 @@
   (unless (or (= "." (char repo 0))
               (search repo "://"))
     (set repo (cat "https://github.com/" repo)))
-  (mkdir (j ".monki" "git"))
+  (mkdir (gitdir))
   ($ "echo" "'*'" ">" (j ".monki" ".gitignore"))
-  (let dst (j ".monki" "git")
+  (let dst (gitdir)
+    (when (repo-changed? dst repo)
+      (rmrf dst))
     (unless (git? dst) ($ "git" "clone" "-n" repo dst))
     (unless (git? dst) (error (cat "could not clone " repo " to " dst)))
     (git dst "reset" "--" ".")

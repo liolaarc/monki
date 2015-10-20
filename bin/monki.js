@@ -1485,6 +1485,12 @@ ltrim = function (s) {
   }
   return(s);
 };
+trim = function (s) {
+  var _r44 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id20 = _r44;
+  var f = _id20.f;
+  return(rtrim(ltrim(s, {_stash: true, f: f}), {_stash: true, f: f}));
+};
 endswith = function (s, ending) {
   var i = _35(s) - _35(ending);
   return(i === search(s, ending, i));
@@ -1493,10 +1499,10 @@ startswith = function (s, prefix) {
   return(search(s, prefix) === 0);
 };
 pr = function () {
-  var _r46 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id20 = _r46;
-  var sep = _id20.sep;
-  var l = cut(_id20, 0);
+  var _r47 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id21 = _r47;
+  var sep = _id21.sep;
+  var l = cut(_id21, 0);
   var c = undefined;
   if (sep) {
     var _x74 = l;
@@ -1527,9 +1533,9 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r48 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id22 = _r48;
-  var bs = cut(_id22, 0);
+  var _r49 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id23 = _r49;
+  var bs = cut(_id23, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
 }});
@@ -1569,9 +1575,9 @@ writefile = function (path, contents) {
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
-  var _r57 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id24 = _r57;
-  var l = cut(_id24, 0);
+  var _r58 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id25 = _r58;
+  var l = cut(_id25, 0);
   var gp = unique("gp");
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
 }});
@@ -1642,8 +1648,8 @@ docmd = function (cmdline) {
     try {
       return([true, shell(cmdline)]);
     }
-    catch (_e2) {
-      return([false, _e2.message]);
+    catch (_e3) {
+      return([false, _e3.message]);
     }
   })()[1]);
 };
@@ -1822,11 +1828,29 @@ git = function (path, what) {
   return(apply(_36, join(_x39, args)));
 };
 gitdir = function (path) {
-  var dst = j(path, ".monki", "git");
+  var _e1;
+  if (path) {
+    _e1 = j(path, ".monki", "git");
+  } else {
+    _e1 = j(".monki", "git");
+  }
+  var dst = _e1;
   if (! git63(dst)) {
-    throw new Error("no .git at " + dst);
+    var errmsg = "Error: no .git at " + dst;
+    prn(errmsg);
   }
   return(dst);
+};
+giturl = function (dst) {
+  if (git63(dst)) {
+    return(trim(_36("cat", j(dst, ".git", "config"), "|", "grep", "-o", "url.*=.*", "|", "cut", "-d'='", "-f2-")));
+  }
+};
+repo_changed63 = function (dst, repo) {
+  var url = giturl(dst);
+  if (url) {
+    return(!( url === repo));
+  }
 };
 clone = function (repo, revision) {
   if (! repo || none63(repo)) {
@@ -1835,9 +1859,12 @@ clone = function (repo, revision) {
   if (!( "." === char(repo, 0) || search(repo, "://"))) {
     repo = "https://github.com/" + repo;
   }
-  mkdir(j(".monki", "git"));
+  mkdir(gitdir());
   _36("echo", "'*'", ">", j(".monki", ".gitignore"));
-  var dst = j(".monki", "git");
+  var dst = gitdir();
+  if (repo_changed63(dst, repo)) {
+    rmrf(dst);
+  }
   if (! git63(dst)) {
     _36("git", "clone", "-n", repo, dst);
   }
@@ -1868,13 +1895,13 @@ monkitree = function (path) {
   var _i1 = undefined;
   for (_i1 in _o) {
     var file = _o[_i1];
-    var _e1;
+    var _e2;
     if (numeric63(_i1)) {
-      _e1 = parseInt(_i1);
+      _e2 = parseInt(_i1);
     } else {
-      _e1 = _i1;
+      _e2 = _i1;
     }
-    var __i1 = _e1;
+    var __i1 = _e2;
     prn(file);
     monki(file);
   }

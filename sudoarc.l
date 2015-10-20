@@ -215,6 +215,9 @@
     (set s (clip s 1 (len s))))
   s)
 
+(def trim (s :f)
+  (rtrim (ltrim s f: f) f: f))
+
 (def endswith (s ending)
   (let i (- (len s) (len ending))
     (= i (search s ending i))))

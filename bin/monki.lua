@@ -1377,6 +1377,12 @@ function ltrim(s, ...)
   end
   return(s)
 end
+function trim(s, ...)
+  local _r45 = unstash({...})
+  local _id20 = _r45
+  local f = _id20.f
+  return(rtrim(ltrim(s, {_stash = true, f = f}), {_stash = true, f = f}))
+end
 function endswith(s, ending)
   local i = _35(s) - _35(ending)
   return(i == search(s, ending, i))
@@ -1385,17 +1391,17 @@ function startswith(s, prefix)
   return(search(s, prefix) == 0)
 end
 function pr(...)
-  local _r47 = unstash({...})
-  local _id20 = _r47
-  local sep = _id20.sep
-  local l = cut(_id20, 0)
+  local _r48 = unstash({...})
+  local _id21 = _r48
+  local sep = _id21.sep
+  local l = cut(_id21, 0)
   local c = nil
   if sep then
-    local _x96 = l
-    local _n4 = _35(_x96)
+    local _x97 = l
+    local _n4 = _35(_x97)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x96[_i4 + 1]
+      local x = _x97[_i4 + 1]
       if c then
         write(c)
       else
@@ -1405,11 +1411,11 @@ function pr(...)
       _i4 = _i4 + 1
     end
   else
-    local _x97 = l
-    local _n5 = _35(_x97)
+    local _x98 = l
+    local _n5 = _35(_x98)
     local _i5 = 0
     while _i5 < _n5 do
-      local x = _x97[_i5 + 1]
+      local x = _x98[_i5 + 1]
       write(str(x))
       _i5 = _i5 + 1
     end
@@ -1419,9 +1425,9 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r49 = unstash({...})
-  local _id22 = _r49
-  local bs = cut(_id22, 0)
+  local _r50 = unstash({...})
+  local _id23 = _r50
+  local bs = cut(_id23, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
 end})
@@ -1461,9 +1467,9 @@ function writefile(path, contents)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)
-  local _r58 = unstash({...})
-  local _id24 = _r58
-  local l = cut(_id24, 0)
+  local _r59 = unstash({...})
+  local _id25 = _r59
+  local l = cut(_id25, 0)
   local gp = unique("gp")
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
 end})
@@ -1743,11 +1749,29 @@ function git(path, what, ...)
   return(apply(_36, join(_x46, args)))
 end
 function gitdir(path)
-  local dst = j(path, ".monki", "git")
+  local _e3
+  if path then
+    _e3 = j(path, ".monki", "git")
+  else
+    _e3 = j(".monki", "git")
+  end
+  local dst = _e3
   if not git63(dst) then
-    error("no .git at " .. dst)
+    local errmsg = "Error: no .git at " .. dst
+    prn(errmsg)
   end
   return(dst)
+end
+function giturl(dst)
+  if git63(dst) then
+    return(trim(_36("cat", j(dst, ".git", "config"), "|", "grep", "-o", "url.*=.*", "|", "cut", "-d'='", "-f2-")))
+  end
+end
+function repo_changed63(dst, repo)
+  local url = giturl(dst)
+  if url then
+    return(not( url == repo))
+  end
 end
 function clone(repo, revision)
   if not repo or none63(repo) then
@@ -1756,9 +1780,12 @@ function clone(repo, revision)
   if not( "." == char(repo, 0) or search(repo, "://")) then
     repo = "https://github.com/" .. repo
   end
-  mkdir(j(".monki", "git"))
+  mkdir(gitdir())
   _36("echo", "'*'", ">", j(".monki", ".gitignore"))
-  local dst = j(".monki", "git")
+  local dst = gitdir()
+  if repo_changed63(dst, repo) then
+    rmrf(dst)
+  end
   if not git63(dst) then
     _36("git", "clone", "-n", repo, dst)
   end

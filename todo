@@ -5,8 +5,6 @@ todo:
 - Rename `monki clone` to `monki cp`?
 - Alias `monki` to `ki` via a symlink.
 - Add a `monki install` command that symlinks bin/monki to ~/bin.
-- When processing a monki.l file, check whether the repository url of
-  a clone operation has changed, and rm -rf the subtree's .monki dir.
 - When cloning from a local git repo, e.g. `monki clone ../foo foo`,
   automatically try to use ../foo/.git or ../foo/.monki/git/.git.
 - Embed monki's current version into a monki.l file.  Have monki
