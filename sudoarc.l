@@ -127,6 +127,11 @@
 (mac awhen l
   `(let-when it ,@l))
 
+(mac repeat (n rest: l)
+  (w/uniq g
+    `(for ,g ,n
+      ,@l)))
+
 (def atom (x)
   (or (atom? x) (function? x)))
 
