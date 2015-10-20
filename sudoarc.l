@@ -245,7 +245,7 @@
 (def readfile (path) (readstr (filechars path)))
 
 (def args () (split (env 'cmdline) " "))
-(def host () (env "LUMEN_HOST"))
+(def host () (or (env "LUMEN_HOST") ""))
 (def host? (x) (search (host) x))
 
 (mac import (name)
