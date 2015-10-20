@@ -159,6 +159,10 @@
       (set (get l k) v))
     l))
 
+(def listify (x)
+  (if (atom? x) (list x)
+    x))
+
 (def intersperse (x lst)
   (let sep nil
     (acc (each item lst
