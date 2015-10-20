@@ -1824,6 +1824,10 @@ setenv("patch", {_stash: true, macro: function (file, x, y) {
   var g = unique("g");
   return(["w/file", g, ["j", ["getcwd"], file], ["replace", g, x, y]]);
 }});
+setenv("create", {_stash: true, macro: function (file, x) {
+  var g = unique("g");
+  return(["let", g, ["j", ["getcwd"], file], ["touch", g], ["w/file", g, ["j", ["getcwd"], file], x]]);
+}});
 touch = function (files) {
   return(apply(_36, join(["touch"], listify(files))));
 };
@@ -1832,11 +1836,11 @@ _36 = function () {
   var hush = args.hush;
   var c = "";
   var cmds = [];
-  var _x40 = args;
-  var _n = _35(_x40);
+  var _x54 = args;
+  var _n = _35(_x54);
   var _i = 0;
   while (_i < _n) {
-    var arg = _x40[_i];
+    var arg = _x54[_i];
     if (arg === ";") {
       add(cmds, c);
       c = "";
@@ -1867,17 +1871,17 @@ git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r36 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id6 = _r36;
+  var _r38 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id6 = _r38;
   var args = cut(_id6, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
       throw new Error("no .git at " + path);
     }
   }
-  var _x41 = ["git", "--git-dir=" + q(j(path, ".git")), what];
-  _x41.hush = true;
-  return(apply(_36, join(_x41, args)));
+  var _x55 = ["git", "--git-dir=" + q(j(path, ".git")), what];
+  _x55.hush = true;
+  return(apply(_36, join(_x55, args)));
 };
 gitdir = function (path, nocheck) {
   var _e4;
@@ -1999,11 +2003,11 @@ mmain = function (argv) {
     prn(apply(git, join([gitdir(pwd())], params || [])));
     return;
   }
-  var _x44 = argv;
-  var _n2 = _35(_x44);
+  var _x58 = argv;
+  var _n2 = _35(_x58);
   var _i2 = 0;
   while (_i2 < _n2) {
-    var arg = _x44[_i2];
+    var arg = _x58[_i2];
     if (dir63(arg)) {
       monkitree(arg);
     } else {

@@ -162,6 +162,13 @@
     `(w/file ,g (j (getcwd) ,file)
        (replace ,g ,x ,y))))
 
+(mac create (file x)
+  (w/uniq g
+    `(let ,g (j (getcwd) ,file)
+       (touch ,g)
+       (w/file ,g (j (getcwd) ,file)
+         ,x))))
+
 (def touch (files)
   (apply $ `(touch ,@(listify files))))
 

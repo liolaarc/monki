@@ -1745,6 +1745,10 @@ setenv("patch", {_stash = true, macro = function (file, x, y)
   local g = unique("g")
   return({"w/file", g, {"j", {"getcwd"}, file}, {"replace", g, x, y}})
 end})
+setenv("create", {_stash = true, macro = function (file, x)
+  local g = unique("g")
+  return({"let", g, {"j", {"getcwd"}, file}, {"touch", g}, {"w/file", g, {"j", {"getcwd"}, file}, x}})
+end})
 function touch(files)
   return(apply(_36, join({"touch"}, listify(files))))
 end
@@ -1753,11 +1757,11 @@ function _36(...)
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x47 = args
-  local _n = _35(_x47)
+  local _x61 = args
+  local _n = _35(_x61)
   local _i = 0
   while _i < _n do
-    local arg = _x47[_i + 1]
+    local arg = _x61[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1788,17 +1792,17 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r37 = unstash({...})
-  local _id6 = _r37
+  local _r39 = unstash({...})
+  local _id6 = _r39
   local args = cut(_id6, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x49 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x49.hush = true
-  return(apply(_36, join(_x49, args)))
+  local _x63 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x63.hush = true
+  return(apply(_36, join(_x63, args)))
 end
 function gitdir(path, nocheck)
   local _e6
@@ -1913,11 +1917,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x52 = argv
-  local _n2 = _35(_x52)
+  local _x66 = argv
+  local _n2 = _35(_x66)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x52[_i2 + 1]
+    local arg = _x66[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else
