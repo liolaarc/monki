@@ -168,11 +168,12 @@
                        (cat "--git-dir=" (q (j path ".git")))
                        what) args)))
 
-(def gitdir (path)
+(def gitdir (path nocheck)
   (let dst (if path (j path ".monki" "git") (j ".monki" "git"))
-    (unless (git? dst)
-      (let errmsg (cat "Error: no .git at " dst)
-        (prn errmsg)))
+    (unless nocheck
+      (unless (git? dst)
+        (let errmsg (cat "Error: no .git at " dst)
+          (prn errmsg))))
     dst))
 
 (def giturl (dst)
@@ -191,9 +192,9 @@
   (unless (or (= "." (char repo 0))
               (search repo "://"))
     (set repo (cat "https://github.com/" repo)))
-  (mkdir (gitdir))
+  (mkdir (gitdir "." true))
   ($ "echo" "'*'" ">" (j ".monki" ".gitignore"))
-  (let dst (gitdir)
+  (let dst (gitdir "." true)
     (when (repo-changed? dst repo)
       (rmrf dst))
     (unless (git? dst) ($ "git" "clone" "-n" repo dst))
@@ -207,23 +208,23 @@
 (def monki (path)
   (let (dir (dirname path)
         file (basename path))
-    (cd dir)
-    ; copy the file, in case the repo we're cloning from contains a file
-    ; of the same name.
-    ($ "mkdir" "-p" (j ".monki" "tmp"))
-    ($ "cp" file (j ".monki" "tmp"))
-    ; run the file.
-    (load (realpath file)  verbose: true)
-    ; restore the file.
-    ($ "cp" (j ".monki" "tmp" file) file)
-    ($ "rm" (j ".monki" "tmp" file))
-    (resetcwd)))
+    (cd dir
+      ; copy the file, in case the repo we're cloning from contains a file
+      ; of the same name.
+      ($ "mkdir" "-p" (j ".monki" "tmp"))
+      ($ "cp" file (j ".monki" "tmp"))
+      ; run the file.
+      (load (realpath file)  verbose: true)
+      ; restore the file.
+      ($ "cp" (j ".monki" "tmp" file) file)
+      ($ "rm" (j ".monki" "tmp" file)))))
 
 ; recursively call monki on any file named "monki.l" under the path.
 (def monkitree (path)
   (each file (tree path "/monki.l$")
-    (prn file)
-    (monki file)))
+    (cd path
+      (prn (j (pwd) file))
+      (monki file))))
 
 (def musage ()
   (prn "  to run all monki.l files beneath a dir:")

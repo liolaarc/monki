@@ -1827,7 +1827,7 @@ git = function (path, what) {
   _x39.hush = true;
   return(apply(_36, join(_x39, args)));
 };
-gitdir = function (path) {
+gitdir = function (path, nocheck) {
   var _e1;
   if (path) {
     _e1 = j(path, ".monki", "git");
@@ -1835,9 +1835,11 @@ gitdir = function (path) {
     _e1 = j(".monki", "git");
   }
   var dst = _e1;
-  if (! git63(dst)) {
-    var errmsg = "Error: no .git at " + dst;
-    prn(errmsg);
+  if (! nocheck) {
+    if (! git63(dst)) {
+      var errmsg = "Error: no .git at " + dst;
+      prn(errmsg);
+    }
   }
   return(dst);
 };
@@ -1859,9 +1861,9 @@ clone = function (repo, revision) {
   if (!( "." === char(repo, 0) || search(repo, "://"))) {
     repo = "https://github.com/" + repo;
   }
-  mkdir(gitdir());
+  mkdir(gitdir(".", true));
   _36("echo", "'*'", ">", j(".monki", ".gitignore"));
-  var dst = gitdir();
+  var dst = gitdir(".", true);
   if (repo_changed63(dst, repo)) {
     rmrf(dst);
   }
@@ -1882,13 +1884,14 @@ clone = function (repo, revision) {
 monki = function (path) {
   var dir = dirname(path);
   var file = basename(path);
-  cd1(dir);
+  pushd(dir);
   _36("mkdir", "-p", j(".monki", "tmp"));
   _36("cp", file, j(".monki", "tmp"));
   load(realpath(file), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
-  _36("rm", j(".monki", "tmp", file));
-  return(resetcwd());
+  var _g1 = _36("rm", j(".monki", "tmp", file));
+  popd();
+  return(_g1);
 };
 monkitree = function (path) {
   var _o = tree(path, "/monki.l$");
@@ -1902,8 +1905,11 @@ monkitree = function (path) {
       _e2 = _i1;
     }
     var __i1 = _e2;
-    prn(file);
-    monki(file);
+    pushd(path);
+    prn(j(pwd(), file));
+    var _g2 = monki(file);
+    popd();
+    _g2;
   }
 };
 musage = function () {

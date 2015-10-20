@@ -1748,7 +1748,7 @@ function git(path, what, ...)
   _x46.hush = true
   return(apply(_36, join(_x46, args)))
 end
-function gitdir(path)
+function gitdir(path, nocheck)
   local _e3
   if path then
     _e3 = j(path, ".monki", "git")
@@ -1756,9 +1756,11 @@ function gitdir(path)
     _e3 = j(".monki", "git")
   end
   local dst = _e3
-  if not git63(dst) then
-    local errmsg = "Error: no .git at " .. dst
-    prn(errmsg)
+  if not nocheck then
+    if not git63(dst) then
+      local errmsg = "Error: no .git at " .. dst
+      prn(errmsg)
+    end
   end
   return(dst)
 end
@@ -1780,9 +1782,9 @@ function clone(repo, revision)
   if not( "." == char(repo, 0) or search(repo, "://")) then
     repo = "https://github.com/" .. repo
   end
-  mkdir(gitdir())
+  mkdir(gitdir(".", true))
   _36("echo", "'*'", ">", j(".monki", ".gitignore"))
-  local dst = gitdir()
+  local dst = gitdir(".", true)
   if repo_changed63(dst, repo) then
     rmrf(dst)
   end
@@ -1803,21 +1805,25 @@ end
 function monki(path)
   local dir = dirname(path)
   local file = basename(path)
-  cd1(dir)
+  pushd(dir)
   _36("mkdir", "-p", j(".monki", "tmp"))
   _36("cp", file, j(".monki", "tmp"))
   load(realpath(file), {_stash = true, verbose = true})
   _36("cp", j(".monki", "tmp", file), file)
-  _36("rm", j(".monki", "tmp", file))
-  return(resetcwd())
+  local _g1 = _36("rm", j(".monki", "tmp", file))
+  popd()
+  return(_g1)
 end
 function monkitree(path)
   local _o = tree(path, "/monki.l$")
   local _i1 = nil
   for _i1 in next, _o do
     local file = _o[_i1]
-    prn(file)
-    monki(file)
+    pushd(path)
+    prn(j(pwd(), file))
+    local _g2 = monki(file)
+    popd()
+    _g2
   end
 end
 function musage()
