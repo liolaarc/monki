@@ -1,19 +1,17 @@
 todo:
 
-- Add a `monki update` command.
-
-- Rename `monki clone` to `monki cp`.
-
+- Add a `monki update` command that causes monki to update itself.
+- Rename `monki clone` to `monki cp`?
 - Alias `monki` to `ki` via a symlink.
-
-- In a monki.l file, check whether the repository url of a clone
-  operation has changed.  If so, rm -rf the subtree's .monki dir.
-
+- Add a `monki install` command that symlinks bin/monki to ~/bin.
+- When processing a monki.l file, check whether the repository url of
+  a clone operation has changed, and rm -rf the subtree's .monki dir.
+- When cloning from a local git repo, e.g. `monki clone ../foo foo`,
+  automatically try to use ../foo/.git or ../foo/.monki/git/.git.
 - Embed monki's current version into a monki.l file.  Have monki
   sync itself to that version while processing a monki.l file.
-  
   - Note: Handle security fixes properly, i.e. refuse to sync to a
     vulnerable version of Monki.
-
-
+- Fix (shell cmd) to print to stdout rather than always capture
+  stdout.
 
