@@ -1,21 +1,27 @@
-local delimiters = {["("] = true, [")"] = true, ["\n"] = true, [";"] = true}
-local whitespace = {[" "] = true, ["\n"] = true, ["\t"] = true}
+local delimiters = {["("] = true, [")"] = true, [";"] = true, ["\n"] = true}
+local whitespace = {[" "] = true, ["\t"] = true, ["\n"] = true}
 local function stream(str, more)
-  return({more = more, pos = 0, len = _35(str), string = str})
+  return({pos = 0, string = str, len = _35(str), more = more})
 end
-local function peek_char(s)
+local function peek_char(s, count, offset)
   local _id = s
   local pos = _id.pos
   local len = _id.len
   local string = _id.string
-  if pos < len then
-    return(char(string, pos))
+  local from = pos + (offset or 0)
+  local n = count or 1
+  if from <= len - n then
+    if n == 1 then
+      return(char(string, from))
+    else
+      return(clip(string, from, from + n))
+    end
   end
 end
-local function read_char(s)
-  local c = peek_char(s)
+local function read_char(s, count, offset)
+  local c = peek_char(s, count, offset)
   if c then
-    s.pos = s.pos + 1
+    s.pos = s.pos + _35(c)
     return(c)
   end
 end
@@ -171,7 +177,36 @@ end
 read_table[")"] = function (s)
   error("Unexpected ) at " .. s.pos)
 end
+read_table["\"\"\""] = function (s)
+  read_char(s, 3)
+  local r = nil
+  local str = "\""
+  while nil63(r) do
+    local c = peek_char(s, 3)
+    if c == "\"\"\"" then
+      read_char(s, 3)
+      r = str .. "\""
+    else
+      if nil63(c) then
+        r = expected(s, "\"\"\"")
+      else
+        local x = read_char(s)
+        local _e1
+        if x == "\"" or x == "\\" then
+          _e1 = "\\" .. x
+        else
+          _e1 = x
+        end
+        str = str .. _e1
+      end
+    end
+  end
+  return(r)
+end
 read_table["\""] = function (s)
+  if peek_char(s, 3) == "\"\"\"" then
+    return(read_table["\"\"\""](s))
+  end
   read_char(s)
   local r = nil
   local str = "\""
@@ -227,4 +262,4 @@ read_table[","] = function (s)
     return(wrap(s, "unquote"))
   end
 end
-return({["read-string"] = read_string, ["read-all"] = read_all, read = read, ["read-table"] = read_table, stream = stream})
+return({stream = stream, read = read, ["read-all"] = read_all, ["read-string"] = read_string, ["read-table"] = read_table})

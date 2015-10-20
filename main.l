@@ -41,7 +41,8 @@
     x))
 
 (def docmd (cmdline)
-  (at (guard (shell cmdline)) 1))
+  ;(at (guard (shell cmdline)) 1))
+  (shell cmdline))
 
 (def cwd ".")
 (def getcwd () cwd)
@@ -96,10 +97,12 @@
   (unless (dir? path)
     (error (cat "tree: not a dir: " path)))
   (cd path
-    (let s (if pattern 
-               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" pattern)
-               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
-      (split s "\n"))))
+    (let s (trim (if pattern 
+               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" pattern "|" "cat")
+               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "cat")))
+      (if (and s (some? s))
+        (split s "\n")
+        (list)))))
 
 ;
 ; Application.
