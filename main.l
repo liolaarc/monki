@@ -187,8 +187,9 @@
     (unless (git? dst) (error (cat "could not clone " repo " to " dst)))
     (git dst "reset" "--" ".")
     (git dst "checkout" "--" ".")
+    (git dst "checkout" "master")
     (git dst "pull")
-    (when revision (git dst "checkout" revision "."))))
+    (when revision (git dst "checkout" revision))))
 
 (def monki (path)
   (let (dir (dirname path)
