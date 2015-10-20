@@ -265,11 +265,10 @@
   (chmod "+x" file))
 
 (def writefile (path contents)
-  (let spec (getmod path)
-    (write-file (cat path ".tmp") contents)
-    (mvfile (cat path ".tmp") path)
-    (chmod spec path)
-    contents))
+  (doshell "cp -fp" (escape path) (escape (cat path ".tmp")))
+  (write-file (cat path ".tmp") contents)
+  (mvfile (cat path ".tmp") path)
+  contents)
 
 (mac w/file (v path rest: l)
   (w/uniq gp

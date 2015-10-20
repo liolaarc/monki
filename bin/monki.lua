@@ -1455,10 +1455,9 @@ function chmodx(file)
   return(chmod("+x", file))
 end
 function writefile(path, contents)
-  local spec = getmod(path)
+  doshell("cp -fp", escape(path), escape(path .. ".tmp"))
   write_file(path .. ".tmp", contents)
   mvfile(path .. ".tmp", path)
-  chmod(spec, path)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)

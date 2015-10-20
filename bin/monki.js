@@ -1563,10 +1563,9 @@ chmodx = function (file) {
   return(chmod("+x", file));
 };
 writefile = function (path, contents) {
-  var spec = getmod(path);
+  doshell("cp -fp", escape(path), escape(path + ".tmp"));
   write_file(path + ".tmp", contents);
   mvfile(path + ".tmp", path);
-  chmod(spec, path);
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
