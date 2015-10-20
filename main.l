@@ -44,6 +44,7 @@
   (at (guard (shell cmdline)) 1))
 
 (def cwd ".")
+(def getcwd () cwd)
 
 (def pushds ())
 
