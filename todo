@@ -1,0 +1,13 @@
+todo:
+
+- In a monki.l file, check whether the repository url of a clone
+  operation has changed.  If so, rm -rf the subtree's .monki dir.
+
+- Embed monki's current version into a monki.l file.  Have monki
+  sync itself to that version while processing a monki.l file.
+  
+  - Note: Handle security fixes properly, i.e. refuse to sync to a
+    vulnerable version of Monki.
+
+
+
