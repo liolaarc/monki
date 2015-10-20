@@ -752,7 +752,7 @@ setenv("define-global", {_stash = true, macro = function (name, x, ...)
   local _r35 = unstash({...})
   local _id29 = _r35
   local body = cut(_id29, 0)
-  setenv(name, {_stash = true, variable = true, toplevel = true})
+  setenv(name, {_stash = true, toplevel = true, variable = true})
   if some63(body) then
     return(join({"%global-function", name}, bind42(x, body)))
   else
@@ -1075,15 +1075,20 @@ local function main()
     end
   end
 end
+setenv("define", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"define-global"}, l))
+end})
 function comp(expr)
   return(print(compile(macroexpand(expr))))
 end
-local reader = require("reader")
-local reader_stream = reader.stream
-local read_all = reader["read-all"]
-local system = require("system")
-local write = system.write
-local read_file = system["read-file"]
+reader = require("reader")
+reader_stream = reader.stream
+read_all = reader["read-all"]
+system = require("system")
+write = system.write
+read_file = system["read-file"]
+write_file = system["write-file"]
 env = system["get-environment-variable"]
 function readstr(s)
   return(read_all(reader_stream(s)))
@@ -1092,33 +1097,30 @@ function load(file, ...)
   local _r2 = unstash({...})
   local _id = _r2
   local verbose = _id.verbose
-  if verbose then
-    print("Loading " .. file)
-  end
-  local noisy = env("VERBOSE")
-  local _x1 = readstr(read_file(file))
-  local _n = _35(_x1)
+  print("Loading " .. file)
+  local _x4 = readstr(read_file(file))
+  local _n = _35(_x4)
   local _i = 0
   while _i < _n do
-    local expr = _x1[_i + 1]
-    if noisy then
+    local expr = _x4[_i + 1]
+    if env("VERBOSE") then
       prn(string(expr))
     end
-    if noisy then
+    if env("COMP") then
       prn(comp(expr))
     end
-    local _x2 = nil
+    local _x5 = nil
     local _msg = nil
     local _e = xpcall(function ()
-      _x2 = eval(expr)
-      return(_x2)
+      _x5 = eval(expr)
+      return(_x5)
     end, function (m)
       _msg = _37message_handler(m)
       return(_msg)
     end)
     local _e4
     if _e then
-      _e4 = _x2
+      _e4 = _x5
     else
       _e4 = _msg
     end
@@ -1130,6 +1132,9 @@ function load(file, ...)
       prn("   ", x)
       prn("The error occurred while evaluating: ")
       prn(expr)
+    end
+    if env("VERBOSE") then
+      prn(x)
     end
     _i = _i + 1
   end
@@ -1237,6 +1242,13 @@ setenv("awhen", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"let-when", "it"}, l))
 end})
+setenv("repeat", {_stash = true, macro = function (n, ...)
+  local _r23 = unstash({...})
+  local _id17 = _r23
+  local l = cut(_id17, 0)
+  local g = unique("g")
+  return(join({"for", g, n}, l))
+end})
 function atom(x)
   return(atom63(x) or function63(x))
 end
@@ -1275,6 +1287,13 @@ function copylist(xs)
   end
   return(l)
 end
+function listify(x)
+  if atom63(x) then
+    return({x})
+  else
+    return(x)
+  end
+end
 function intersperse(x, lst)
   local sep = nil
   local _g = {}
@@ -1305,11 +1324,11 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x97 = xs
-  local _n3 = _35(_x97)
+  local _x90 = xs
+  local _n3 = _35(_x90)
   local _i3 = 0
   while _i3 < _n3 do
-    local x = _x97[_i3 + 1]
+    local x = _x90[_i3 + 1]
     if f(x) then
       a(x)
     end
@@ -1342,18 +1361,18 @@ function ws63(s)
   end
 end
 function rtrim(s, ...)
-  local _r40 = unstash({...})
-  local _id16 = _r40
-  local f = _id16.f
+  local _r43 = unstash({...})
+  local _id18 = _r43
+  local f = _id18.f
   while some63(s) and (f or ws63)(char(s, edge(s))) do
     s = clip(s, 0, edge(s))
   end
   return(s)
 end
 function ltrim(s, ...)
-  local _r41 = unstash({...})
-  local _id17 = _r41
-  local f = _id17.f
+  local _r44 = unstash({...})
+  local _id19 = _r44
+  local f = _id19.f
   while some63(s) and (f or ws63)(char(s, 0)) do
     s = clip(s, 1, _35(s))
   end
@@ -1367,17 +1386,17 @@ function startswith(s, prefix)
   return(search(s, prefix) == 0)
 end
 function pr(...)
-  local _r44 = unstash({...})
-  local _id18 = _r44
-  local sep = _id18.sep
-  local l = cut(_id18, 0)
+  local _r47 = unstash({...})
+  local _id20 = _r47
+  local sep = _id20.sep
+  local l = cut(_id20, 0)
   local c = nil
   if sep then
-    local _x103 = l
-    local _n4 = _35(_x103)
+    local _x96 = l
+    local _n4 = _35(_x96)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x103[_i4 + 1]
+      local x = _x96[_i4 + 1]
       if c then
         write(c)
       else
@@ -1387,11 +1406,11 @@ function pr(...)
       _i4 = _i4 + 1
     end
   else
-    local _x104 = l
-    local _n5 = _35(_x104)
+    local _x97 = l
+    local _n5 = _35(_x97)
     local _i5 = 0
     while _i5 < _n5 do
-      local x = _x104[_i5 + 1]
+      local x = _x97[_i5 + 1]
       write(str(x))
       _i5 = _i5 + 1
     end
@@ -1401,9 +1420,9 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r46 = unstash({...})
-  local _id20 = _r46
-  local bs = cut(_id20, 0)
+  local _r49 = unstash({...})
+  local _id22 = _r49
+  local bs = cut(_id22, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
 end})
@@ -1413,9 +1432,29 @@ function prn(...)
   pr("\n")
   return(_g3)
 end
+function mvfile(src, dst)
+  local s = "mv "
+  s = s .. escape(src)
+  s = s .. " "
+  s = s .. escape(dst)
+  shell(s)
+  return(dst)
+end
 function filechars(path)
   return(read_file(path))
 end
+function writefile(path, contents)
+  write_file(path .. ".tmp", contents)
+  mvfile(path .. ".tmp", path)
+  return(contents)
+end
+setenv("w/file", {_stash = true, macro = function (v, path, ...)
+  local _r54 = unstash({...})
+  local _id24 = _r54
+  local l = cut(_id24, 0)
+  local gp = unique("gp")
+  return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
+end})
 function readfile(path)
   return(readstr(filechars(path)))
 end
@@ -1423,7 +1462,7 @@ function args()
   return(split(env("cmdline"), " "))
 end
 function host()
-  return(env("LUMEN_HOST"))
+  return(env("LUMEN_HOST") or "")
 end
 function host63(x)
   return(search(host(), x))
@@ -1450,11 +1489,13 @@ if host63("luajit") then
   end
 end
 function shell(cmd)
-  local popen = io.popen
-  local h = popen(cmd)
-  local _g4 = h.read(h, "*a")
-  h.close(h)
-  return(_g4)
+  function exec(s)
+    local h = io.popen(cmd)
+    local _g4 = h.read(h, "*a")
+    h.close(h)
+    return(_g4)
+  end
+  return(exec(cmd))
 end
 local _sys = require("system")
 j = _sys["path-join"]
@@ -1519,6 +1560,9 @@ function docmd(cmdline)
   return(({_e, _e1})[2])
 end
 cwd = "."
+function getcwd()
+  return(cwd)
+end
 pushds = {}
 function pushd(path)
   add(pushds, pwd())
@@ -1541,6 +1585,17 @@ function cd(path)
   end
   return(pwd())
 end
+cd1 = cd
+setenv("cd", {_stash = true, macro = function (path, ...)
+  local _r16 = unstash({...})
+  local _id2 = _r16
+  local l = cut(_id2, 0)
+  if none63(l) then
+    return({"cd1", path})
+  else
+    return({"do", {"pushd", path}, {"do1", join({"do"}, l), {"popd"}}})
+  end
+end})
 function resetcwd()
   cwd = "."
   pushds = {}
@@ -1549,38 +1604,31 @@ end
 function pwd()
   return(_36("pwd", {_stash = true, hush = true}))
 end
-setenv("w/pushd", {_stash = true, macro = function (path, ...)
-  local _r17 = unstash({...})
-  local _id2 = _r17
-  local body = cut(_id2, 0)
-  return(join({"do", {"pushd", path}}, body, {{"popd"}}))
-end})
 function mkdir(path)
   return(_36("mkdir", "-p", path))
 end
 setenv("w/mkdir", {_stash = true, macro = function (path, ...)
-  local _r20 = unstash({...})
-  local _id4 = _r20
+  local _r21 = unstash({...})
+  local _id4 = _r21
   local body = cut(_id4, 0)
   local g = unique("g")
-  return(join({"let", g, path, {"mkdir", g}, {"pushd", g}}, body, {{"popd"}}))
+  return({"let", g, path, {"mkdir", g}, {"pushd", g}, {"do1", join({"do"}, body), {"popd"}}})
 end})
-function tree(path, ...)
-  local _r21 = unstash({...})
-  local _id5 = _r21
-  local match = _id5.match
+function tree(path, pattern)
   if not dir63(path) then
     error("tree: not a dir: " .. path)
   end
   pushd(path)
   local _e2
-  if match then
-    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", match)
+  if pattern then
+    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern)
   else
     _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'")
   end
   local s = _e2
-  return(split(s, "\n"))
+  local _g = split(s, "\n")
+  popd()
+  return(_g)
 end
 function unlit(x)
   if id_literal63(x) then
@@ -1589,18 +1637,21 @@ function unlit(x)
     return(x)
   end
 end
-function replacing(str, x, y)
+function replace(str, x, y, count)
   local self = nil
-  self = function (str, x, y)
+  self = function (str, x, y, count)
+    if count and count == 0 then
+      return(str)
+    end
     local pos = search(str, x)
     if pos then
-      return(clip(str, 0, pos) .. y .. self(clip(str, pos + _35(x)), x, y))
+      return(clip(str, 0, pos) .. y .. self(clip(str, pos + _35(x)), x, y, count and count - 1))
     else
       local _pos = str
       return(_pos)
     end
   end
-  return(self(unlit(str), unlit(x), unlit(y)))
+  return(self(unlit(str), unlit(x), unlit(y), count))
 end
 local _tolit = nil
 _tolit = function (x)
@@ -1618,20 +1669,28 @@ _tolit = function (x)
     end
   end
 end
-setenv("replace", {_stash = true, macro = function (str, x, y)
-  return({"replacing", _tolit(str), _tolit(x), _tolit(y)})
+setenv("replace", {_stash = true, macro = function (...)
+  local args = unstash({...})
+  return(join({"replace1"}, map(_tolit, args)))
 end})
-replace = replacing
+replace1 = replace
+setenv("patch", {_stash = true, macro = function (file, x, y)
+  local g = unique("g")
+  return({"w/file", g, {"j", {"getcwd"}, file}, {"replace", g, x, y}})
+end})
+function touch(files)
+  return(apply(_36, join({"touch"}, listify(files))))
+end
 function _36(...)
   local args = unstash({...})
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x31 = args
-  local _n = _35(_x31)
+  local _x44 = args
+  local _n = _35(_x44)
   local _i = 0
   while _i < _n do
-    local arg = _x31[_i + 1]
+    local arg = _x44[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1653,7 +1712,7 @@ function _36(...)
   if not( cwd == ".") then
     cmdline = "cd " .. q(cwd) .. "; " .. cmdline
   end
-  if not hush or env("VERBOSE") then
+  if not env("QUIET") and (not hush or env("VERBOSE")) then
     prn(cmdline)
   end
   return(rtrim(docmd(cmdline)))
@@ -1662,17 +1721,17 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r29 = unstash({...})
-  local _id6 = _r29
-  local args = cut(_id6, 0)
+  local _r31 = unstash({...})
+  local _id5 = _r31
+  local args = cut(_id5, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x33 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x33.hush = true
-  return(apply(_36, join(_x33, args)))
+  local _x46 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x46.hush = true
+  return(apply(_36, join(_x46, args)))
 end
 function gitdir(path)
   local dst = j(path, ".monki", "git")
@@ -1699,15 +1758,16 @@ function clone(repo, revision)
   end
   git(dst, "reset", "--", ".")
   git(dst, "checkout", "--", ".")
+  git(dst, "checkout", "master")
   git(dst, "pull")
   if revision then
-    return(git(dst, "checkout", revision, "."))
+    return(git(dst, "checkout", revision))
   end
 end
 function monki(path)
   local dir = dirname(path)
   local file = basename(path)
-  cd(dir)
+  cd1(dir)
   _36("mkdir", "-p", j(".monki", "tmp"))
   _36("cp", file, j(".monki", "tmp"))
   load(realpath(file), {_stash = true, verbose = true})
@@ -1716,7 +1776,7 @@ function monki(path)
   return(resetcwd())
 end
 function monkitree(path)
-  local _o = tree(path, {_stash = true, match = "/monki.l$"})
+  local _o = tree(path, "/monki.l$")
   local _i1 = nil
   for _i1 in next, _o do
     local file = _o[_i1]
@@ -1759,11 +1819,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x36 = argv
-  local _n2 = _35(_x36)
+  local _x49 = argv
+  local _n2 = _35(_x49)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x36[_i2 + 1]
+    local arg = _x49[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else

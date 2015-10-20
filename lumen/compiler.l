@@ -233,7 +233,6 @@
   (or (number-code? n)         ; 0-9
       (and (> n 64) (< n 91))  ; A-Z
       (and (> n 96) (< n 123)) ; a-z
-      (= n 46)                 ; .
       (= n 95)))               ; _
 
 (define-global valid-id? (id)
@@ -321,6 +320,9 @@
       (string-literal? x) (escape-newlines x)
       (string? x) (id x)
       (boolean? x) (if x "true" "false")
+      (nan? x) "nan"
+      (= x inf) "inf"
+      (= x -inf) "-inf"
       (number? x) (cat x "")
     (error (cat "Cannot compile atom: " (string x)))))
 

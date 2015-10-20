@@ -1,13 +1,13 @@
-var delimiters = {")": true, "\n": true, "(": true, ";": true};
-var whitespace = {"\t": true, "\n": true, " ": true};
+var delimiters = {"(": true, ")": true, "\n": true, ";": true};
+var whitespace = {" ": true, "\n": true, "\t": true};
 var stream = function (str, more) {
-  return({more: more, len: _35(str), string: str, pos: 0});
+  return({more: more, pos: 0, len: _35(str), string: str});
 };
 var peek_char = function (s) {
   var _id = s;
+  var pos = _id.pos;
   var len = _id.len;
   var string = _id.string;
-  var pos = _id.pos;
   if (pos < len) {
     return(char(string, pos));
   }
@@ -76,8 +76,8 @@ var flag63 = function (atom) {
 };
 var expected = function (s, c) {
   var _id1 = s;
-  var pos = _id1.pos;
   var more = _id1.more;
+  var pos = _id1.pos;
   var _id2 = more;
   var _e;
   if (_id2) {
@@ -96,7 +96,6 @@ var wrap = function (s, x) {
     return([x, y]);
   }
 };
-var literals = {nan: 0 / 0, "false": false, "-nan": 0 / 0, "-inf": -1 / 0, inf: 1 / 0, "true": true};
 read_table[""] = function (s) {
   var str = "";
   while (true) {
@@ -107,15 +106,34 @@ read_table[""] = function (s) {
       break;
     }
   }
-  var x = literals[str];
-  if (is63(x)) {
-    return(x);
+  if (str === "true") {
+    return(true);
   } else {
-    var n = number(str);
-    if (nil63(n) || nan63(n) || inf63(n)) {
-      return(str);
+    if (str === "false") {
+      return(false);
     } else {
-      return(n);
+      if (str === "nan") {
+        return(nan);
+      } else {
+        if (str === "-nan") {
+          return(nan);
+        } else {
+          if (str === "inf") {
+            return(inf);
+          } else {
+            if (str === "-inf") {
+              return(-inf);
+            } else {
+              var n = number(str);
+              if (nil63(n) || nan63(n) || inf63(n)) {
+                return(str);
+              } else {
+                return(n);
+              }
+            }
+          }
+        }
+      }
     }
   }
 };
