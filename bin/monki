@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# TODO: For now, force LUMEN_HOST=node until we figure out a good way
+# of blocking until Lua's pcall() has finished.  See
+# http://lua-users.org/lists/lua-l/2013-10/msg00727.html
+export LUMEN_HOST=node
+
 # resolve symlinks.
 if [ -z "$at" ]; then at="`readlink -f "$0" 2>/dev/null`"; fi
 if [ -z "$at" ]; then at="`readlink    "$0" 2>/dev/null`"; fi
