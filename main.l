@@ -104,6 +104,30 @@
         (split s "\n")
         (list)))))
 
+(def which (prog)
+  (let ((ok x) (guard ($ "which" prog)))
+    (when ok
+      x)))
+
+(def freebsd? ()
+  (= ($ "uname") "FreeBSD"))
+
+(def make args
+  (let prog (if (freebsd?)
+                (if (which "gmake") "gmake"
+                    (error "Install gmake by running:  sudo pkg install gmake"))
+                "make")
+    (prn (apply $ (join (list prog) args)))))
+
+(def clean () (make "clean"))
+(def build () (make "--always-make" "all"))
+(def test () (make "--always-make" "test"))
+
+(def rebuild (count)
+  (clean)
+  (for i count
+    (build)))
+
 ;
 ; Application.
 ;

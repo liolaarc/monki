@@ -1,18 +1,5 @@
 (clone "laarc/lumen" "0008-reader-fix")
 
-(def lumenfiles ()
-  (tree "." "/*.l$"))
-
-(def build ()
-  (touch (lumenfiles))
-  (prn ($ "make")))
-
-(def rebuild (n)
-  (prn ($ "make" "clean"))
-  (repeat (or n 3)
-    (build))
-  (prn ($ "make" "test")))
-
 ;
 ; reader.l: Add """raw string""" syntax.
 ;
@@ -72,5 +59,6 @@
   (read-char s)
 |)
 
-(rebuild)
+(rebuild 3)
+(test)
 

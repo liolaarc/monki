@@ -1723,6 +1723,59 @@ tree = function (path, pattern) {
   popd();
   return(_g);
 };
+which = function (prog) {
+  var _id5 = (function () {
+    try {
+      return([true, _36("which", prog)]);
+    }
+    catch (_e6) {
+      return([false, _e6.message]);
+    }
+  })();
+  var ok = _id5[0];
+  var x = _id5[1];
+  if (ok) {
+    return(x);
+  }
+};
+freebsd63 = function () {
+  return(_36("uname") === "FreeBSD");
+};
+make = function () {
+  var args = unstash(Array.prototype.slice.call(arguments, 0));
+  var _e2;
+  if (freebsd63()) {
+    var _e3;
+    if (which("gmake")) {
+      _e3 = "gmake";
+    } else {
+      throw new Error("Install gmake by running:  sudo pkg install gmake");
+      _e3 = undefined;
+    }
+    _e2 = _e3;
+  } else {
+    _e2 = "make";
+  }
+  var prog = _e2;
+  return(prn(apply(_36, join([prog], args))));
+};
+clean = function () {
+  return(make("clean"));
+};
+build = function () {
+  return(make("--always-make", "all"));
+};
+test = function () {
+  return(make("--always-make", "test"));
+};
+rebuild = function (count) {
+  clean();
+  var i = 0;
+  while (i < count) {
+    build();
+    i = i + 1;
+  }
+};
 unlit = function (x) {
   if (id_literal63(x)) {
     return(inner(x));
@@ -1779,11 +1832,11 @@ _36 = function () {
   var hush = args.hush;
   var c = "";
   var cmds = [];
-  var _x38 = args;
-  var _n = _35(_x38);
+  var _x40 = args;
+  var _n = _35(_x40);
   var _i = 0;
   while (_i < _n) {
-    var arg = _x38[_i];
+    var arg = _x40[_i];
     if (arg === ";") {
       add(cmds, c);
       c = "";
@@ -1814,26 +1867,26 @@ git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r29 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id5 = _r29;
-  var args = cut(_id5, 0);
+  var _r36 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id6 = _r36;
+  var args = cut(_id6, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
       throw new Error("no .git at " + path);
     }
   }
-  var _x39 = ["git", "--git-dir=" + q(j(path, ".git")), what];
-  _x39.hush = true;
-  return(apply(_36, join(_x39, args)));
+  var _x41 = ["git", "--git-dir=" + q(j(path, ".git")), what];
+  _x41.hush = true;
+  return(apply(_36, join(_x41, args)));
 };
 gitdir = function (path, nocheck) {
-  var _e2;
+  var _e4;
   if (path) {
-    _e2 = j(path, ".monki", "git");
+    _e4 = j(path, ".monki", "git");
   } else {
-    _e2 = j(".monki", "git");
+    _e4 = j(".monki", "git");
   }
-  var dst = _e2;
+  var dst = _e4;
   if (! nocheck) {
     if (! git63(dst)) {
       var errmsg = "Error: no .git at " + dst;
@@ -1897,13 +1950,13 @@ monkitree = function (path) {
   var _i1 = undefined;
   for (_i1 in _o) {
     var file = _o[_i1];
-    var _e3;
+    var _e5;
     if (numeric63(_i1)) {
-      _e3 = parseInt(_i1);
+      _e5 = parseInt(_i1);
     } else {
-      _e3 = _i1;
+      _e5 = _i1;
     }
-    var __i1 = _e3;
+    var __i1 = _e5;
     pushd(path);
     prn(j(pwd(), file));
     var _g2 = monki(file);
@@ -1946,11 +1999,11 @@ mmain = function (argv) {
     prn(apply(git, join([gitdir(pwd())], params || [])));
     return;
   }
-  var _x42 = argv;
-  var _n2 = _35(_x42);
+  var _x44 = argv;
+  var _n2 = _35(_x44);
   var _i2 = 0;
   while (_i2 < _n2) {
-    var arg = _x42[_i2];
+    var arg = _x44[_i2];
     if (dir63(arg)) {
       monkitree(arg);
     } else {

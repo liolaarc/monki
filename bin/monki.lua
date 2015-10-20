@@ -1619,22 +1619,83 @@ function tree(path, pattern)
     error("tree: not a dir: " .. path)
   end
   pushd(path)
-  local _e
-  if pattern then
-    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
-  else
-    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
-  end
-  local s = trim(_e)
   local _e1
-  if s and some63(s) then
-    _e1 = split(s, "\n")
+  if pattern then
+    _e1 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
   else
-    _e1 = {}
+    _e1 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
   end
-  local _g = _e1
+  local s = trim(_e1)
+  local _e2
+  if s and some63(s) then
+    _e2 = split(s, "\n")
+  else
+    _e2 = {}
+  end
+  local _g = _e2
   popd()
   return(_g)
+end
+function which(prog)
+  local _x28 = nil
+  local _msg = nil
+  local _e = xpcall(function ()
+    _x28 = _36("which", prog)
+    return(_x28)
+  end, function (m)
+    _msg = _37message_handler(m)
+    return(_msg)
+  end)
+  local _e3
+  if _e then
+    _e3 = _x28
+  else
+    _e3 = _msg
+  end
+  local _id5 = {_e, _e3}
+  local ok = _id5[1]
+  local x = _id5[2]
+  if ok then
+    return(x)
+  end
+end
+function freebsd63()
+  return(_36("uname") == "FreeBSD")
+end
+function make(...)
+  local args = unstash({...})
+  local _e4
+  if freebsd63() then
+    local _e5
+    if which("gmake") then
+      _e5 = "gmake"
+    else
+      error("Install gmake by running:  sudo pkg install gmake")
+      _e5 = nil
+    end
+    _e4 = _e5
+  else
+    _e4 = "make"
+  end
+  local prog = _e4
+  return(prn(apply(_36, join({prog}, args))))
+end
+function clean()
+  return(make("clean"))
+end
+function build()
+  return(make("--always-make", "all"))
+end
+function test()
+  return(make("--always-make", "test"))
+end
+function rebuild(count)
+  clean()
+  local i = 0
+  while i < count do
+    build()
+    i = i + 1
+  end
 end
 function unlit(x)
   if id_literal63(x) then
@@ -1692,11 +1753,11 @@ function _36(...)
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x43 = args
-  local _n = _35(_x43)
+  local _x47 = args
+  local _n = _35(_x47)
   local _i = 0
   while _i < _n do
-    local arg = _x43[_i + 1]
+    local arg = _x47[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1727,26 +1788,26 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r29 = unstash({...})
-  local _id5 = _r29
-  local args = cut(_id5, 0)
+  local _r37 = unstash({...})
+  local _id6 = _r37
+  local args = cut(_id6, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x45 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x45.hush = true
-  return(apply(_36, join(_x45, args)))
+  local _x49 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x49.hush = true
+  return(apply(_36, join(_x49, args)))
 end
 function gitdir(path, nocheck)
-  local _e2
+  local _e6
   if path then
-    _e2 = j(path, ".monki", "git")
+    _e6 = j(path, ".monki", "git")
   else
-    _e2 = j(".monki", "git")
+    _e6 = j(".monki", "git")
   end
-  local dst = _e2
+  local dst = _e6
   if not nocheck then
     if not git63(dst) then
       local errmsg = "Error: no .git at " .. dst
@@ -1852,11 +1913,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x48 = argv
-  local _n2 = _35(_x48)
+  local _x52 = argv
+  local _n2 = _35(_x52)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x48[_i2 + 1]
+    local arg = _x52[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else
