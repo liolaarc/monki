@@ -65,6 +65,14 @@
       (set cwd ($ hush: true "cd" path ";" "pwd"))
       (set cwd "."))
   (pwd))
+(def cd1 cd)
+
+(mac cd (path rest: l)
+  (if (none? l)
+    `(cd1 ,path)
+    `(do (pushd ,path)
+         (do1 (do ,@l)
+           (popd)))))
 
 (def resetcwd ()
   (set cwd ".")
@@ -72,11 +80,6 @@
 
 (def pwd ()
   ($ hush: true "pwd"))
-
-(mac w/pushd (path rest: body)
-  `(do (pushd ,path)
-       ,@body
-       (popd)))
 
 (def mkdir (path)
   ($ "mkdir" "-p" path))
