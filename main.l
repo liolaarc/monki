@@ -208,7 +208,7 @@
 
 ; recursively call monki on any file named "monki.l" under the path.
 (def monkitree (path)
-  (each file (tree path match: "/monki.l$")
+  (each file (tree path "/monki.l$")
     (prn file)
     (monki file)))
 
