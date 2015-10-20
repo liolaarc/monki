@@ -52,7 +52,7 @@ if [ ! -z "${REBUILD}" ]; then
   rm -f "${obj}/"*.js "${obj}/"*.lua
 
   for target in "js" "lua"; do
-      "${lumen}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+      "${lumen}" -c "${home}/sudoarc/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
   done
 
   for target in "js" "lua"; do
