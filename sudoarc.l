@@ -293,9 +293,12 @@
            ; ((get o 'toString)) ; TODO: Research why this breaks.
            ((get o "toString")))))
   (target lua: (do
-    (define popen (get io 'popen))
-         ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
-         (let h (popen cmd)
-           (do1 ((get h 'read) h "*a")
-                ((get h 'close) h))))))
+    (define exec (s)
+      ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
+      ; Watch out, popen() sometimes fails to block:
+      ; http://lua-users.org/lists/lua-l/2013-10/msg00727.html
+      (let h ((get io 'popen) cmd)
+        (do1 ((get h 'read) h "*a")
+             ((get h 'close) h))))
+    (exec cmd))))
 
