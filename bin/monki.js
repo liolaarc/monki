@@ -1199,16 +1199,18 @@ load = function (file) {
   var _r2 = unstash(Array.prototype.slice.call(arguments, 1));
   var _id = _r2;
   var verbose = _id.verbose;
-  print("Loading " + file);
+  if (verbose) {
+    print("Loading " + file);
+  }
   var _x2 = readstr(read_file(file));
   var _n = _35(_x2);
   var _i = 0;
   while (_i < _n) {
     var expr = _x2[_i];
-    if (env("VERBOSE")) {
+    if ("1" === env("VERBOSE")) {
       prn(string(expr));
     }
-    if (env("COMP")) {
+    if ("1" === env("COMP")) {
       prn(comp(expr));
     }
     var _id1 = (function () {
@@ -1226,9 +1228,6 @@ load = function (file) {
       prn("   ", x);
       prn("The error occurred while evaluating: ");
       prn(expr);
-    }
-    if (env("VERBOSE")) {
-      prn(x);
     }
     _i = _i + 1;
   }
@@ -1540,6 +1539,12 @@ prn = function () {
   pr("\n");
   return(_g3);
 };
+filechars = function (path) {
+  return(read_file(path));
+};
+readfile = function (path) {
+  return(readstr(filechars(path)));
+};
 mvfile = function (src, dst) {
   var s = "mv ";
   s = s + escape(src);
@@ -1548,24 +1553,18 @@ mvfile = function (src, dst) {
   shell(s);
   return(dst);
 };
-filechars = function (path) {
-  return(read_file(path));
-};
 writefile = function (path, contents) {
   write_file(path + ".tmp", contents);
   mvfile(path + ".tmp", path);
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
-  var _r53 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id24 = _r53;
+  var _r54 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id24 = _r54;
   var l = cut(_id24, 0);
   var gp = unique("gp");
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
 }});
-readfile = function (path) {
-  return(readstr(filechars(path)));
-};
 args = function () {
   return(split(env("cmdline"), " "));
 };
@@ -1791,7 +1790,7 @@ _36 = function () {
   if (!( cwd === ".")) {
     cmdline = "cd " + q(cwd) + "; " + cmdline;
   }
-  if (! env("QUIET") && (! hush || env("VERBOSE"))) {
+  if (! hush || env("VERBOSE")) {
     prn(cmdline);
   }
   return(rtrim(docmd(cmdline)));

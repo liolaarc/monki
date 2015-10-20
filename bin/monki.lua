@@ -1097,16 +1097,18 @@ function load(file, ...)
   local _r2 = unstash({...})
   local _id = _r2
   local verbose = _id.verbose
-  print("Loading " .. file)
+  if verbose then
+    print("Loading " .. file)
+  end
   local _x4 = readstr(read_file(file))
   local _n = _35(_x4)
   local _i = 0
   while _i < _n do
     local expr = _x4[_i + 1]
-    if env("VERBOSE") then
+    if "1" == env("VERBOSE") then
       prn(string(expr))
     end
-    if env("COMP") then
+    if "1" == env("COMP") then
       prn(comp(expr))
     end
     local _x5 = nil
@@ -1132,9 +1134,6 @@ function load(file, ...)
       prn("   ", x)
       prn("The error occurred while evaluating: ")
       prn(expr)
-    end
-    if env("VERBOSE") then
-      prn(x)
     end
     _i = _i + 1
   end
@@ -1432,6 +1431,12 @@ function prn(...)
   pr("\n")
   return(_g3)
 end
+function filechars(path)
+  return(read_file(path))
+end
+function readfile(path)
+  return(readstr(filechars(path)))
+end
 function mvfile(src, dst)
   local s = "mv "
   s = s .. escape(src)
@@ -1440,24 +1445,18 @@ function mvfile(src, dst)
   shell(s)
   return(dst)
 end
-function filechars(path)
-  return(read_file(path))
-end
 function writefile(path, contents)
   write_file(path .. ".tmp", contents)
   mvfile(path .. ".tmp", path)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)
-  local _r54 = unstash({...})
-  local _id24 = _r54
+  local _r55 = unstash({...})
+  local _id24 = _r55
   local l = cut(_id24, 0)
   local gp = unique("gp")
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
 end})
-function readfile(path)
-  return(readstr(filechars(path)))
-end
 function args()
   return(split(env("cmdline"), " "))
 end
@@ -1712,7 +1711,7 @@ function _36(...)
   if not( cwd == ".") then
     cmdline = "cd " .. q(cwd) .. "; " .. cmdline
   end
-  if not env("QUIET") and (not hush or env("VERBOSE")) then
+  if not hush or env("VERBOSE") then
     prn(cmdline)
   end
   return(rtrim(docmd(cmdline)))
