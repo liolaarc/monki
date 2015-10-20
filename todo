@@ -1,5 +1,6 @@
 todo:
 
+- Abort on errors.
 - Add a `monki update` command that causes monki to update itself.
 - Rename `monki clone` to `monki cp`?
 - Alias `monki` to `ki` via a symlink.
