@@ -92,14 +92,14 @@
        (do1 (do ,@body)
          (popd)))))
 
-(def tree (path :match)
+(def tree (path pattern)
   (unless (dir? path)
     (error (cat "tree: not a dir: " path)))
-  (pushd path)
-  (let s (if match 
-             ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" match)
-             ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
-    (split s "\n")))
+  (cd path
+    (let s (if pattern 
+               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" pattern)
+               ($ "find" "." "|" "grep" "-v" "'/\\.monki/'"))
+      (split s "\n"))))
 
 ;
 ; Application.
