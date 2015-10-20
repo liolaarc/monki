@@ -109,14 +109,16 @@
   (if (id-literal? x) (inner x)
     x))
 
-(def replacing (str x y)
-  (lfn self (str x y)
-       (iflet pos (search str x)
-         (cat (clip str 0 pos)
-              y
-              (self (clip str (+ pos (# x))) x y))
-         str)
-    (self (unlit str) (unlit x) (unlit y))))
+(def replace (str x y count)
+  (lfn self (str x y count)
+     (do (when (and count (= count 0))
+           (return str))
+         (iflet pos (search str x)
+           (cat (clip str 0 pos)
+                y
+                (self (clip str (+ pos (# x))) x y (and count (- count 1))))
+           str))
+    (self (unlit str) (unlit x) (unlit y) count)))
 
 (lfn tolit (x)
   (if (not (atom? x)) x
@@ -124,10 +126,9 @@
       (string? x) x
     (list 'quote x))
 
-(mac replace (str x y)
-  `(replacing ,(tolit str) ,(tolit x) ,(tolit y))))
-
-(def replace replacing) ; a sneaky hack to make (apply replace '(foo o z)) work.
+(mac replace args
+  `(replace1 ,@(map tolit args))))
+(def replace1 replace) ; a sneaky hack to make (apply replace '(foo o z)) work.
 
 (def $ args
   (let hush (get args 'hush)
