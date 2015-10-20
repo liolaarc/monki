@@ -1,4 +1,8 @@
 
+; TODO: Is this necessary?
+(define-macro define l
+  `(define-global ,@l))
+
 ; Useful shorthand for seeing what a Lumen expression compiles to.  It
 ; can be used anywhere eval is used, and it shows you what code eval
 ; would have run.  E.g. try:
@@ -18,6 +22,7 @@
 (define system (require 'system))
 (define write (get system 'write))
 (define read-file (get system 'read-file))
+(define write-file (get system 'write-file))
 (define-global env (get system 'get-environment-variable))
 
 (define-global readstr (s)
@@ -243,6 +248,26 @@
   (read-file path))
 
 (def readfile (path) (readstr (filechars path)))
+
+(def mvfile (src dst)
+  (let s "mv "
+    (cat! s (escape src))
+    (cat! s " ")
+    (cat! s (escape dst))
+    (shell s)
+    dst)) ; todo: nil for failure, non-nil for success.
+
+(def writefile (path contents)
+  (write-file (cat path ".tmp") contents)
+  (mvfile (cat path ".tmp") path)
+  contents)
+
+(mac w/file (v path rest: l)
+  (w/uniq gp
+    `(let (,gp ,path
+           ,v (filechars ,gp))
+       (set ,v (do ,@l))
+       (writefile ,gp ,v))))
 
 (def args () (split (env 'cmdline) " "))
 (def host () (or (env "LUMEN_HOST") ""))
