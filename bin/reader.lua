@@ -1,4 +1,4 @@
-local delimiters = {["("] = true, [")"] = true, [";"] = true, ["\n"] = true}
+local delimiters = {["("] = true, [")"] = true, ["["] = true, ["]"] = true, ["{"] = true, ["}"] = true, [";"] = true, ["\n"] = true}
 local whitespace = {[" "] = true, ["\t"] = true, ["\n"] = true}
 local function stream(str, more)
   return({pos = 0, string = str, len = _35(str), more = more})
@@ -176,6 +176,48 @@ read_table["("] = function (s)
 end
 read_table[")"] = function (s)
   error("Unexpected ) at " .. s.pos)
+end
+read_table["["] = function (s)
+  read_char(s)
+  local r = nil
+  local l = {}
+  while nil63(r) do
+    skip_non_code(s)
+    local c = peek_char(s)
+    if c == "]" then
+      read_char(s)
+      r = {"fn", {"_"}, l}
+    else
+      if nil63(c) then
+        r = expected(s, "]")
+      else
+        local x = read(s)
+        add(l, x)
+      end
+    end
+  end
+  return(r)
+end
+read_table["{"] = function (s)
+  read_char(s)
+  local r = nil
+  local l = {}
+  while nil63(r) do
+    skip_non_code(s)
+    local c = peek_char(s)
+    if c == "}" then
+      read_char(s)
+      r = join({"curly"}, l)
+    else
+      if nil63(c) then
+        r = expected(s, "}")
+      else
+        local x = read(s)
+        add(l, x)
+      end
+    end
+  end
+  return(r)
 end
 read_table["\"\"\""] = function (s)
   read_char(s, 3)

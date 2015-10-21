@@ -1,6 +1,6 @@
 ;; -*- mode: lisp -*-
 
-(define delimiters (set-of "(" ")" ";" "\n"))
+(define delimiters (set-of "(" ")"  "[" "]"  "{" "}" ";" "\n"))
 (define whitespace (set-of " " "\t" "\n"))
 
 (define stream (str more)
@@ -81,11 +81,11 @@
 	    (cat! str (read-char s))
 	  (break))))
     (if (= str "true") true
-      (= str "false") false
-      (= str "nan") nan
-      (= str "-nan") nan
-      (= str "inf") inf
-      (= str "-inf") -inf
+        (= str "false") false
+        (= str "nan") nan
+        (= str "-nan") nan
+        (= str "inf") inf
+        (= str "-inf") -inf
       (let n (number str)
         (if (or (nil? n) (nan? n) (inf? n)) str n)))))
 
@@ -108,6 +108,30 @@
 
 (define-reader (")" s)
   (error (cat "Unexpected ) at " (get s 'pos))))
+
+(define-reader ("[" s)
+  (read-char s)
+  (with r nil
+    (let l ()
+      (while (nil? r)
+        (skip-non-code s)
+        (let c (peek-char s)
+          (if (= c "]") (do (read-char s) (set r `(fn (_) ,l)))
+              (nil? c) (set r (expected s "]"))
+            (let x (read s)
+              (add l x))))))))
+
+(define-reader ("{" s)
+  (read-char s)
+  (with r nil
+    (let l ()
+      (while (nil? r)
+        (skip-non-code s)
+        (let c (peek-char s)
+          (if (= c "}") (do (read-char s) (set r `(curly ,@l)))
+              (nil? c) (set r (expected s "}"))
+            (let x (read s)
+              (add l x))))))))
 
 (define-reader ("\"\"\"" s)
   (read-char s 3)

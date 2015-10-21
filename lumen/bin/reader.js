@@ -1,4 +1,4 @@
-var delimiters = {"(": true, ")": true, ";": true, "\n": true};
+var delimiters = {"(": true, ")": true, "[": true, "]": true, "{": true, "}": true, ";": true, "\n": true};
 var whitespace = {" ": true, "\t": true, "\n": true};
 var stream = function (str, more) {
   return({pos: 0, string: str, len: _35(str), more: more});
@@ -176,6 +176,48 @@ read_table["("] = function (s) {
 };
 read_table[")"] = function (s) {
   throw new Error("Unexpected ) at " + s.pos);
+};
+read_table["["] = function (s) {
+  read_char(s);
+  var r = undefined;
+  var l = [];
+  while (nil63(r)) {
+    skip_non_code(s);
+    var c = peek_char(s);
+    if (c === "]") {
+      read_char(s);
+      r = ["fn", ["_"], l];
+    } else {
+      if (nil63(c)) {
+        r = expected(s, "]");
+      } else {
+        var x = read(s);
+        add(l, x);
+      }
+    }
+  }
+  return(r);
+};
+read_table["{"] = function (s) {
+  read_char(s);
+  var r = undefined;
+  var l = [];
+  while (nil63(r)) {
+    skip_non_code(s);
+    var c = peek_char(s);
+    if (c === "}") {
+      read_char(s);
+      r = join(["curly"], l);
+    } else {
+      if (nil63(c)) {
+        r = expected(s, "}");
+      } else {
+        var x = read(s);
+        add(l, x);
+      }
+    }
+  }
+  return(r);
 };
 read_table["\"\"\""] = function (s) {
   read_char(s, 3);
