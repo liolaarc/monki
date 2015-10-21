@@ -279,15 +279,18 @@
   ; eval files in subdirs.
   (when (none? (or argv ()))
     (return (monkitree (pwd))))
-  ; help.
-  (when (in? (at argv 0) (list "-h" "--help" "help"))
-    (musage)
-    (return))
-  ; run a non-monki.l script.
-  (when (endswith (at argv 0) ".l")
-    (return (monki (at argv 0))))
   (let (op (at argv 0)
         params (cut argv 1))
+    ; help.
+    (when (in? op (list "-h" "--help" "help"))
+      (musage)
+      (return))
+    ; run a non-monki.l script.
+    (when (endswith op ".l")
+      (return (monki op)))
+    ; repl.
+    (when (= op "repl")
+      (return (repl)))
     ; clone.
     (when (= op "clone")
       (unless (> (len argv) 1)

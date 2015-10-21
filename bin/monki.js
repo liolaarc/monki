@@ -2006,15 +2006,18 @@ mmain = function (argv) {
   if (none63(argv || [])) {
     return(monkitree(pwd()));
   }
-  if (in63(argv[0], ["-h", "--help", "help"])) {
+  var op = argv[0];
+  var params = cut(argv, 1);
+  if (in63(op, ["-h", "--help", "help"])) {
     musage();
     return;
   }
-  if (endswith(argv[0], ".l")) {
-    return(monki(argv[0]));
+  if (endswith(op, ".l")) {
+    return(monki(op));
   }
-  var op = argv[0];
-  var params = cut(argv, 1);
+  if (op === "repl") {
+    return(repl());
+  }
   if (op === "clone") {
     if (!( _35(argv) > 1)) {
       musage();

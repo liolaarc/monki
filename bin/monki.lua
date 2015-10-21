@@ -1920,15 +1920,18 @@ function mmain(argv)
   if none63(argv or {}) then
     return(monkitree(pwd()))
   end
-  if in63(argv[1], {"-h", "--help", "help"}) then
+  local op = argv[1]
+  local params = cut(argv, 1)
+  if in63(op, {"-h", "--help", "help"}) then
     musage()
     return
   end
-  if endswith(argv[1], ".l") then
-    return(monki(argv[1]))
+  if endswith(op, ".l") then
+    return(monki(op))
   end
-  local op = argv[1]
-  local params = cut(argv, 1)
+  if op == "repl" then
+    return(repl())
+  end
   if op == "clone" then
     if not( _35(argv) > 1) then
       musage()

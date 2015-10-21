@@ -69,10 +69,10 @@ if [ ! -z "${REBUILD}" ]; then
   done
 fi
 
-if [ -z "${REPL}" ]; then
-  args="-e nil"
-else
+if [ ! -z "${REPL}" ] || [ "$*" == "repl" ]; then
   rlwrap="`which rlwrap`"
+else
+  args="-e nil"
 fi
 
 if [ ! -z "$rlwrap" ]; then
