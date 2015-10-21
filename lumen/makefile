@@ -1,6 +1,6 @@
 .PHONY: all clean test
 
-LUMEN_LUA  ?= lua
+LUMEN_LUA  ?= luajit
 LUMEN_NODE ?= node
 LUMEN_HOST ?= $(LUMEN_LUA)
 

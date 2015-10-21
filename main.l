@@ -117,7 +117,7 @@
                 (if (which "gmake") "gmake"
                     (error "Install gmake by running:  sudo pkg install gmake"))
                 "make")
-    (prn (apply $ (join (list prog) args)))))
+    (prn (apply $ (join (list "time" prog) args)))))
 
 (def clean () (make "clean"))
 (def build () (make "--always-make" "all"))
@@ -255,10 +255,17 @@
 
 ; recursively call monki on any file named "monki.l" under the path.
 (def monkitree (path)
-  (each file (tree path "/monki.l$")
-    (cd path
-      (prn (j (pwd) file))
+  (cd path
+    (each file (tree "." "/monki.l$")
+      (prn (j (pwd) path file))
       (monki file))))
+
+; ; TODO: Figure out why this breaks. Report it if it's a compiler bug.
+; (def monkitree (path)
+;   (each file (tree path "/monki.l$")
+;     (cd path ; this is where the bug happens, and only on lua hosts.
+;       (prn (j (pwd) file))
+;       (monki file))))
 
 (def musage ()
   (prn "  to run all monki.l files beneath a dir:")

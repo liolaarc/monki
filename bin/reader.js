@@ -1,7 +1,7 @@
-var delimiters = {"(": true, ")": true, "[": true, "]": true, "{": true, "}": true, ";": true, "\n": true};
-var whitespace = {" ": true, "\t": true, "\n": true};
+var delimiters = {"(": true, ")": true, ";": true, "\n": true, "}": true, "]": true, "{": true, "[": true};
+var whitespace = {" ": true, "\n": true, "\t": true};
 var stream = function (str, more) {
-  return({pos: 0, string: str, len: _35(str), more: more});
+  return({more: more, pos: 0, len: _35(str), string: str});
 };
 var peek_char = function (s, count, offset) {
   var _id = s;
