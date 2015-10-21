@@ -1888,9 +1888,10 @@ function monki(path)
   pushd(dir)
   _36("mkdir", "-p", j(".monki", "tmp"))
   _36("cp", file, j(".monki", "tmp"))
-  load(realpath(file), {_stash = true, verbose = true})
+  local _g3 = load(realpath(file), {_stash = true, verbose = true})
   _36("cp", j(".monki", "tmp", file), file)
-  local _g2 = _36("rm", j(".monki", "tmp", file))
+  _36("rm", j(".monki", "tmp", file))
+  local _g2 = _g3
   popd()
   return(_g2)
 end
@@ -1903,9 +1904,9 @@ function monkitree(path)
     prn(j(pwd(), path, file))
     monki(file)
   end
-  local _g3
+  local _g4
   popd()
-  return(_g3)
+  return(_g4)
 end
 function musage()
   prn("  to run all monki.l files beneath a dir:")
@@ -1922,6 +1923,9 @@ function mmain(argv)
   if in63(argv[1], {"-h", "--help", "help"}) then
     musage()
     return
+  end
+  if endswith(argv[1], ".l") then
+    return(monki(argv[1]))
   end
   local op = argv[1]
   local params = cut(argv, 1)

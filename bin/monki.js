@@ -1967,9 +1967,10 @@ monki = function (path) {
   pushd(dir);
   _36("mkdir", "-p", j(".monki", "tmp"));
   _36("cp", file, j(".monki", "tmp"));
-  load(realpath(file), {_stash: true, verbose: true});
+  var _g3 = load(realpath(file), {_stash: true, verbose: true});
   _36("cp", j(".monki", "tmp", file), file);
-  var _g2 = _36("rm", j(".monki", "tmp", file));
+  _36("rm", j(".monki", "tmp", file));
+  var _g2 = _g3;
   popd();
   return(_g2);
 };
@@ -1989,9 +1990,9 @@ monkitree = function (path) {
     prn(j(pwd(), path, file));
     monki(file);
   }
-  var _g3;
+  var _g4;
   popd();
-  return(_g3);
+  return(_g4);
 };
 musage = function () {
   prn("  to run all monki.l files beneath a dir:");
@@ -2008,6 +2009,9 @@ mmain = function (argv) {
   if (in63(argv[0], ["-h", "--help", "help"])) {
     musage();
     return;
+  }
+  if (endswith(argv[0], ".l")) {
+    return(monki(argv[0]));
   }
   var op = argv[0];
   var params = cut(argv, 1);

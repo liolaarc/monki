@@ -243,15 +243,15 @@
   (let (dir (dirname path)
         file (basename path))
     (cd dir
-      ; copy the file, in case the repo we're cloning from contains a file
-      ; of the same name.
+      ; copy the file, in case the script clones a repo that has a
+      ; file of the same name.
       ($ "mkdir" "-p" (j ".monki" "tmp"))
       ($ "cp" file (j ".monki" "tmp"))
       ; run the file.
-      (load (realpath file)  verbose: true)
-      ; restore the file.
-      ($ "cp" (j ".monki" "tmp" file) file)
-      ($ "rm" (j ".monki" "tmp" file)))))
+      (do1 (load (realpath file)  verbose: true)
+        ; restore the file.
+        ($ "cp" (j ".monki" "tmp" file) file)
+        ($ "rm" (j ".monki" "tmp" file))))))
 
 ; recursively call monki on any file named "monki.l" under the path.
 (def monkitree (path)
@@ -283,6 +283,9 @@
   (when (in? (at argv 0) (list "-h" "--help" "help"))
     (musage)
     (return))
+  ; run a non-monki.l script.
+  (when (endswith (at argv 0) ".l")
+    (return (monki (at argv 0))))
   (let (op (at argv 0)
         params (cut argv 1))
     ; clone.
