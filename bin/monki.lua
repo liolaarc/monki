@@ -1537,8 +1537,23 @@ function shell(cmd)
   return(exec(cmd))
 end
 local _sys = require("system")
-j = _sys["path-join"]
+pj = _sys["path-join"]
+sep = _sys["path-separator"]
 file63 = _sys["file-exists?"]
+function fixpath(path)
+  local s = sep .. "." .. sep
+  while search(path, s) do
+    path = replace(path, s, sep)
+  end
+  if 0 == search(path, "." .. sep) then
+    path = replace(path, "." .. sep, "", 1)
+  end
+  return(path)
+end
+function j(...)
+  local parts = unstash({...})
+  return(fixpath(apply(pj, parts)))
+end
 function dir63(path)
   return("1" == _36("sh", "-c", "if [ -d " .. escape(path) .. " ]; then echo 1; fi", {_stash = true, hush = true}))
 end
@@ -1567,8 +1582,8 @@ function rmrf(path)
   end
 end
 function surround(x, ...)
-  local _r6 = unstash({...})
-  local _id = _r6
+  local _r7 = unstash({...})
+  local _id = _r7
   local lh = _id.lh
   local rh = _id.rh
   return((lh or "") .. x .. (rh or ""))
@@ -1611,8 +1626,8 @@ function cd(path)
 end
 cd1 = cd
 setenv("cd", {_stash = true, macro = function (path, ...)
-  local _r14 = unstash({...})
-  local _id2 = _r14
+  local _r15 = unstash({...})
+  local _id2 = _r15
   local l = cut(_id2, 0)
   if none63(l) then
     return({"cd1", path})
@@ -1632,8 +1647,8 @@ function mkdir(path)
   return(_36("mkdir", "-p", path))
 end
 setenv("w/mkdir", {_stash = true, macro = function (path, ...)
-  local _r19 = unstash({...})
-  local _id4 = _r19
+  local _r20 = unstash({...})
+  local _id4 = _r20
   local body = cut(_id4, 0)
   local g = unique("g")
   return({"let", g, path, {"mkdir", g}, {"pushd", g}, {"do1", join({"do"}, body), {"popd"}}})
@@ -1652,7 +1667,7 @@ function tree(path, pattern)
   local s = trim(_e1)
   local _e2
   if s and some63(s) then
-    _e2 = split(s, "\n")
+    _e2 = map(fixpath, split(s, "\n"))
   else
     _e2 = {}
   end
@@ -1661,18 +1676,18 @@ function tree(path, pattern)
   return(_g)
 end
 function which(prog)
-  local _x30 = nil
+  local _x31 = nil
   local _msg = nil
   local _e = xpcall(function ()
-    _x30 = _36("which", prog)
-    return(_x30)
+    _x31 = _36("which", prog)
+    return(_x31)
   end, function (m)
     _msg = _37message_handler(m)
     return(_msg)
   end)
   local _e3
   if _e then
-    _e3 = _x30
+    _e3 = _x31
   else
     _e3 = _msg
   end
@@ -1781,11 +1796,11 @@ function _36(...)
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x64 = args
-  local _n = _35(_x64)
+  local _x65 = args
+  local _n = _35(_x65)
   local _i = 0
   while _i < _n do
-    local arg = _x64[_i + 1]
+    local arg = _x65[_i + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1816,17 +1831,17 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r39 = unstash({...})
-  local _id6 = _r39
+  local _r40 = unstash({...})
+  local _id6 = _r40
   local args = cut(_id6, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x66 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x66.hush = true
-  return(apply(_36, join(_x66, args)))
+  local _x67 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x67.hush = true
+  return(apply(_36, join(_x67, args)))
 end
 function gitdir(path, nocheck)
   local _e6
@@ -1949,11 +1964,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x69 = argv
-  local _n2 = _35(_x69)
+  local _x70 = argv
+  local _n2 = _35(_x70)
   local _i2 = 0
   while _i2 < _n2 do
-    local arg = _x69[_i2 + 1]
+    local arg = _x70[_i2 + 1]
     if dir63(arg) then
       monkitree(arg)
     else

@@ -1,7 +1,19 @@
 
 (let sys (require 'system)
-  (def j (get sys 'path-join))
+  (def pj (get sys 'path-join))
+  (def sep (get sys 'path-separator))
   (def file? (get sys 'file-exists?)))
+
+(def fixpath (path)
+  (let s (cat sep "." sep)
+    (while (search path s)
+      (set path (replace path s sep)))
+    (when (= 0 (search path (cat "." sep)))
+      (set path (replace path (cat "." sep) "" 1)))
+    path))
+
+(def j parts
+  (fixpath (apply pj parts)))
 
 (def dir? (path)
   ; There isn't any way to determine whether a directory exists in
@@ -101,7 +113,7 @@
                ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "grep" pattern "|" "cat")
                ($ "find" "." "|" "grep" "-v" "'/\\.monki/'" "|" "cat")))
       (if (and s (some? s))
-        (split s "\n")
+        (map fixpath (split s "\n"))
         (list)))))
 
 (def which (prog)

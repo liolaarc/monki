@@ -1624,8 +1624,23 @@ shell = function (cmd) {
   return(o.toString());
 };
 var _sys = require("system");
-j = _sys["path-join"];
+pj = _sys["path-join"];
+sep = _sys["path-separator"];
 file63 = _sys["file-exists?"];
+fixpath = function (path) {
+  var s = sep + "." + sep;
+  while (search(path, s)) {
+    path = replace(path, s, sep);
+  }
+  if (0 === search(path, "." + sep)) {
+    path = replace(path, "." + sep, "", 1);
+  }
+  return(path);
+};
+j = function () {
+  var parts = unstash(Array.prototype.slice.call(arguments, 0));
+  return(fixpath(apply(pj, parts)));
+};
 dir63 = function (path) {
   return("1" === _36("sh", "-c", "if [ -d " + escape(path) + " ]; then echo 1; fi", {_stash: true, hush: true}));
 };
@@ -1654,8 +1669,8 @@ rmrf = function (path) {
   }
 };
 surround = function (x) {
-  var _r6 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id = _r6;
+  var _r7 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id = _r7;
   var lh = _id.lh;
   var rh = _id.rh;
   return((lh || "") + x + (rh || ""));
@@ -1698,8 +1713,8 @@ cd = function (path) {
 };
 cd1 = cd;
 setenv("cd", {_stash: true, macro: function (path) {
-  var _r14 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id2 = _r14;
+  var _r15 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id2 = _r15;
   var l = cut(_id2, 0);
   if (none63(l)) {
     return(["cd1", path]);
@@ -1719,8 +1734,8 @@ mkdir = function (path) {
   return(_36("mkdir", "-p", path));
 };
 setenv("w/mkdir", {_stash: true, macro: function (path) {
-  var _r19 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id4 = _r19;
+  var _r20 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id4 = _r20;
   var body = cut(_id4, 0);
   var g = unique("g");
   return(["let", g, path, ["mkdir", g], ["pushd", g], ["do1", join(["do"], body), ["popd"]]]);
@@ -1739,7 +1754,7 @@ tree = function (path, pattern) {
   var s = trim(_e);
   var _e1;
   if (s && some63(s)) {
-    _e1 = split(s, "\n");
+    _e1 = map(fixpath, split(s, "\n"));
   } else {
     _e1 = [];
   }
@@ -1895,8 +1910,8 @@ git63 = function (path) {
   return(dir63(j(path, ".git")));
 };
 git = function (path, what) {
-  var _r38 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id6 = _r38;
+  var _r39 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id6 = _r39;
   var args = cut(_id6, 0);
   if (!( what === "clone")) {
     if (! git63(path)) {
