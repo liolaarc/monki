@@ -125,13 +125,14 @@ fi
 
 ; bin/lumen: Export LUMEN_HOST so that users can discern LuaJIT vs Lua.
 (patch "bin/lumen"
-"""
-exec $(which rlwrap) ${host} "${home}/${code}" "$@"
-"""
-"""
+|esac
+
+|
+|esac
+
 export LUMEN_HOST="${host}"
-exec $(which rlwrap) ${host} "${home}/${code}" "$@"
-""")
+|)
+
 
 ;
 ; bin/lumen: Add lib/${os} to the LUA_PATH and NODE_PATH.
