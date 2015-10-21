@@ -1224,8 +1224,8 @@ load = function (file) {
       try {
         return([true, eval(expr)]);
       }
-      catch (_e6) {
-        return([false, _e6.message]);
+      catch (_e8) {
+        return([false, _e8.message]);
       }
     })();
     var ok = _id1[0];
@@ -1281,13 +1281,13 @@ setenv("lfn", {_stash: true, macro: function (name, args, body) {
   var _r12 = unstash(Array.prototype.slice.call(arguments, 3));
   var _id7 = _r12;
   var l = cut(_id7, 0);
-  var _e2;
+  var _e3;
   if (some63(l)) {
-    _e2 = l;
+    _e3 = l;
   } else {
-    _e2 = [name];
+    _e3 = [name];
   }
-  return(join(["let", name, "nil", ["set", name, ["fn", args, body]]], _e2));
+  return(join(["let", name, "nil", ["set", name, ["fn", args, body]]], _e3));
 }});
 setenv("afn", {_stash: true, macro: function (args, body) {
   var _r14 = unstash(Array.prototype.slice.call(arguments, 2));
@@ -1325,13 +1325,30 @@ setenv("iflet", {_stash: true, macro: function (name) {
     var x = _id15[0];
     var a = _id15[1];
     var bs = cut(_id15, 2);
-    var _e3;
+    var _e4;
     if (one63(l)) {
-      _e3 = name;
+      _e4 = name;
     } else {
-      _e3 = ["if", name, a, join(["iflet", name], bs)];
+      _e4 = ["if", name, a, join(["iflet", name], bs)];
     }
-    return(["let", name, x, _e3]);
+    return(["let", name, x, _e4]);
+  }
+}});
+setenv("whenlet", {_stash: true, macro: function (name) {
+  var _r22 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id18 = _r22;
+  var l = cut(_id18, 0);
+  if (some63(l)) {
+    var _id19 = l;
+    var x = _id19[0];
+    var ys = cut(_id19, 1);
+    var _e5;
+    if (one63(l)) {
+      _e5 = name;
+    } else {
+      _e5 = join(["do"], ys);
+    }
+    return(["let", name, x, _e5]);
   }
 }});
 setenv("aif", {_stash: true, macro: function () {
@@ -1343,9 +1360,9 @@ setenv("awhen", {_stash: true, macro: function () {
   return(join(["let-when", "it"], l));
 }});
 setenv("repeat", {_stash: true, macro: function (n) {
-  var _r22 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id17 = _r22;
-  var l = cut(_id17, 0);
+  var _r24 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id21 = _r24;
+  var l = cut(_id21, 0);
   var g = unique("g");
   return(join(["for", g, n], l));
 }});
@@ -1383,13 +1400,13 @@ copylist = function (xs) {
   var k = undefined;
   for (k in _o) {
     var v = _o[k];
-    var _e4;
+    var _e6;
     if (numeric63(k)) {
-      _e4 = parseInt(k);
+      _e6 = parseInt(k);
     } else {
-      _e4 = k;
+      _e6 = k;
     }
-    var _k = _e4;
+    var _k = _e6;
     l[_k] = v;
   }
   return(l);
@@ -1412,13 +1429,13 @@ intersperse = function (x, lst) {
   var _i2 = undefined;
   for (_i2 in _o1) {
     var item = _o1[_i2];
-    var _e5;
+    var _e7;
     if (numeric63(_i2)) {
-      _e5 = parseInt(_i2);
+      _e7 = parseInt(_i2);
     } else {
-      _e5 = _i2;
+      _e7 = _i2;
     }
-    var __i2 = _e5;
+    var __i2 = _e7;
     if (sep) {
       a(sep);
     } else {
@@ -1438,11 +1455,11 @@ keep = function (f, xs) {
   a = function (item) {
     return(add(_g1, item));
   };
-  var _x88 = xs;
-  var _n3 = _35(_x88);
+  var _x93 = xs;
+  var _n3 = _35(_x93);
   var _i3 = 0;
   while (_i3 < _n3) {
-    var x = _x88[_i3];
+    var x = _x93[_i3];
     if (f(x)) {
       a(x);
     }
@@ -1475,27 +1492,27 @@ ws63 = function (s) {
   }
 };
 rtrim = function (s) {
-  var _r42 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id18 = _r42;
-  var f = _id18.f;
+  var _r44 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id22 = _r44;
+  var f = _id22.f;
   while (some63(s) && (f || ws63)(char(s, edge(s)))) {
     s = clip(s, 0, edge(s));
   }
   return(s);
 };
 ltrim = function (s) {
-  var _r43 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id19 = _r43;
-  var f = _id19.f;
+  var _r45 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id23 = _r45;
+  var f = _id23.f;
   while (some63(s) && (f || ws63)(char(s, 0))) {
     s = clip(s, 1, _35(s));
   }
   return(s);
 };
 trim = function (s) {
-  var _r44 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id20 = _r44;
-  var f = _id20.f;
+  var _r46 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id24 = _r46;
+  var f = _id24.f;
   return(rtrim(ltrim(s, {_stash: true, f: f}), {_stash: true, f: f}));
 };
 endswith = function (s, ending) {
@@ -1506,17 +1523,17 @@ startswith = function (s, prefix) {
   return(search(s, prefix) === 0);
 };
 pr = function () {
-  var _r47 = unstash(Array.prototype.slice.call(arguments, 0));
-  var _id21 = _r47;
-  var sep = _id21.sep;
-  var l = cut(_id21, 0);
+  var _r49 = unstash(Array.prototype.slice.call(arguments, 0));
+  var _id25 = _r49;
+  var sep = _id25.sep;
+  var l = cut(_id25, 0);
   var c = undefined;
   if (sep) {
-    var _x90 = l;
-    var _n4 = _35(_x90);
+    var _x95 = l;
+    var _n4 = _35(_x95);
     var _i4 = 0;
     while (_i4 < _n4) {
-      var x = _x90[_i4];
+      var x = _x95[_i4];
       if (c) {
         write(c);
       } else {
@@ -1526,11 +1543,11 @@ pr = function () {
       _i4 = _i4 + 1;
     }
   } else {
-    var _x91 = l;
-    var _n5 = _35(_x91);
+    var _x96 = l;
+    var _n5 = _35(_x96);
     var _i5 = 0;
     while (_i5 < _n5) {
-      var x = _x91[_i5];
+      var x = _x96[_i5];
       write(str(x));
       _i5 = _i5 + 1;
     }
@@ -1540,9 +1557,9 @@ pr = function () {
   }
 };
 setenv("do1", {_stash: true, macro: function (a) {
-  var _r49 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id23 = _r49;
-  var bs = cut(_id23, 0);
+  var _r51 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id27 = _r51;
+  var bs = cut(_id27, 0);
   var g = unique("g");
   return(["let", g, a, join(["do"], bs), g]);
 }});
@@ -1582,9 +1599,9 @@ writefile = function (path, contents) {
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
-  var _r58 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id25 = _r58;
-  var l = cut(_id25, 0);
+  var _r60 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id29 = _r60;
+  var l = cut(_id29, 0);
   var gp = unique("gp");
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
 }});
