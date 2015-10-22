@@ -153,7 +153,7 @@ or
 
 (clone "person/foo" "foo" "some-commit-hash")
 
-That will cause your subfolder to mirror the HEAD of branch "some-branch-name" / to mirror "some-commit-hash", respectively.  Specifying a commit hash causes the subdir to never deviate from that hash, meaning it won't sync to any new code under any circumstances, till you remove or change the hash in the clone expression.
+That will cause your subfolder to mirror the HEAD of branch "some-branch-name", or to mirror "some-commit-hash", respectively.  Specifying a commit hash causes the subdir to never deviate from that hash, meaning it won't sync to any new code under any circumstances, till you remove or change the hash in the clone expression.
 
 - To switch your subfolder back to master, just change the clone statement back to (clone "person/foo" "foo") and run `monki`.  Your subdir will automatically mirror itself to the latest HEAD of the master branch.
 
