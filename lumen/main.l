@@ -4,7 +4,7 @@
 (define compiler (require 'compiler))
 (define system (require 'system))
 
-(define eval-print (form)
+(define-global eval-print (form)
   (let ((ok x) (guard ((get compiler 'eval) form)))
     (if (not ok) (print (cat "error: " x))
         (is? x) (print (string x)))))
@@ -12,7 +12,7 @@
 (define rep (s)
   (eval-print ((get reader 'read-string) s)))
 
-(define repl ()
+(define-global repl ()
   (let buf ""
     (define rep1 (s)
       (cat! buf s)

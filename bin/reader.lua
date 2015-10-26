@@ -198,6 +198,9 @@ read_table["["] = function (s)
   end
   return(r)
 end
+read_table["]"] = function (s)
+  error("Unexpected ] at " .. s.pos)
+end
 read_table["{"] = function (s)
   read_char(s)
   local r = nil
@@ -218,6 +221,9 @@ read_table["{"] = function (s)
     end
   end
   return(r)
+end
+read_table["}"] = function (s)
+  error("Unexpected } at " .. s.pos)
 end
 read_table["\"\"\""] = function (s)
   read_char(s, 3)

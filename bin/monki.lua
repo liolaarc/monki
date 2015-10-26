@@ -1300,15 +1300,15 @@ end
 function cons(x, y)
   return(join({x}, y))
 end
-function copylist(xs)
-  local l = {}
-  local _o = xs
+function copylist(l)
+  local _l = {}
+  local _o = _l
   local k = nil
   for k in next, _o do
     local v = _o[k]
-    l[k] = v
+    _l[copylist(k)] = copylist(v)
   end
-  return(l)
+  return(_l)
 end
 function listify(x)
   if atom63(x) then
@@ -1341,7 +1341,17 @@ setenv("complement", {_stash = true, macro = function (f)
   local g = unique("g")
   return({"fn", g, {"not", {"apply", f, g}}})
 end})
+function testify(x)
+  if function63(x) then
+    return(x)
+  else
+    return(function (_)
+      return(_ == x)
+    end)
+  end
+end
 function keep(f, xs)
+  f = testify(f)
   local _g1 = {}
   local a = nil
   a = function (item)
@@ -1362,9 +1372,10 @@ end
 function rem(f, xs)
   return(keep(function (...)
     local _g2 = unstash({...})
-    return(not apply(f, _g2))
+    return(not apply(testify(f), _g2))
   end, xs))
 end
+rev = reverse
 function str(x)
   if string63(x) then
     return(x)
@@ -1384,8 +1395,8 @@ function ws63(s)
   end
 end
 function rtrim(s, ...)
-  local _r45 = unstash({...})
-  local _id22 = _r45
+  local _r47 = unstash({...})
+  local _id22 = _r47
   local f = _id22.f
   while some63(s) and (f or ws63)(char(s, edge(s))) do
     s = clip(s, 0, edge(s))
@@ -1393,8 +1404,8 @@ function rtrim(s, ...)
   return(s)
 end
 function ltrim(s, ...)
-  local _r46 = unstash({...})
-  local _id23 = _r46
+  local _r48 = unstash({...})
+  local _id23 = _r48
   local f = _id23.f
   while some63(s) and (f or ws63)(char(s, 0)) do
     s = clip(s, 1, _35(s))
@@ -1402,8 +1413,8 @@ function ltrim(s, ...)
   return(s)
 end
 function trim(s, ...)
-  local _r47 = unstash({...})
-  local _id24 = _r47
+  local _r49 = unstash({...})
+  local _id24 = _r49
   local f = _id24.f
   return(rtrim(ltrim(s, {_stash = true, f = f}), {_stash = true, f = f}))
 end
@@ -1415,8 +1426,8 @@ function startswith(s, prefix)
   return(search(s, prefix) == 0)
 end
 function pr(...)
-  local _r50 = unstash({...})
-  local _id25 = _r50
+  local _r52 = unstash({...})
+  local _id25 = _r52
   local sep = _id25.sep
   local l = cut(_id25, 0)
   local c = nil
@@ -1449,8 +1460,8 @@ function pr(...)
   end
 end
 setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r52 = unstash({...})
-  local _id27 = _r52
+  local _r54 = unstash({...})
+  local _id27 = _r54
   local bs = cut(_id27, 0)
   local g = unique("g")
   return({"let", g, a, join({"do"}, bs), g})
@@ -1491,8 +1502,8 @@ function writefile(path, contents)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)
-  local _r61 = unstash({...})
-  local _id29 = _r61
+  local _r63 = unstash({...})
+  local _id29 = _r63
   local l = cut(_id29, 0)
   local gp = unique("gp")
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
@@ -1743,6 +1754,27 @@ function unlit(x)
     return(x)
   end
 end
+setenv("unlit!", {_stash = true, macro = function (...)
+  local xs = unstash({...})
+  return(join({"do"}, map(function (_)
+    return({"set", _, {"unlit", _}})
+  end, xs)))
+end})
+function tolit(x)
+  if not atom63(x) then
+    return(x)
+  else
+    if id_literal63(x) then
+      return({"quote", inner(x)})
+    else
+      if string63(x) then
+        return(x)
+      else
+        return({"quote", x})
+      end
+    end
+  end
+end
 function replace(str, x, y, count)
   local self = nil
   self = function (str, x, y, count)
@@ -1759,31 +1791,25 @@ function replace(str, x, y, count)
   end
   return(self(unlit(str), unlit(x), unlit(y), count))
 end
-local _tolit = nil
-_tolit = function (x)
-  if not atom63(x) then
-    return(x)
-  else
-    if id_literal63(x) then
-      return({"quote", inner(x)})
-    else
-      if string63(x) then
-        return(x)
-      else
-        return({"quote", x})
-      end
-    end
+function patch(file, x, y)
+  file = unlit(file)
+  x = unlit(x)
+  y = unlit(y)
+  local _gp = j(getcwd(), file)
+  local fs = filechars(_gp)
+  local _e6
+  if not search(fs, x) then
+    error(file .. ": patch: failed to find code:\n  " .. x)
+    _e6 = nil
   end
+  fs = replace(fs, x, y)
+  return(writefile(_gp, fs))
 end
-setenv("replace", {_stash = true, macro = function (...)
+setenv("patch", {_stash = true, macro = function (...)
   local args = unstash({...})
-  return(join({"replace1"}, map(_tolit, args)))
+  return(join({"patch1"}, map(tolit, args)))
 end})
-replace1 = replace
-setenv("patch", {_stash = true, macro = function (file, x, y)
-  local g = unique("g")
-  return({"w/file", g, {"j", {"getcwd"}, file}, {"replace", g, x, y}})
-end})
+patch1 = patch
 setenv("create", {_stash = true, macro = function (file, x)
   local g = unique("g")
   return({"let", g, {"j", {"getcwd"}, file}, {"touch", g}, {"w/file", g, {"j", {"getcwd"}, file}, x}})
@@ -1791,16 +1817,29 @@ end})
 function touch(files)
   return(apply(_36, join({"touch"}, listify(files))))
 end
+function make_global(file, ...)
+  local _r40 = unstash({...})
+  local _id6 = _r40
+  local variables = cut(_id6, 0)
+  local _x65 = variables
+  local _n = _35(_x65)
+  local _i = 0
+  while _i < _n do
+    local v = _x65[_i + 1]
+    patch1(file, "(define " .. v .. " ", "(define-global " .. v .. " ")
+    _i = _i + 1
+  end
+end
 function _36(...)
   local args = unstash({...})
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x65 = args
-  local _n = _35(_x65)
-  local _i = 0
-  while _i < _n do
-    local arg = _x65[_i + 1]
+  local _x67 = args
+  local _n1 = _35(_x67)
+  local _i1 = 0
+  while _i1 < _n1 do
+    local arg = _x67[_i1 + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -1813,7 +1852,7 @@ function _36(...)
         c = c .. " "
       end
     end
-    _i = _i + 1
+    _i1 = _i1 + 1
   end
   if some63(c) then
     add(cmds, c)
@@ -1831,26 +1870,26 @@ function git63(path)
   return(dir63(j(path, ".git")))
 end
 function git(path, what, ...)
-  local _r40 = unstash({...})
-  local _id6 = _r40
-  local args = cut(_id6, 0)
+  local _r42 = unstash({...})
+  local _id7 = _r42
+  local args = cut(_id7, 0)
   if not( what == "clone") then
     if not git63(path) then
       error("no .git at " .. path)
     end
   end
-  local _x67 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x67.hush = true
-  return(apply(_36, join(_x67, args)))
+  local _x69 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x69.hush = true
+  return(apply(_36, join(_x69, args)))
 end
 function gitdir(path, nocheck)
-  local _e6
+  local _e7
   if path then
-    _e6 = j(path, ".monki", "git")
+    _e7 = j(path, ".monki", "git")
   else
-    _e6 = j(".monki", "git")
+    _e7 = j(".monki", "git")
   end
-  local dst = _e6
+  local dst = _e7
   if not nocheck then
     if not git63(dst) then
       local errmsg = "Error: no .git at " .. dst
@@ -1913,9 +1952,9 @@ end
 function monkitree(path)
   pushd(path)
   local _o = tree(".", "/monki.l$")
-  local _i1 = nil
-  for _i1 in next, _o do
-    local file = _o[_i1]
+  local _i2 = nil
+  for _i2 in next, _o do
+    local file = _o[_i2]
     prn(j(pwd(), path, file))
     monki(file)
   end
@@ -1964,11 +2003,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x70 = argv
-  local _n2 = _35(_x70)
-  local _i2 = 0
-  while _i2 < _n2 do
-    local arg = _x70[_i2 + 1]
+  local _x72 = argv
+  local _n3 = _35(_x72)
+  local _i3 = 0
+  while _i3 < _n3 do
+    local arg = _x72[_i3 + 1]
     if dir63(arg) then
       monkitree(arg)
     else
@@ -1978,7 +2017,7 @@ function mmain(argv)
         error("unknown cmd " .. arg)
       end
     end
-    _i2 = _i2 + 1
+    _i3 = _i3 + 1
   end
 end
 mmain(args())

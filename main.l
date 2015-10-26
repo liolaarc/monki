@@ -148,6 +148,16 @@
   (if (id-literal? x) (inner x)
     x))
 
+(mac unlit! xs
+  `(do ,@(map [do `(set ,_ (unlit ,_))]
+           xs)))
+
+(def tolit (x)
+  (if (not (atom? x)) x
+      (id-literal? x) (list 'quote (inner x))
+      (string? x) x
+    (list 'quote x)))
+
 (def replace (str x y count)
   (lfn self (str x y count)
      (do (when (and count (= count 0))
@@ -159,20 +169,15 @@
            str))
     (self (unlit str) (unlit x) (unlit y) count)))
 
-(lfn tolit (x)
-  (if (not (atom? x)) x
-      (id-literal? x) (list 'quote (inner x))
-      (string? x) x
-    (list 'quote x))
-
-(mac replace args
-  `(replace1 ,@(map tolit args))))
-(def replace1 replace) ; a sneaky hack to make (apply replace '(foo o z)) work.
-
-(mac patch (file x y)
-  (w/uniq g
-    `(w/file ,g (j (getcwd) ,file)
-       (replace ,g ,x ,y))))
+(def patch (file x y)
+  (unlit! file x y)
+  (w/file fs (j (getcwd) file)
+    (unless (search fs x)
+      (error (cat file ": patch: failed to find code:\n  " x)))
+    (replace fs x y)))
+(mac patch args
+  `(patch1 ,@(map tolit args)))
+(def patch1 patch)
 
 (mac create (file x)
   (w/uniq g
@@ -183,6 +188,12 @@
 
 (def touch (files)
   (apply $ `(touch ,@(listify files))))
+
+(def make-global (file rest: variables)
+  (step v variables
+    (patch1 file
+      (cat "(define " v " ")
+      (cat "(define-global " v " "))))
 
 (def $ args
   (let hush (get args 'hush)

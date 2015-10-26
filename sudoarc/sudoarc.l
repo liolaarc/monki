@@ -164,10 +164,10 @@
 (def cons (x y)
   (join (list x) y))
 
-(def copylist (l)
-  (let l (obj)
-    (each (k v) l
-      (set (get l (copylist k)) (copylist v)))
+(def copylist (xs)
+  (let l ()
+    (each (k v) xs
+      (set (get l k) v))
     l))
 
 (def listify (x)
