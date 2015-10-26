@@ -7,7 +7,7 @@
 
 # Let's see how this goes.  Watch for signs of io.popen failing to
 # block.
-export LUMEN_HOST=luajit 
+export LUMEN_HOST=${LUMEN_HOST:-luajit}
 
 # resolve symlinks.
 if [ -z "$at" ]; then at="`readlink -f "$0" 2>/dev/null`"; fi
