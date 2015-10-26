@@ -198,6 +198,9 @@ read_table["["] = function (s) {
   }
   return(r);
 };
+read_table["]"] = function (s) {
+  throw new Error("Unexpected ] at " + s.pos);
+};
 read_table["{"] = function (s) {
   read_char(s);
   var r = undefined;
@@ -218,6 +221,9 @@ read_table["{"] = function (s) {
     }
   }
   return(r);
+};
+read_table["}"] = function (s) {
+  throw new Error("Unexpected } at " + s.pos);
 };
 read_table["\"\"\""] = function (s) {
   read_char(s, 3);

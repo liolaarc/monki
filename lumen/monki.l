@@ -235,6 +235,8 @@ case $host in
               (nil? c) (set r (expected s "]"))
             (let x (read s)
               (add l x))))))))
+(define-reader ("]" s)
+  (error (cat "Unexpected ] at " (get s 'pos))))
 
 (define-reader ("{" s)
   (read-char s)
@@ -247,6 +249,8 @@ case $host in
               (nil? c) (set r (expected s "}"))
             (let x (read s)
               (add l x))))))))
+(define-reader ("}" s)
+  (error (cat "Unexpected } at " (get s 'pos))))
 |)
 
 (patch "reader.l"
