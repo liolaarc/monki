@@ -1945,7 +1945,7 @@ function mmain(argv)
     return(monki(op))
   end
   if op == "repl" then
-    return(repl())
+    return
   end
   if op == "clone" then
     if not( _35(argv) > 1) then

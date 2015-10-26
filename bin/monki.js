@@ -2031,7 +2031,7 @@ mmain = function (argv) {
     return(monki(op));
   }
   if (op === "repl") {
-    return(repl());
+    return;
   }
   if (op === "clone") {
     if (!( _35(argv) > 1)) {

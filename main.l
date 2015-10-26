@@ -302,7 +302,7 @@
       (return (monki op)))
     ; repl.
     (when (= op "repl")
-      (return (repl)))
+      (return)) ; lumen's (main) will start a repl.
     ; clone.
     (when (= op "clone")
       (unless (> (len argv) 1)
