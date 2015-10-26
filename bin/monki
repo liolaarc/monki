@@ -42,8 +42,8 @@ if [ ! -z "${REBUILD}" ]; then
   # Rebuild Monki.
   #
   obj="${home}/obj"
-  lumen_bin="${home}/lumen/bin"
-  lumen="${home}/lumen/bin/lumen"
+  lumen_bin="${home}/sudoarc/lumen/bin"
+  lumen="${home}/sudoarc/lumen/bin/lumen"
   if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
 
   for target in "js" "lua"; do
