@@ -1634,6 +1634,9 @@ shell = function (cmd) {
   var o = exec(cmd);
   return(o.toString());
 };
+exit = function (code) {
+  return(process.exit(code));
+};
 var _sys = require("system");
 pj = _sys["path-join"];
 sep = _sys["path-separator"];

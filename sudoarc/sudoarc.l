@@ -352,3 +352,9 @@
              ((get h 'close) h))))
     (exec cmd))))
 
+; (exit)
+(def exit (code)
+  (target js: (process.exit code)
+          lua: (os.exit code)))
+
+

@@ -1547,6 +1547,9 @@ function shell(cmd)
   end
   return(exec(cmd))
 end
+function exit(code)
+  return(os.exit(code))
+end
 local _sys = require("system")
 pj = _sys["path-join"]
 sep = _sys["path-separator"]
