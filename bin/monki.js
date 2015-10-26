@@ -1054,7 +1054,7 @@ setenv("export", {_stash: true, macro: function () {
 var reader = require("reader");
 var compiler = require("compiler");
 var system = require("system");
-var eval_print = function (form) {
+eval_print = function (form) {
   var _id = (function () {
     try {
       return([true, compiler.eval(form)]);
@@ -1076,7 +1076,7 @@ var eval_print = function (form) {
 var rep = function (s) {
   return(eval_print(reader["read-string"](s)));
 };
-var repl = function () {
+repl = function () {
   var buf = "";
   var rep1 = function (s) {
     buf = buf + s;
@@ -1394,9 +1394,9 @@ cddr = function (x) {
 cons = function (x, y) {
   return(join([x], y));
 };
-copylist = function (l) {
-  var _l = {};
-  var _o = _l;
+copylist = function (xs) {
+  var l = [];
+  var _o = xs;
   var k = undefined;
   for (k in _o) {
     var v = _o[k];
@@ -1407,9 +1407,9 @@ copylist = function (l) {
       _e6 = k;
     }
     var _k = _e6;
-    _l[copylist(_k)] = copylist(v);
+    l[_k] = v;
   }
-  return(_l);
+  return(l);
 };
 listify = function (x) {
   if (atom63(x)) {

@@ -939,7 +939,7 @@ end})
 local reader = require("reader")
 local compiler = require("compiler")
 local system = require("system")
-local function eval_print(form)
+function eval_print(form)
   local _x = nil
   local _msg = nil
   local _e = xpcall(function ()
@@ -969,7 +969,7 @@ end
 local function rep(s)
   return(eval_print(reader["read-string"](s)))
 end
-local function repl()
+function repl()
   local buf = ""
   local function rep1(s)
     buf = buf .. s
@@ -1300,15 +1300,15 @@ end
 function cons(x, y)
   return(join({x}, y))
 end
-function copylist(l)
-  local _l = {}
-  local _o = _l
+function copylist(xs)
+  local l = {}
+  local _o = xs
   local k = nil
   for k in next, _o do
     local v = _o[k]
-    _l[copylist(k)] = copylist(v)
+    l[k] = v
   end
-  return(_l)
+  return(l)
 end
 function listify(x)
   if atom63(x) then

@@ -1054,7 +1054,7 @@ setenv("export", {_stash: true, macro: function () {
 var reader = require("reader");
 var compiler = require("compiler");
 var system = require("system");
-var eval_print = function (form) {
+eval_print = function (form) {
   var _id = (function () {
     try {
       return([true, compiler.eval(form)]);
@@ -1076,7 +1076,7 @@ var eval_print = function (form) {
 var rep = function (s) {
   return(eval_print(reader["read-string"](s)));
 };
-var repl = function () {
+repl = function () {
   var buf = "";
   var rep1 = function (s) {
     buf = buf + s;
