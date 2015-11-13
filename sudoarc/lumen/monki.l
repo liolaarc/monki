@@ -147,6 +147,17 @@ case $host in
 """)
 
 
+; reader.l: turn "." atoms into "rest:" atoms.
+; This enables (fn (x . ys) ...) rather than (fn (x rest: ys) ...)
+(patch "reader.l"
+|
+        (= str "-inf") -inf
+|
+|
+        (= str "-inf") -inf
+        (= str ".")    "rest:"
+|)
+
 
 ;
 ; reader.l: Add """raw string""" syntax.
@@ -206,6 +217,7 @@ case $host in
     (return ((get read-table "\"\"\"") s)))
   (read-char s)
 |)
+
 
 ;
 ; reader.l: Add [ ] syntax to represent a fn of one arg, e.g.

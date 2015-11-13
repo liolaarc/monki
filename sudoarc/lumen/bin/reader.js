@@ -130,11 +130,15 @@ read_table[""] = function (s) {
             if (str === "-inf") {
               return(-inf);
             } else {
-              var n = number(str);
-              if (nil63(n) || nan63(n) || inf63(n)) {
-                return(str);
+              if (str === ".") {
+                return("rest:");
               } else {
-                return(n);
+                var n = number(str);
+                if (nil63(n) || nan63(n) || inf63(n)) {
+                  return(str);
+                } else {
+                  return(n);
+                }
               }
             }
           }
