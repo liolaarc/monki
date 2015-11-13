@@ -1082,26 +1082,22 @@ local function main()
     end
   end
 end
-setenv("define", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  return(join({"define-global"}, l))
-end})
 function comp(expr)
   return(print(compile(macroexpand(expr))))
 end
-reader = require("reader")
-reader_stream = reader.stream
-read_all = reader["read-all"]
-system = require("system")
-write = system.write
-read_file = system["read-file"]
-write_file = system["write-file"]
+local reader = require("reader")
+local reader_stream = reader.stream
+local read_all = reader["read-all"]
+local system = require("system")
+local write = system.write
+local read_file = system["read-file"]
+local write_file = system["write-file"]
 env = system["get-environment-variable"]
 function readstr(s)
   return(read_all(reader_stream(s)))
 end
-function prnerr(_x4)
-  local _id = _x4
+function prnerr(_x)
+  local _id = _x
   local expr = _id[1]
   local msg = _id[2]
   prn("Error in ", file, ": ")
@@ -1115,29 +1111,29 @@ function loadstr(str, ...)
   local _id1 = _r3
   local on_err = _id1["on-err"]
   local verbose = _id1.verbose
-  local _x6 = readstr(str)
-  local _n = _35(_x6)
+  local _x2 = readstr(str)
+  local _n = _35(_x2)
   local _i = 0
   while _i < _n do
-    local expr = _x6[_i + 1]
+    local expr = _x2[_i + 1]
     if "1" == env("VERBOSE") then
       prn(string(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))
     end
-    local _x7 = nil
+    local _x3 = nil
     local _msg = nil
     local _e = xpcall(function ()
-      _x7 = eval(expr)
-      return(_x7)
+      _x3 = eval(expr)
+      return(_x3)
     end, function (m)
       _msg = _37message_handler(m)
       return(_msg)
     end)
     local _e5
     if _e then
-      _e5 = _x7
+      _e5 = _x3
     else
       _e5 = _msg
     end
@@ -1372,11 +1368,11 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x115 = xs
-  local _n3 = _35(_x115)
+  local _x111 = xs
+  local _n3 = _35(_x111)
   local _i3 = 0
   while _i3 < _n3 do
-    local x = _x115[_i3 + 1]
+    local x = _x111[_i3 + 1]
     if f(x) then
       a(x)
     end
@@ -1447,11 +1443,11 @@ function pr(...)
   local l = cut(_id27, 0)
   local c = nil
   if sep then
-    local _x122 = l
-    local _n4 = _35(_x122)
+    local _x118 = l
+    local _n4 = _35(_x118)
     local _i4 = 0
     while _i4 < _n4 do
-      local x = _x122[_i4 + 1]
+      local x = _x118[_i4 + 1]
       if c then
         write(c)
       else
@@ -1461,11 +1457,11 @@ function pr(...)
       _i4 = _i4 + 1
     end
   else
-    local _x123 = l
-    local _n5 = _35(_x123)
+    local _x119 = l
+    local _n5 = _35(_x119)
     local _i5 = 0
     while _i5 < _n5 do
-      local x = _x123[_i5 + 1]
+      local x = _x119[_i5 + 1]
       write(str(x))
       _i5 = _i5 + 1
     end
@@ -1554,7 +1550,7 @@ if host63("luajit") then
   end
 end
 function shell(cmd)
-  function exec(s)
+  local function exec(s)
     local h = io.popen(cmd)
     local _g4 = h.read(h, "*a")
     h.close(h)

@@ -856,22 +856,22 @@ var lower_set = function (args, hoist, stmt63, tail63) {
 var lower_if = function (args, hoist, stmt63, tail63) {
   var _id16 = args;
   var cond = _id16[0];
-  var then = _id16[1];
-  var else = _id16[2];
+  var _then = _id16[1];
+  var _else = _id16[2];
   if (stmt63 || tail63) {
     var _e32;
-    if (else) {
-      _e32 = [lower_body([else], tail63)];
+    if (_else) {
+      _e32 = [lower_body([_else], tail63)];
     }
-    return(add(hoist, join(["%if", lower(cond, hoist), lower_body([then], tail63)], _e32)));
+    return(add(hoist, join(["%if", lower(cond, hoist), lower_body([_then], tail63)], _e32)));
   } else {
     var e = unique("e");
     add(hoist, ["%local", e]);
     var _e31;
-    if (else) {
-      _e31 = [lower(["set", e, else])];
+    if (_else) {
+      _e31 = [lower(["set", e, _else])];
     }
-    add(hoist, join(["%if", lower(cond, hoist), lower(["set", e, then])], _e31));
+    add(hoist, join(["%if", lower(cond, hoist), lower(["set", e, _then])], _e31));
     return(e);
   }
 };

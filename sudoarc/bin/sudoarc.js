@@ -1184,26 +1184,22 @@ var main = function () {
     }
   }
 };
-setenv("define", {_stash: true, macro: function () {
-  var l = unstash(Array.prototype.slice.call(arguments, 0));
-  return(join(["define-global"], l));
-}});
 comp = function (expr) {
   return(print(compile(macroexpand(expr))));
 };
-reader = require("reader");
-reader_stream = reader.stream;
-read_all = reader["read-all"];
-system = require("system");
-write = system.write;
-read_file = system["read-file"];
-write_file = system["write-file"];
+var reader = require("reader");
+var reader_stream = reader.stream;
+var read_all = reader["read-all"];
+var system = require("system");
+var write = system.write;
+var read_file = system["read-file"];
+var write_file = system["write-file"];
 env = system["get-environment-variable"];
 readstr = function (s) {
   return(read_all(reader_stream(s)));
 };
-prnerr = function (_x3) {
-  var _id = _x3;
+prnerr = function (_x) {
+  var _id = _x;
   var expr = _id[0];
   var msg = _id[1];
   prn("Error in ", file, ": ");
@@ -1217,11 +1213,11 @@ loadstr = function (str) {
   var _id1 = _r3;
   var on_err = _id1["on-err"];
   var verbose = _id1.verbose;
-  var _x4 = readstr(str);
-  var _n = _35(_x4);
+  var _x1 = readstr(str);
+  var _n = _35(_x1);
   var _i = 0;
   while (_i < _n) {
-    var expr = _x4[_i];
+    var expr = _x1[_i];
     if ("1" === env("VERBOSE")) {
       prn(string(expr));
     }
@@ -1480,11 +1476,11 @@ keep = function (f, xs) {
   a = function (item) {
     return(add(_g1, item));
   };
-  var _x95 = xs;
-  var _n3 = _35(_x95);
+  var _x92 = xs;
+  var _n3 = _35(_x92);
   var _i3 = 0;
   while (_i3 < _n3) {
-    var x = _x95[_i3];
+    var x = _x92[_i3];
     if (f(x)) {
       a(x);
     }
@@ -1555,11 +1551,11 @@ pr = function () {
   var l = cut(_id27, 0);
   var c = undefined;
   if (sep) {
-    var _x97 = l;
-    var _n4 = _35(_x97);
+    var _x94 = l;
+    var _n4 = _35(_x94);
     var _i4 = 0;
     while (_i4 < _n4) {
-      var x = _x97[_i4];
+      var x = _x94[_i4];
       if (c) {
         write(c);
       } else {
@@ -1569,11 +1565,11 @@ pr = function () {
       _i4 = _i4 + 1;
     }
   } else {
-    var _x98 = l;
-    var _n5 = _35(_x98);
+    var _x95 = l;
+    var _n5 = _35(_x95);
     var _i5 = 0;
     while (_i5 < _n5) {
-      var x = _x98[_i5];
+      var x = _x95[_i5];
       write(str(x));
       _i5 = _i5 + 1;
     }
@@ -1644,8 +1640,8 @@ setenv("import", {_stash: true, macro: function (name) {
   return(["def", name, ["require", ["quote", name]]]);
 }});
 shell = function (cmd) {
-  childproc = require("child_process");
-  exec = childproc.execSync;
+  var childproc = require("child_process");
+  var exec = childproc.execSync;
   var o = exec(cmd);
   return(o.toString());
 };
