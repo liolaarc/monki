@@ -1,8 +1,4 @@
 
-; TODO: Is this necessary?
-(define-macro define l
-  `(define-global ,@l))
-
 ; Useful shorthand for seeing what a Lumen expression compiles to.  It
 ; can be used anywhere eval is used, and it shows you what code eval
 ; would have run.  E.g. try:
@@ -32,18 +28,27 @@
 ; Let's see how far we can push Lumen in the direction of Arc.
 ;
 
-(define-global load (file :verbose)
-  (when verbose
-    (print (cat "Loading " file)))
-  (step expr (readstr (read-file file))
+(define-global prnerr ((expr msg))
+  (prn "Error in " file ": ")
+  (prn "   " msg)
+  (prn "The error occurred while evaluating: ")
+  (prn expr)
+  msg)
+
+(define-global loadstr (str :verbose :on-err)
+  (step expr (readstr str)
     (when (= "1" (env "VERBOSE")) (prn (string expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
     (let ((ok x) (guard (eval expr)))
       (unless ok
-        (prn "Error in " file ": ")
-        (prn "   " x)
-        (prn "The error occurred while evaluating: ")
-        (prn expr)))))
+        ((or on-err prnerr) (list expr x))))))
+
+(define-global load (file :verbose :on-err)
+  (when verbose
+    (print (cat "Loading " file)))
+  (loadstr (read-file file)
+    verbose: verbose
+    on-err: on-err))
 
 (define-macro mac l
   `(define-macro ,@l))

@@ -786,7 +786,7 @@ setenv("let", {_stash: true, macro: function (bs) {
       var val = _id13[1];
       var bs1 = cut(_id13, 2);
       var renames = [];
-      if (bound63(id) || toplevel63()) {
+      if (bound63(id) || reserved63(id) || toplevel63()) {
         var id1 = unique(id);
         renames = [id, id1];
         id = id1;
@@ -1089,9 +1089,9 @@ repl = function () {
     }
   };
   system.write("> ");
-  var in = process.stdin;
-  in.setEncoding("utf8");
-  return(in.on("data", rep1));
+  var _in = process.stdin;
+  _in.setEncoding("utf8");
+  return(_in.on("data", rep1));
 };
 compile_file = function (path) {
   var s = reader.stream(system["read-file"](path));

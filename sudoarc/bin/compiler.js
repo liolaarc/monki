@@ -592,11 +592,7 @@ var id = function (id) {
     id1 = id1 + c1;
     i = i + 1;
   }
-  if (reserved63(id1)) {
-    return("_" + id1);
-  } else {
-    return(id1);
-  }
+  return(id1);
 };
 var compile_atom = function (x) {
   if (x === "nil" && target === "lua") {
@@ -856,22 +852,22 @@ var lower_set = function (args, hoist, stmt63, tail63) {
 var lower_if = function (args, hoist, stmt63, tail63) {
   var _id16 = args;
   var cond = _id16[0];
-  var then = _id16[1];
-  var else = _id16[2];
+  var _then = _id16[1];
+  var _else = _id16[2];
   if (stmt63 || tail63) {
     var _e32;
-    if (else) {
-      _e32 = [lower_body([else], tail63)];
+    if (_else) {
+      _e32 = [lower_body([_else], tail63)];
     }
-    return(add(hoist, join(["%if", lower(cond, hoist), lower_body([then], tail63)], _e32)));
+    return(add(hoist, join(["%if", lower(cond, hoist), lower_body([_then], tail63)], _e32)));
   } else {
     var e = unique("e");
     add(hoist, ["%local", e]);
     var _e31;
-    if (else) {
-      _e31 = [lower(["set", e, else])];
+    if (_else) {
+      _e31 = [lower(["set", e, _else])];
     }
-    add(hoist, join(["%if", lower(cond, hoist), lower(["set", e, then])], _e31));
+    add(hoist, join(["%if", lower(cond, hoist), lower(["set", e, _then])], _e31));
     return(e);
   }
 };
@@ -1148,9 +1144,6 @@ setenv("return", {_stash: true, special: function (x) {
 }, stmt: true});
 setenv("new", {_stash: true, special: function (x) {
   return("new " + compile(x));
-}});
-setenv("typeof", {_stash: true, special: function (x) {
-  return("typeof(" + compile(x) + ")");
 }});
 setenv("error", {_stash: true, special: function (x) {
   var _e36;

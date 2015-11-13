@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# # TODO: For now, force LUMEN_HOST=node until we figure out a good way
+# # of blocking until Lua's pcall() has finished.  See
+# # http://lua-users.org/lists/lua-l/2013-10/msg00727.html
+# export LUMEN_HOST=node
+
+# Let's see how this goes.  Watch for signs of io.popen failing to
+# block.
+export LUMEN_HOST=${LUMEN_HOST:-luajit}
+
+# resolve symlinks.
+if [ -z "$at" ]; then at="`readlink -f "$0" 2>/dev/null`"; fi
+if [ -z "$at" ]; then at="`readlink    "$0" 2>/dev/null`"; fi
+if [ -z "$at" ]; then at="$0"; fi
+
+dir="$(pwd)"
+cd "$(dirname "$at")"
+cd ..
+home="$(pwd)"
+bin="${home}/bin"
+cd "${dir}"
+
+if [ ! -z ${LUMEN_HOST} ];       then host=${LUMEN_HOST}
+elif luajit -v > /dev/null 2>&1; then host=luajit
+elif    lua -v > /dev/null 2>&1; then host=lua
+elif   node -v > /dev/null 2>&1; then host=node
+else 1>&2 echo "no host found" && exit 1; fi
+export LUMEN_HOST="${host}"
+
+case $host in
+    node*)
+        ext=js
+        export NODE_PATH="$NODE_PATH:${bin}:${dir}/lib";;
+    *)
+        ext=lua
+        export LUA_PATH="$LUA_PATH;${bin}/?.lua;${dir}/lib/?.lua;;";;
+esac
+
+if [ ! -z "${REBUILD}" ]; then
+  #
+  # Rebuild.
+  #
+  obj="${home}/obj"
+  lumen_bin="${home}/lumen/bin"
+  lumen="${home}/lumen/bin/lumen"
+  if [ ! -e "${lumen}" ]; then 1>&2 echo "Lumen not found" && exit 1; fi
+
+  for target in "js" "lua"; do
+      cd "${bin}"
+      git checkout *.${target}
+      cd "${dir}"
+      cp "${lumen_bin}/"*.${target} "${bin}/"
+  done
+
+  rm -f "${obj}/"*.js "${obj}/"*.lua
+
+  for target in "js" "lua"; do
+      "${lumen}" -c "${home}/sudoarc.l" -o "${obj}/sudoarc.${target}" -t ${target}
+  done
+
+  for target in "js" "lua"; do
+    "${lumen}" "${obj}/sudoarc.${ext}" -c "${home}/main.l" -o "${obj}/main.${target}" -t ${target}
+    cat "${lumen_bin}/lumen.${target}" | grep -v '^main\(\)' > "${bin}/sudoarc.${target}"
+    for src in "sudoarc" "main"; do
+        cat "${obj}/${src}.${target}" >> "${bin}/sudoarc.${target}"
+    done
+    echo "main()" >> "${bin}/sudoarc.${target}"
+  done
+fi
+
+if [ ! -z "${REPL}" ] || [ "$*" == "repl" ] || [ "$1" == "repl" ] || [ -z "$*" ]; then
+  rlwrap="`which rlwrap`"
+else
+  args="-e nil"
+fi
+
+if [ ! -z "$rlwrap" ]; then
+  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/sudoarc.${ext}" $args
+else
+  cmdline="$@" exec             "${host}" "${bin}/sudoarc.${ext}" $args
+fi
+

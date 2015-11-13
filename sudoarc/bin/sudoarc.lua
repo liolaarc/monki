@@ -685,7 +685,7 @@ setenv("let", {_stash = true, macro = function (bs, ...)
       local val = _id13[2]
       local bs1 = cut(_id13, 2)
       local renames = {}
-      if bound63(id) or toplevel63() then
+      if bound63(id) or reserved63(id) or toplevel63() then
         local id1 = unique(id)
         renames = {id, id1}
         id = id1
@@ -1082,4 +1082,526 @@ local function main()
     end
   end
 end
+setenv("define", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"define-global"}, l))
+end})
+function comp(expr)
+  return(print(compile(macroexpand(expr))))
+end
+reader = require("reader")
+reader_stream = reader.stream
+read_all = reader["read-all"]
+system = require("system")
+write = system.write
+read_file = system["read-file"]
+write_file = system["write-file"]
+env = system["get-environment-variable"]
+function readstr(s)
+  return(read_all(reader_stream(s)))
+end
+function prnerr(_x4)
+  local _id = _x4
+  local expr = _id[1]
+  local msg = _id[2]
+  prn("Error in ", file, ": ")
+  prn("   ", msg)
+  prn("The error occurred while evaluating: ")
+  prn(expr)
+  return(msg)
+end
+function loadstr(str, ...)
+  local _r3 = unstash({...})
+  local _id1 = _r3
+  local on_err = _id1["on-err"]
+  local verbose = _id1.verbose
+  local _x6 = readstr(str)
+  local _n = _35(_x6)
+  local _i = 0
+  while _i < _n do
+    local expr = _x6[_i + 1]
+    if "1" == env("VERBOSE") then
+      prn(string(expr))
+    end
+    if "1" == env("COMP") then
+      prn(comp(expr))
+    end
+    local _x7 = nil
+    local _msg = nil
+    local _e = xpcall(function ()
+      _x7 = eval(expr)
+      return(_x7)
+    end, function (m)
+      _msg = _37message_handler(m)
+      return(_msg)
+    end)
+    local _e5
+    if _e then
+      _e5 = _x7
+    else
+      _e5 = _msg
+    end
+    local _id2 = {_e, _e5}
+    local ok = _id2[1]
+    local x = _id2[2]
+    if not ok then
+      (on_err or prnerr)({expr, x})
+    end
+    _i = _i + 1
+  end
+end
+function load(file, ...)
+  local _r6 = unstash({...})
+  local _id3 = _r6
+  local on_err = _id3["on-err"]
+  local verbose = _id3.verbose
+  if verbose then
+    print("Loading " .. file)
+  end
+  return(loadstr(read_file(file), {_stash = true, ["on-err"] = on_err, verbose = verbose}))
+end
+setenv("mac", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"define-macro"}, l))
+end})
+setenv("macex", {_stash = true, macro = function (e)
+  return({"macroexpand", e})
+end})
+setenv("len", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"#"}, l))
+end})
+setenv("letmac", {_stash = true, macro = function (name, args, body, ...)
+  local _r10 = unstash({...})
+  local _id5 = _r10
+  local l = cut(_id5, 0)
+  return(join({"let-macro", {{name, args, body}}}, l))
+end})
+setenv("def", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"define-global"}, l))
+end})
+idfn = function (x)
+  return(x)
+end
+setenv("w/uniq", {_stash = true, macro = function (x, ...)
+  local _r13 = unstash({...})
+  local _id7 = _r13
+  local body = cut(_id7, 0)
+  if atom63(x) then
+    return(join({"let-unique", {x}}, body))
+  else
+    return(join({"let-unique", x}, body))
+  end
+end})
+setenv("void", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"do"}, l, {"nil"}))
+end})
+setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
+  local _r15 = unstash({...})
+  local _id9 = _r15
+  local l = cut(_id9, 0)
+  local _e6
+  if some63(l) then
+    _e6 = l
+  else
+    _e6 = {name}
+  end
+  return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, _e6))
+end})
+setenv("afn", {_stash = true, macro = function (args, body, ...)
+  local _r17 = unstash({...})
+  local _id11 = _r17
+  local l = cut(_id11, 0)
+  return(join({"lfn", "self", args, body}, l))
+end})
+setenv("accum", {_stash = true, macro = function (name, ...)
+  local _r19 = unstash({...})
+  local _id13 = _r19
+  local body = cut(_id13, 0)
+  local g = unique("g")
+  return({"let", g, join(), join({"lfn", name, {"item"}, {"add", g, "item"}}, body), g})
+end})
+setenv("acc", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"accum", "a"}, l))
+end})
+setenv("nor", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return({"not", join({"or"}, l)})
+end})
+function lst63(x)
+  return(not( atom63(x) or function63(x)))
+end
+function any63(x)
+  return(lst63(x) and some63(x))
+end
+setenv("iflet", {_stash = true, macro = function (name, ...)
+  local _r23 = unstash({...})
+  local _id16 = _r23
+  local l = cut(_id16, 0)
+  if some63(l) then
+    local _id17 = l
+    local x = _id17[1]
+    local a = _id17[2]
+    local bs = cut(_id17, 2)
+    local _e7
+    if one63(l) then
+      _e7 = name
+    else
+      _e7 = {"if", name, a, join({"iflet", name}, bs)}
+    end
+    return({"let", name, x, _e7})
+  end
+end})
+setenv("whenlet", {_stash = true, macro = function (name, ...)
+  local _r25 = unstash({...})
+  local _id20 = _r25
+  local l = cut(_id20, 0)
+  if some63(l) then
+    local _id21 = l
+    local x = _id21[1]
+    local ys = cut(_id21, 1)
+    local _e8
+    if one63(l) then
+      _e8 = name
+    else
+      _e8 = join({"do"}, ys)
+    end
+    return({"let", name, x, _e8})
+  end
+end})
+setenv("aif", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"iflet", "it"}, l))
+end})
+setenv("awhen", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"let-when", "it"}, l))
+end})
+setenv("repeat", {_stash = true, macro = function (n, ...)
+  local _r27 = unstash({...})
+  local _id23 = _r27
+  local l = cut(_id23, 0)
+  local g = unique("g")
+  return(join({"for", g, n}, l))
+end})
+function atom(x)
+  return(atom63(x) or function63(x))
+end
+function acons(x)
+  return(not atom(x))
+end
+function car(x)
+  if acons(x) and some63(x) then
+    return(hd(x))
+  end
+end
+function cdr(x)
+  if acons(x) and some63(x) then
+    return(tl(x))
+  end
+end
+function caar(x)
+  return(car(car(x)))
+end
+function cadr(x)
+  return(car(cdr(x)))
+end
+function cddr(x)
+  return(cdr(cdr(x)))
+end
+function cons(x, y)
+  return(join({x}, y))
+end
+function copylist(xs)
+  local l = {}
+  local _o = xs
+  local k = nil
+  for k in next, _o do
+    local v = _o[k]
+    l[k] = v
+  end
+  return(l)
+end
+function listify(x)
+  if atom63(x) then
+    return({x})
+  else
+    return(x)
+  end
+end
+function intersperse(x, lst)
+  local sep = nil
+  local _g = {}
+  local a = nil
+  a = function (item)
+    return(add(_g, item))
+  end
+  local _o1 = lst
+  local _i2 = nil
+  for _i2 in next, _o1 do
+    local item = _o1[_i2]
+    if sep then
+      a(sep)
+    else
+      sep = x
+    end
+    a(item)
+  end
+  return(_g)
+end
+setenv("complement", {_stash = true, macro = function (f)
+  local g = unique("g")
+  return({"fn", g, {"not", {"apply", f, g}}})
+end})
+function testify(x)
+  if function63(x) then
+    return(x)
+  else
+    return(function (_)
+      return(_ == x)
+    end)
+  end
+end
+function keep(f, xs)
+  f = testify(f)
+  local _g1 = {}
+  local a = nil
+  a = function (item)
+    return(add(_g1, item))
+  end
+  local _x115 = xs
+  local _n3 = _35(_x115)
+  local _i3 = 0
+  while _i3 < _n3 do
+    local x = _x115[_i3 + 1]
+    if f(x) then
+      a(x)
+    end
+    _i3 = _i3 + 1
+  end
+  return(_g1)
+end
+function rem(f, xs)
+  return(keep(function (...)
+    local _g2 = unstash({...})
+    return(not apply(testify(f), _g2))
+  end, xs))
+end
+rev = reverse
+function str(x)
+  if string63(x) then
+    return(x)
+  else
+    return(string(x))
+  end
+end
+wschars = {" ", "\t", "\n", "\r"}
+function ws63(s)
+  local i = 0
+  while i < _35(s) do
+    local c = char(s, i)
+    if in63(c, wschars) then
+      return(true)
+    end
+    i = i + 1
+  end
+end
+function rtrim(s, ...)
+  local _r49 = unstash({...})
+  local _id24 = _r49
+  local f = _id24.f
+  while some63(s) and (f or ws63)(char(s, edge(s))) do
+    s = clip(s, 0, edge(s))
+  end
+  return(s)
+end
+function ltrim(s, ...)
+  local _r50 = unstash({...})
+  local _id25 = _r50
+  local f = _id25.f
+  while some63(s) and (f or ws63)(char(s, 0)) do
+    s = clip(s, 1, _35(s))
+  end
+  return(s)
+end
+function trim(s, ...)
+  local _r51 = unstash({...})
+  local _id26 = _r51
+  local f = _id26.f
+  return(rtrim(ltrim(s, {_stash = true, f = f}), {_stash = true, f = f}))
+end
+function endswith(s, ending)
+  local i = _35(s) - _35(ending)
+  return(i == search(s, ending, i))
+end
+function startswith(s, prefix)
+  return(search(s, prefix) == 0)
+end
+function pr(...)
+  local _r54 = unstash({...})
+  local _id27 = _r54
+  local sep = _id27.sep
+  local l = cut(_id27, 0)
+  local c = nil
+  if sep then
+    local _x122 = l
+    local _n4 = _35(_x122)
+    local _i4 = 0
+    while _i4 < _n4 do
+      local x = _x122[_i4 + 1]
+      if c then
+        write(c)
+      else
+        c = str(sep)
+      end
+      write(str(x))
+      _i4 = _i4 + 1
+    end
+  else
+    local _x123 = l
+    local _n5 = _35(_x123)
+    local _i5 = 0
+    while _i5 < _n5 do
+      local x = _x123[_i5 + 1]
+      write(str(x))
+      _i5 = _i5 + 1
+    end
+  end
+  if l then
+    return(hd(l))
+  end
+end
+setenv("do1", {_stash = true, macro = function (a, ...)
+  local _r56 = unstash({...})
+  local _id29 = _r56
+  local bs = cut(_id29, 0)
+  local g = unique("g")
+  return({"let", g, a, join({"do"}, bs), g})
+end})
+function prn(...)
+  local l = unstash({...})
+  local _g3 = apply(pr, l)
+  pr("\n")
+  return(_g3)
+end
+function filechars(path)
+  return(read_file(path))
+end
+function readfile(path)
+  return(readstr(filechars(path)))
+end
+function doshell(...)
+  local args = unstash({...})
+  return(rtrim(shell(apply(cat, intersperse(" ", args)))))
+end
+function mvfile(src, dst)
+  doshell("mv", escape(src), escape(dst))
+  return(dst)
+end
+function getmod(file)
+  return(doshell("stat -r", escape(file), "| awk '{ print $3; }'"))
+end
+function chmod(spec, file)
+  return(doshell("chmod", escape(spec), escape(file)))
+end
+function chmodx(file)
+  return(chmod("+x", file))
+end
+function writefile(path, contents)
+  doshell("cp -fp", escape(path), escape(path .. ".tmp"))
+  write_file(path .. ".tmp", contents)
+  mvfile(path .. ".tmp", path)
+  return(contents)
+end
+setenv("w/file", {_stash = true, macro = function (v, path, ...)
+  local _r65 = unstash({...})
+  local _id31 = _r65
+  local l = cut(_id31, 0)
+  local gp = unique("gp")
+  return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
+end})
+function args()
+  return(split(env("cmdline"), " "))
+end
+function host()
+  return(env("LUMEN_HOST") or "")
+end
+function host63(x)
+  return(search(host(), x))
+end
+setenv("import", {_stash = true, macro = function (name)
+  return({"def", name, {"require", {"quote", name}}})
+end})
+if host63("luajit") then
+  ffi = require("ffi")
+  setenv("defc", {_stash = true, macro = function (name, val)
+    local _e9
+    if id_literal63(val) then
+      _e9 = inner(val)
+    else
+      _e9 = val
+    end
+    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e9}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+  end})
+  ffi.cdef("int usleep (unsigned int usecs)")
+  usleep = ffi.C.usleep
+  function sleep(secs)
+    usleep(secs * 1000000)
+    return(nil)
+  end
+end
+function shell(cmd)
+  function exec(s)
+    local h = io.popen(cmd)
+    local _g4 = h.read(h, "*a")
+    h.close(h)
+    return(_g4)
+  end
+  return(exec(cmd))
+end
+function exit(code)
+  return(os.exit(code))
+end
+function appusage()
+  prn("  to run a script:    sudoarc foo.l")
+  prn("  to get a repl:      sudoarc")
+  return(prn(""))
+end
+function script63(name)
+  return(endswith(name, ".l") or endswith(name, ".arc"))
+end
+function appmain(argv)
+  if none63(argv or {}) then
+    return(repl())
+  end
+  local op = argv[1]
+  local params = cut(argv, 1)
+  if in63(op, {"-h", "--help", "help"}) then
+    appusage()
+    return
+  end
+  if script63(op) then
+    return(load(op))
+  end
+  if op == "repl" then
+    map(load, params)
+    return
+  end
+  local _x1 = argv
+  local _n = _35(_x1)
+  local _i = 0
+  while _i < _n do
+    local arg = _x1[_i + 1]
+    if script63(arg) then
+      load(arg)
+    else
+      error("unknown cmd " .. arg)
+    end
+    _i = _i + 1
+  end
+end
+appmain(args())
 main()
