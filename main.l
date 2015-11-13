@@ -291,12 +291,34 @@
 ;       (monki file))))
 
 (def musage ()
+  (prn "")
   (prn "  to run all monki.l files beneath a dir:")
   (prn "    monki <dir>")
+  (prn "")
   (prn "  to clone a git repo at a subdir:")
   (prn "    monki clone <url> [revision] <subdir>")
+  (prn "    monki clone laarc/monki monki")
+  (prn "    monki cp laarc/monki monki")
+  (prn "    monki c laarc/monki monki")
   (prn "")
-  (prn " e.g.  monki clone laarc/monki monki"))
+  (prn "")
+  (prn "  to run a git command on the underlying .git repo of a monki folder:")
+  (prn "    cd some-monki-folder/")
+  (prn "    monki git log")
+  (prn "    monki git status")
+  (prn "    monki g status")
+  (prn "")
+  (prn "  to get a repl")
+  (prn "    monki repl")
+  (prn "    monki r")
+  (prn "")
+  (prn "  to eval some expressions:")
+  (prn "    monki eval '1 2 3 (+ 1 2) (list 1 2)'")
+  (prn "    monki e '1 2 3'")
+  (prn "")
+  (prn "  to eval some expressions and see what they compile to:")
+  (prn "    COMP=1 monki eval '1 2 3 (+ 1 2) (list 1 2)'")
+  (prn ""))
 
 (def mmain (argv)
   ; eval files in subdirs.
@@ -305,17 +327,21 @@
   (let (op (at argv 0)
         params (cut argv 1))
     ; help.
-    (when (in? op (list "-h" "--help" "help"))
+    (when (in? op '(help h --help -h /? -? ? haalp))
       (musage)
       (return))
     ; run a non-monki.l script.
     (when (endswith op ".l")
       (return (monki op)))
+    ; eval expressions.
+    (when (in? op '(eval e))
+      (loadstr (clip (env 'cmdline) (# op)) :print)
+      (return))
     ; repl.
-    (when (= op "repl")
+    (when (in? op '(repl r))
       (return)) ; lumen's (main) will start a repl.
     ; clone.
-    (when (= op "clone")
+    (when (in? op '(clone cp c))
       (unless (> (len argv) 1)
         (musage)
         (return))
@@ -327,7 +353,7 @@
            ">" (j dst "monki.l"))
         (return (monkitree dst))))
     ; git.
-    (when (= op "git")
+    (when (or (= op "git") (= op "g"))
       (prn (apply git (join (list (gitdir (pwd))) (or params ()))))
       (return)))
   ; eval files.

@@ -75,9 +75,14 @@ else
   args="-e nil"
 fi
 
+read -r -d '' cmdline <<EOF
+$*
+EOF
+export cmdline
+
 if [ ! -z "$rlwrap" ]; then
-  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/monki.${ext}" $args
+  exec "${rlwrap}" "${host}" "${bin}/monki.${ext}" $args
 else
-  cmdline="$@" exec             "${host}" "${bin}/monki.${ext}" $args
+  exec             "${host}" "${bin}/monki.${ext}" $args
 fi
 

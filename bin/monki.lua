@@ -1111,6 +1111,7 @@ function loadstr(str, ...)
   local _id1 = _r3
   local on_err = _id1["on-err"]
   local verbose = _id1.verbose
+  local print = _id1.print
   local _x2 = readstr(str)
   local _n = _35(_x2)
   local _i = 0
@@ -1140,6 +1141,9 @@ function loadstr(str, ...)
     local _id2 = {_e, _e5}
     local ok = _id2[1]
     local x = _id2[2]
+    if ok and print == true then
+      prn(x)
+    end
     if not ok then
       (on_err or prnerr)({expr, x})
     end
@@ -1520,7 +1524,7 @@ setenv("w/file", {_stash = true, macro = function (v, path, ...)
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
 end})
 function args()
-  return(split(env("cmdline"), " "))
+  return(readstr(env("cmdline")))
 end
 function host()
   return(env("LUMEN_HOST") or "")
@@ -1977,12 +1981,29 @@ function monkitree(path)
   return(_g4)
 end
 function musage()
+  prn("")
   prn("  to run all monki.l files beneath a dir:")
   prn("    monki <dir>")
+  prn("")
   prn("  to clone a git repo at a subdir:")
   prn("    monki clone <url> [revision] <subdir>")
   prn("")
-  return(prn(" e.g.  monki clone laarc/monki monki"))
+  prn(" e.g.  monki clone laarc/monki monki")
+  prn("")
+  prn("  to run a git command on the underlying .git repo of a monki folder:")
+  prn("    cd some-monki-folder/")
+  prn("    monki git log")
+  prn("    monki git status")
+  prn("")
+  prn("  to get a repl")
+  prn("    monki repl")
+  prn("")
+  prn("  to eval some expressions:")
+  prn("    monki eval '1 2 3 (+ 1 2) (list 1 2)'")
+  prn("")
+  prn("  to eval some expressions and see what they compile to:")
+  prn("    COMP=1 monki eval '1 2 3 (+ 1 2) (list 1 2)'")
+  return(prn(""))
 end
 function mmain(argv)
   if none63(argv or {}) then
@@ -1990,17 +2011,21 @@ function mmain(argv)
   end
   local op = argv[1]
   local params = cut(argv, 1)
-  if in63(op, {"-h", "--help", "help"}) then
+  if in63(op, {"help", "h", "--help", "-h", "/?", "-?", "?", "haalp"}) then
     musage()
     return
   end
   if endswith(op, ".l") then
     return(monki(op))
   end
-  if op == "repl" then
+  if in63(op, {"eval", "e"}) then
+    loadstr(clip(env("cmdline"), _35(op)), {_stash = true, print = true})
     return
   end
-  if op == "clone" then
+  if in63(op, {"repl", "r"}) then
+    return
+  end
+  if in63(op, {"clone", "cp", "c"}) then
     if not( _35(argv) > 1) then
       musage()
       return
@@ -2013,15 +2038,15 @@ function mmain(argv)
     _36("echo", "(clone " .. inner(string(cut(params, 0, edge(params)))) .. ")", ">", j(dst, "monki.l"))
     return(monkitree(dst))
   end
-  if op == "git" then
+  if op == "git" or op == "g" then
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x72 = argv
-  local _n3 = _35(_x72)
+  local _x75 = argv
+  local _n3 = _35(_x75)
   local _i3 = 0
   while _i3 < _n3 do
-    local arg = _x72[_i3 + 1]
+    local arg = _x75[_i3 + 1]
     if dir63(arg) then
       monkitree(arg)
     else

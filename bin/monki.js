@@ -1213,6 +1213,7 @@ loadstr = function (str) {
   var _id1 = _r3;
   var on_err = _id1["on-err"];
   var verbose = _id1.verbose;
+  var print = _id1.print;
   var _x1 = readstr(str);
   var _n = _35(_x1);
   var _i = 0;
@@ -1234,6 +1235,9 @@ loadstr = function (str) {
     })();
     var ok = _id2[0];
     var x = _id2[1];
+    if (ok && print === true) {
+      prn(x);
+    }
     if (! ok) {
       (on_err || prnerr)([expr, x]);
     }
@@ -1628,7 +1632,7 @@ setenv("w/file", {_stash: true, macro: function (v, path) {
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
 }});
 args = function () {
-  return(split(env("cmdline"), " "));
+  return(readstr(env("cmdline")));
 };
 host = function () {
   return(env("LUMEN_HOST") || "");
@@ -2063,12 +2067,29 @@ monkitree = function (path) {
   return(_g4);
 };
 musage = function () {
+  prn("");
   prn("  to run all monki.l files beneath a dir:");
   prn("    monki <dir>");
+  prn("");
   prn("  to clone a git repo at a subdir:");
   prn("    monki clone <url> [revision] <subdir>");
   prn("");
-  return(prn(" e.g.  monki clone laarc/monki monki"));
+  prn(" e.g.  monki clone laarc/monki monki");
+  prn("");
+  prn("  to run a git command on the underlying .git repo of a monki folder:");
+  prn("    cd some-monki-folder/");
+  prn("    monki git log");
+  prn("    monki git status");
+  prn("");
+  prn("  to get a repl");
+  prn("    monki repl");
+  prn("");
+  prn("  to eval some expressions:");
+  prn("    monki eval '1 2 3 (+ 1 2) (list 1 2)'");
+  prn("");
+  prn("  to eval some expressions and see what they compile to:");
+  prn("    COMP=1 monki eval '1 2 3 (+ 1 2) (list 1 2)'");
+  return(prn(""));
 };
 mmain = function (argv) {
   if (none63(argv || [])) {
@@ -2076,17 +2097,21 @@ mmain = function (argv) {
   }
   var op = argv[0];
   var params = cut(argv, 1);
-  if (in63(op, ["-h", "--help", "help"])) {
+  if (in63(op, ["help", "h", "--help", "-h", "/?", "-?", "?", "haalp"])) {
     musage();
     return;
   }
   if (endswith(op, ".l")) {
     return(monki(op));
   }
-  if (op === "repl") {
+  if (in63(op, ["eval", "e"])) {
+    loadstr(clip(env("cmdline"), _35(op)), {_stash: true, print: true});
     return;
   }
-  if (op === "clone") {
+  if (in63(op, ["repl", "r"])) {
+    return;
+  }
+  if (in63(op, ["clone", "cp", "c"])) {
     if (!( _35(argv) > 1)) {
       musage();
       return;
@@ -2099,15 +2124,15 @@ mmain = function (argv) {
     _36("echo", "(clone " + inner(string(cut(params, 0, edge(params)))) + ")", ">", j(dst, "monki.l"));
     return(monkitree(dst));
   }
-  if (op === "git") {
+  if (op === "git" || op === "g") {
     prn(apply(git, join([gitdir(pwd())], params || [])));
     return;
   }
-  var _x61 = argv;
-  var _n3 = _35(_x61);
+  var _x64 = argv;
+  var _n3 = _35(_x64);
   var _i3 = 0;
   while (_i3 < _n3) {
-    var arg = _x61[_i3];
+    var arg = _x64[_i3];
     if (dir63(arg)) {
       monkitree(arg);
     } else {
