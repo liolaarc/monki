@@ -14,15 +14,18 @@
   (let (op (at argv 0)
         params (cut argv 1))
     ; help.
-    (when (in? op (list "-h" "--help" "help"))
+    (when (in? op '(help h --help -h -? ? /? haalp))
       (appusage)
       (return))
     ; run a lumen script.
     (when (script? op)
       (return (load op)))
-    ; run any lumen scripts, then get a repl.
-    (when (= op "repl")
-      (map load params)
+    ; eval expressions.
+    (when (in? op '(eval e))
+      (loadstr (clip (env 'cmdline) (# op)) :print)
+      (return))
+    ; get a repl.
+    (when (in? op '(repl r))
       (return))) ; lumen's (main) will start a repl.
   ; eval files.
   (step arg argv

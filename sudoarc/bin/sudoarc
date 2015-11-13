@@ -75,9 +75,14 @@ else
   args="-e nil"
 fi
 
+read -r -d '' cmdline <<EOF
+$*
+EOF
+export cmdline
+
 if [ ! -z "$rlwrap" ]; then
-  cmdline="$@" exec "${rlwrap}" "${host}" "${bin}/sudoarc.${ext}" $args
+  exec "${rlwrap}" "${host}" "${bin}/sudoarc.${ext}" $args
 else
-  cmdline="$@" exec             "${host}" "${bin}/sudoarc.${ext}" $args
+  exec             "${host}" "${bin}/sudoarc.${ext}" $args
 fi
 

@@ -1213,6 +1213,7 @@ loadstr = function (str) {
   var _id1 = _r3;
   var on_err = _id1["on-err"];
   var verbose = _id1.verbose;
+  var print = _id1.print;
   var _x1 = readstr(str);
   var _n = _35(_x1);
   var _i = 0;
@@ -1234,6 +1235,9 @@ loadstr = function (str) {
     })();
     var ok = _id2[0];
     var x = _id2[1];
+    if (ok && print === true) {
+      prn(x);
+    }
     if (! ok) {
       (on_err || prnerr)([expr, x]);
     }
@@ -1628,7 +1632,7 @@ setenv("w/file", {_stash: true, macro: function (v, path) {
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
 }});
 args = function () {
-  return(split(env("cmdline"), " "));
+  return(readstr(env("cmdline")));
 };
 host = function () {
   return(env("LUMEN_HOST") || "");
@@ -1662,22 +1666,25 @@ appmain = function (argv) {
   }
   var op = argv[0];
   var params = cut(argv, 1);
-  if (in63(op, ["-h", "--help", "help"])) {
+  if (in63(op, ["help", "h", "--help", "-h", "-?", "?", "/?", "haalp"])) {
     appusage();
     return;
   }
   if (script63(op)) {
     return(load(op));
   }
-  if (op === "repl") {
-    map(load, params);
+  if (in63(op, ["eval", "e"])) {
+    loadstr(clip(env("cmdline"), _35(op)), {_stash: true, print: true});
     return;
   }
-  var _x1 = argv;
-  var _n = _35(_x1);
+  if (in63(op, ["repl", "r"])) {
+    return;
+  }
+  var _x3 = argv;
+  var _n = _35(_x3);
   var _i = 0;
   while (_i < _n) {
-    var arg = _x1[_i];
+    var arg = _x3[_i];
     if (script63(arg)) {
       load(arg);
     } else {

@@ -1111,6 +1111,7 @@ function loadstr(str, ...)
   local _id1 = _r3
   local on_err = _id1["on-err"]
   local verbose = _id1.verbose
+  local print = _id1.print
   local _x2 = readstr(str)
   local _n = _35(_x2)
   local _i = 0
@@ -1140,6 +1141,9 @@ function loadstr(str, ...)
     local _id2 = {_e, _e5}
     local ok = _id2[1]
     local x = _id2[2]
+    if ok and print == true then
+      prn(x)
+    end
     if not ok then
       (on_err or prnerr)({expr, x})
     end
@@ -1520,7 +1524,7 @@ setenv("w/file", {_stash = true, macro = function (v, path, ...)
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
 end})
 function args()
-  return(split(env("cmdline"), " "))
+  return(readstr(env("cmdline")))
 end
 function host()
   return(env("LUMEN_HOST") or "")
@@ -1575,22 +1579,25 @@ function appmain(argv)
   end
   local op = argv[1]
   local params = cut(argv, 1)
-  if in63(op, {"-h", "--help", "help"}) then
+  if in63(op, {"help", "h", "--help", "-h", "-?", "?", "/?", "haalp"}) then
     appusage()
     return
   end
   if script63(op) then
     return(load(op))
   end
-  if op == "repl" then
-    map(load, params)
+  if in63(op, {"eval", "e"}) then
+    loadstr(clip(env("cmdline"), _35(op)), {_stash = true, print = true})
     return
   end
-  local _x1 = argv
-  local _n = _35(_x1)
+  if in63(op, {"repl", "r"}) then
+    return
+  end
+  local _x3 = argv
+  local _n = _35(_x3)
   local _i = 0
   while _i < _n do
-    local arg = _x1[_i + 1]
+    local arg = _x3[_i + 1]
     if script63(arg) then
       load(arg)
     else

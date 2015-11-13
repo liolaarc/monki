@@ -35,11 +35,13 @@
   (prn expr)
   msg)
 
-(define-global loadstr (str :verbose :on-err)
+(define-global loadstr (str :verbose :on-err :print)
   (step expr (readstr str)
     (when (= "1" (env "VERBOSE")) (prn (string expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
     (let ((ok x) (guard (eval expr)))
+      (when (and ok (= print true))
+        (prn x)) 
       (unless ok
         ((or on-err prnerr) (list expr x))))))
 
@@ -299,7 +301,7 @@
        (set ,v (do ,@l))
        (writefile ,gp ,v))))
 
-(def args () (split (env 'cmdline) " "))
+(def args () (readstr (env 'cmdline)))
 (def host () (or (env "LUMEN_HOST") ""))
 (def host? (x) (search (host) x))
 
