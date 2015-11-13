@@ -279,7 +279,36 @@ read_table["\""] = function (s) {
   }
   return(r);
 };
+read_table["||"] = function (s) {
+  read_char(s, 2);
+  var r = undefined;
+  var str = "\"";
+  while (nil63(r)) {
+    var c = peek_char(s, 2);
+    if (c === "||") {
+      read_char(s, 2);
+      r = str + "\"";
+    } else {
+      if (nil63(c)) {
+        r = expected(s, "||");
+      } else {
+        var x = read_char(s);
+        var _e2;
+        if (x === "\"" || x === "\\") {
+          _e2 = "\\" + x;
+        } else {
+          _e2 = x;
+        }
+        str = str + _e2;
+      }
+    }
+  }
+  return(r);
+};
 read_table["|"] = function (s) {
+  if (peek_char(s, 2) === "||") {
+    return(read_table["||"](s));
+  }
   read_char(s);
   var r = undefined;
   var str = "|";

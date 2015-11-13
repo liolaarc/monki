@@ -1658,7 +1658,7 @@ script63 = function (name) {
 };
 appmain = function (argv) {
   if (none63(argv || [])) {
-    return(repl());
+    return;
   }
   var op = argv[0];
   var params = cut(argv, 1);

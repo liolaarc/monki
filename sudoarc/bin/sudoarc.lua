@@ -1571,7 +1571,7 @@ function script63(name)
 end
 function appmain(argv)
   if none63(argv or {}) then
-    return(repl())
+    return
   end
   local op = argv[1]
   local params = cut(argv, 1)

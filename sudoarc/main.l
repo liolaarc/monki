@@ -10,7 +10,7 @@
 
 (def appmain (argv)
   (when (none? (or argv ()))
-    (return (repl)))
+    (return)) ; lumen's (main) will start a repl.
   (let (op (at argv 0)
         params (cut argv 1))
     ; help.

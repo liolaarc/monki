@@ -279,7 +279,36 @@ read_table["\""] = function (s)
   end
   return(r)
 end
+read_table["||"] = function (s)
+  read_char(s, 2)
+  local r = nil
+  local str = "\""
+  while nil63(r) do
+    local c = peek_char(s, 2)
+    if c == "||" then
+      read_char(s, 2)
+      r = str .. "\""
+    else
+      if nil63(c) then
+        r = expected(s, "||")
+      else
+        local x = read_char(s)
+        local _e2
+        if x == "\"" or x == "\\" then
+          _e2 = "\\" .. x
+        else
+          _e2 = x
+        end
+        str = str .. _e2
+      end
+    end
+  end
+  return(r)
+end
 read_table["|"] = function (s)
+  if peek_char(s, 2) == "||" then
+    return(read_table["||"](s))
+  end
   read_char(s)
   local r = nil
   local str = "|"

@@ -163,7 +163,20 @@
                   (cat! str (read-char s)))
                 (cat! str (read-char s)))))))))
 
+(define-reader ("||" s)
+  (read-char s 2)
+  (with r nil
+    (let str "\""
+      (while (nil? r)
+        (let c (peek-char s 2)
+          (if (= c "||") (set r (cat str (do (read-char s 2) "\"")))
+              (nil? c) (set r (expected s "||"))
+            (let x (read-char s)
+              (cat! str (if (or (= x "\"") (= x "\\")) (cat "\\" x) x)))))))))
+
 (define-reader ("|" s)
+  (when (= (peek-char s 2) "||")
+    (return ((get read-table "||") s)))
   (read-char s)
   (with r nil
     (let str "|"
