@@ -2,40 +2,40 @@
 
 ; By default, use LuaJIT when compiling Lumen.
 (patch "makefile"
-|LUMEN_LUA  ?= lua|
-|LUMEN_LUA  ?= luajit|)
+||LUMEN_LUA  ?= lua||
+||LUMEN_LUA  ?= luajit||)
 
 ; compiler.l: Re-enable foo.bar syntax, even though it suffers from
 ; inconsistent behavior.  (E.g. foo.bar-baz doesn't work.)
 (patch "compiler.l"
-|
+||
 (define valid-code? (n)
   (or (number-code? n)         ; 0-9
       (and (> n 64) (< n 91))  ; A-Z
       (and (> n 96) (< n 123)) ; a-z
       (= n 95)))               ; _
-|
-|
+||
+||
 (define valid-code? (n)
   (or (number-code? n)         ; 0-9
       (and (> n 64) (< n 91))  ; A-Z
       (and (> n 96) (< n 123)) ; a-z
       (= n 46)                 ; .
       (= n 95)))               ; _
-|)
+||)
 
 
 ; runtime.l: def obj? (x)
 (patch "runtime.l"
-|
+||
 (define-global atom? (x)
-|
-|
+||
+||
 (define-global obj? (x)
   (and (is? x) (= (type x) (target js: 'object lua: 'table))))
 
 (define-global atom? (x)
-|)
+||)
 
 ; runtime.l: string:
 ;  - detect circular lists
@@ -43,7 +43,7 @@
 ;  - prevent errors for unknown types such as LuaJIT cdata
 ;
 (patch "runtime.l"
-"""
+||
 (define-global string (x depth)
   (if (and depth (> depth 40)) "circular"
       (nil? x) "nil"
@@ -66,8 +66,8 @@
         (cat! s sp v)
         (set sp " "))
       (cat s  ")"))))
-"""
-"""
+||
+||
 (define-global string (x depth ancestors)
   (if (nil? x) "nil"
       (nan? x) "nan"
@@ -93,70 +93,70 @@
         (cat! s sp v)
         (set sp " "))
       (cat s  ")"))))
-""")
+||)
 
 ; bin/lumen: Fix LUMEN_HOST to handle spaces.
 (patch "bin/lumen"
-|
+||
 if [ ! -z ${LUMEN_HOST} ]
 then
     host=${LUMEN_HOST}
-|
-|
+||
+||
 if [ ! -z "${LUMEN_HOST}" ]
 then
     host="${LUMEN_HOST}"
-|)
+||)
 
 ; bin/lumen: Use rlwrap when possible.
 (patch "bin/lumen"
-|exec ${host} "${home}/${code}" "$@"|
+||exec ${host} "${home}/${code}" "$@"||
 ; Using rlwrap turns out to make compilation slower.  A full rebuild
 ; of Lumen jumped from 0.761s to 0.968s, a ~25% slowdown.  Keep
 ; rlwrap disabled except for repls.
-|
+||
 if [ -z "$*" ]; then
   exec rlwrap ${host} "${home}/${code}" "$@"
 else
   exec        ${host} "${home}/${code}" "$@"
 fi
-|)
+||)
 
 
 ; bin/lumen: Export LUMEN_HOST so that users can discern LuaJIT vs Lua.
 (patch "bin/lumen"
-|esac
+||esac
 
-|
-|esac
+||
+||esac
 
 export LUMEN_HOST="${host}"
-|)
+||)
 
 
 ;
 ; bin/lumen: Add lib/${os} to the LUA_PATH and NODE_PATH.
 ;
 (patch "bin/lumen"
-"""
+||
 case $host in
-"""
-"""
+||
+||
 os=$(uname | sed "y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/")
 case $host in
-""")
+||)
 
 
 ; reader.l: turn "." atoms into "rest:" atoms.
 ; This enables (fn (x . ys) ...) rather than (fn (x rest: ys) ...)
 (patch "reader.l"
-|
+||
         (= str "-inf") -inf
-|
-|
+||
+||
         (= str "-inf") -inf
         (= str ".")    "rest:"
-|)
+||)
 
 
 ;
@@ -164,7 +164,7 @@ case $host in
 ;
 
 (patch "reader.l"
-|
+||
 (define peek-char (s)
   (let ((:pos :len :string) s)
     (when (< pos len)
@@ -173,8 +173,8 @@ case $host in
 (define read-char (s)
   (let c (peek-char s)
     (if c (do (inc (get s 'pos)) c))))
-|
-|
+||
+||
 (define peek-char (s count offset)
   (let ((:pos :len :string) s
         from (+ pos (or offset 0))
@@ -187,14 +187,14 @@ case $host in
 (define read-char (s count offset)
   (let c (peek-char s count offset)
     (if c (do (inc (get s 'pos) (# c)) c))))
-|)
+||)
 
 (patch "reader.l"
-|
+||
 (define-reader ("\"" s)
   (read-char s)
-|
-|
+||
+||
 (define-reader ("\"\"\"" s)
   (read-char s 3)
   (with r nil
@@ -210,7 +210,7 @@ case $host in
   (when (= (peek-char s 3) "\"\"\"")
     (return ((get read-table "\"\"\"") s)))
   (read-char s)
-|)
+||)
 
 
 ;
@@ -250,11 +250,11 @@ case $host in
 ;
 
 (patch "reader.l"
-|
+||
 (define-reader (")" s)
   (error (cat "Unexpected ) at " (get s 'pos))))
-|
-|
+||
+||
 (define-reader (")" s)
   (error (cat "Unexpected ) at " (get s 'pos))))
 
@@ -285,11 +285,11 @@ case $host in
               (add l x))))))))
 (define-reader ("}" s)
   (error (cat "Unexpected } at " (get s 'pos))))
-|)
+||)
 
 (patch "reader.l"
-|(define delimiters (set-of "(" ")" ";" "\n"))|
-|(define delimiters (set-of "(" ")"  "[" "]"  "{" "}" ";" "\n"))|)
+||(define delimiters (set-of "(" ")" ";" "\n"))||
+||(define delimiters (set-of "(" ")"  "[" "]"  "{" "}" ";" "\n"))||)
 
 ;
 ; Expose some useful fns globally.
