@@ -1,4 +1,13 @@
 
+(define-macro mac l `(define-macro ,@l))
+(mac var l `(define ,@l))
+(mac def l `(define-global ,@l))
+(mac sym l `(define-symbol ,@l))
+(mac special l `(define-special ,@l))
+
+(mac imp (l) `(require ',@l))
+(mac lib (l) `(def ,l (imp ,l)))
+
 ; Useful shorthand for seeing what a Lumen expression compiles to.  It
 ; can be used anywhere eval is used, and it shows you what code eval
 ; would have run.  E.g. try:
@@ -52,9 +61,6 @@
     verbose: verbose
     on-err: on-err))
 
-(define-macro mac l
-  `(define-macro ,@l))
-
 (mac macex (e)
   `(macroexpand ,e))
 
@@ -64,9 +70,6 @@
 (mac letmac (name args body rest: l)
   `(let-macro ((,name ,args ,body))
      ,@l))
-
-(mac def l
-  `(define-global ,@l))
 
 (def idfn (fn (x) x))
 
