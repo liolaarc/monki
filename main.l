@@ -80,7 +80,7 @@
   (pwd))
 (def cd1 cd)
 
-(mac cd (path rest: l)
+(mac cd (path . l)
   (if (none? l)
     `(cd1 ,path)
     `(do (pushd ,path)
@@ -97,7 +97,7 @@
 (def mkdir (path)
   ($ "mkdir" "-p" path))
 
-(mac w/mkdir (path rest: body)
+(mac w/mkdir (path . body)
   (w/uniq g
     `(let ,g ,path
        (mkdir ,g)
@@ -189,7 +189,7 @@
 (def touch (files)
   (apply $ `(touch ,@(listify files))))
 
-(def make-global (file rest: variables)
+(def make-global (file . variables)
   (step v variables
     (patch1 file
       (cat "(define " v " ")
@@ -217,7 +217,7 @@
 (def git? (path)
   (dir? (j path ".git")))
 
-(def git (path what rest: args)
+(def git (path what . args)
   (unless (= what "clone")
     (unless (git? path)
       (error (cat "no .git at " path))))

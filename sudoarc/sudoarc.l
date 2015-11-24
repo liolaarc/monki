@@ -71,42 +71,6 @@
 (def atom atom?)
 (def env  {system get-environment-variable})
 
-; Useful shorthand for seeing what a Lumen expression compiles to.  It
-; can be used anywhere eval is used, and it shows you what code eval
-; would have run.  E.g. try:
-;
-;   (let exprs '(let (adder (fn (x) (fn (n) (+ x n))) add2 (adder 2)) (add2 42))
-;     (comp exprs)
-;     (eval exprs))
-;
-(def comp    [print (compile (macex _))])
-(def macex   {compiler expand})
-(def readstr [read-all (stream _)])
-
-(def prnerr ((expr msg))
-  (prn "Error in " file ": ")
-  (prn "   " msg)
-  (prn "The error occurred while evaluating: ")
-  (prn expr)
-  msg)
-
-(def loadstr (str :verbose :on-err :print)
-  (step expr (readstr str)
-    (when (= "1" (env "VERBOSE")) (prn (string expr)))
-    (when (= "1" (env "COMP")) (prn (comp expr)))
-    (let ((ok x) (guard (eval expr)))
-      (when (and ok (= print true))
-        (prn x)) 
-      (unless ok
-        ((or on-err prnerr) (list expr x))))))
-
-(def load (file :verbose :on-err)
-  (when verbose
-    (prn "Loading " file))
-  (loadstr (read-file file)
-    verbose: verbose
-    on-err: on-err))
-
 (mac w/uniq (x . body)
   (if (atom? x)
     `(let-unique (,x) ,@body)
@@ -339,11 +303,46 @@
        (set ,v (do ,@l))
        (writefile ,gp ,v))))
 
-(defs
-  args (fn () (readstr (env 'cmdline)))
-  host (fn () (or (env "LUMEN_HOST") ""))
-  host? [search (host) _]
-  luajit? (fn () (host? 'luajit)))
+(def args [readstr (env 'cmdline)])
+(def host [or (env "LUMEN_HOST") ""])
+(def host? [search (host) _])
+(def luajit? [host? 'luajit])
+
+; Useful shorthand for seeing what a Lumen expression compiles to.  It
+; can be used anywhere eval is used, and it shows you what code eval
+; would have run.  E.g. try:
+;
+;   (let exprs '(let (adder (fn (x) (fn (n) (+ x n))) add2 (adder 2)) (add2 42))
+;     (comp exprs)
+;     (eval exprs))
+;
+(def comp [print (compile (macex _))])
+(def macex {compiler expand})
+(def readstr [read-all (stream _)])
+
+(def prnerr ((expr msg))
+  (prn "Error in " file ": ")
+  (prn "   " msg)
+  (prn "The error occurred while evaluating: ")
+  (prn expr)
+  msg)
+
+(def loadstr (str :verbose :on-err :print)
+  (step expr (readstr str)
+    (when (= "1" (env "VERBOSE")) (prn (string expr)))
+    (when (= "1" (env "COMP")) (prn (comp expr)))
+    (let ((ok x) (guard (eval expr)))
+      (when (and ok (= print true))
+        (prn x)) 
+      (unless ok
+        ((or on-err prnerr) (list expr x))))))
+
+(def load (file :verbose :on-err)
+  (when verbose
+    (prn "Loading " file))
+  (loadstr (read-file file)
+    verbose: verbose
+    on-err: on-err))
 
 ;
 ; These run only on LuaJIT.
