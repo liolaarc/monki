@@ -102,6 +102,10 @@ local function wrap(s, x)
     return({x, y})
   end
 end
+local function digit63(s, i)
+  local c = code(s, i)
+  return(c >= 48 and c <= 57)
+end
 read_table[""] = function (s)
   local str = ""
   while true do
@@ -133,11 +137,15 @@ read_table[""] = function (s)
               if str == "." then
                 return("rest:")
               else
-                local n = number(str)
-                if nil63(n) or nan63(n) or inf63(n) then
+                if not digit63(str, edge(str)) then
                   return(str)
                 else
-                  return(n)
+                  local n = number(str)
+                  if nil63(n) or nan63(n) or inf63(n) then
+                    return(str)
+                  else
+                    return(n)
+                  end
                 end
               end
             end

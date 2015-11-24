@@ -1,9 +1,11 @@
 (clone "sctb/lumen")
 
+
 ; By default, use LuaJIT when compiling Lumen.
 (patch "makefile"
 ||LUMEN_LUA  ?= lua||
 ||LUMEN_LUA  ?= luajit||)
+
 
 ; compiler.l: Re-enable foo.bar syntax, even though it suffers from
 ; inconsistent behavior.  (E.g. foo.bar-baz doesn't work.)
@@ -23,6 +25,32 @@
       (= n 46)                 ; .
       (= n 95)))               ; _
 ||)
+
+
+; compiler.l: On LUMEN_HOST=node, "0?" is incorrectly read as 0.  We
+; fix the bug here.
+
+(patch "reader.l"
+||
+(define-reader ("" s) ; atom
+||
+||
+(define digit? (s i)
+  (let c (code s i)
+    (and (>= c 48) (<= c 57))))
+
+(define-reader ("" s) ; atom
+||)
+
+(patch "reader.l"
+||
+        (= str "-inf") -inf
+||
+||
+        (= str "-inf") -inf
+        (not (digit? str (edge str))) str
+||)
+
 
 ; (patch "compiler.l"
 ; ||
@@ -60,7 +88,10 @@
 ; (export run
 ; ||)
 
-; runtime.l: def tuple (xs n)
+
+; runtime.l:
+;   def tuple (lst n)
+;   def vals (lst)
 (patch "runtime.l"
 ||
 (define-global pair (l)
@@ -76,16 +107,22 @@
       (add l1 (list (at l i) (at l (+ i 1))))
       (inc i))))
 
-(define-global tuple (l n)
+(define-global tuple (lst n)
   (if (nil? n) (set n 2))
   (with l1 ()
-    (for i (# l)
+    (for i (# lst)
       (let l2 ()
         (for j n
-          (add l2 (at l (+ i j))))
+          (add l2 (at lst (+ i j))))
         (add l1 l2))
       (inc i (- n 1)))))
+
+(define-global vals (lst)
+  (with r ()
+    (step x lst
+      (add r x))))
 ||)
+
 
 ; runtime.l: modify atom? to return true for functions.
 (patch "runtime.l"
@@ -101,6 +138,7 @@
 ||(test= false (atom? (fn ())))||
 ||(test= true (atom? (fn ())))||)
 
+
 ; runtime.l: def obj? (x)
 (patch "runtime.l"
 ||
@@ -112,6 +150,7 @@
 
 (define-global atom? (x)
 ||)
+
 
 ; runtime.l: string:
 ;  - detect circular lists
@@ -171,6 +210,7 @@
       (cat s  ")"))))
 ||)
 
+
 ; bin/lumen: Use rlwrap when possible.
 (patch "bin/lumen"
 ||exec ${host} "${home}/${code}" "$@"||
@@ -222,9 +262,7 @@ case $host in
 ||)
 
 
-;
 ; reader.l: Add """raw string""" syntax.
-;
 
 (patch "reader.l"
 ||
@@ -276,9 +314,7 @@ case $host in
 ||)
 
 
-;
 ; reader.l: Add ||raw string|| syntax.
-;
 
 (patch "reader.l"
 """
@@ -354,6 +390,7 @@ case $host in
 ||(define delimiters (set-of "(" ")" ";" "\n"))||
 ||(define delimiters (set-of "(" ")"  "[" "]"  "{" "}" ";" "\n"))||)
 
+
 ;
 ; Expose some useful fns globally.
 ;
@@ -361,6 +398,7 @@ case $host in
 (make-global "main.l"
   "repl"
   "eval-print")
+
 
 ; Apply all of these changes by rebuilding Lumen several times.  The
 ; first rebuild will be using the old Lumen compiler. The second will

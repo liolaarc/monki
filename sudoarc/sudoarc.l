@@ -1,4 +1,7 @@
 
+(define-macro void l
+  `(do ,@l nil))
+
 ;; Definition funcs
 
 (define-macro alias (newname oldname)
@@ -10,45 +13,38 @@
 (alias mac define-macro)
 (alias special define-special)
 
-; if a variable is nil, set it to a default value.
-(mac o l
-  (with e '(do)
-    (let lastvar 'nil
-      (step (var val) (pair l)
-        (add e `(if (nil? ,var) (set ,var ,val)))
-        (set lastvar var))
-      (add e lastvar))))
-
-;; Module funcs
-
-(mac lib (name) `(def ,name (require ',name)))
-(mac use (name) `(var ,name (require ',name)))
-
-; {reader stream} becomes (get reader 'stream)
-(mac curly (module func)
-  `(get ,module ',func))
-
 ;; Multi-Definition funcs
 
-(mac multi (name val argc) (o argc 2)
+(mac multi (name val argc)
+  (if (nil? argc) (set argc 2))
   (if (atom? val)
     `(mac ,name l
       (with e '(do)
         (step (x . ys) (tuple l ,argc)
           (add e `(,',val ,x ,@ys)))))
     `(mac ,name l
-      (prn (with e '(do)
+      (with e '(do)
         (step it (tuple l ,argc)
           (let ((x . ys) it)
-            (add e ,val))))))))
+            (add e ,val)))))))
 
 (multi vars var 2)
 (multi defs def 2)
 (multi syms sym 2)
 (multi macs mac 3)
 (multi specials special 3)
+
+;; Module funcs
+
+(mac lib (name) `(def ,name (require ',name)))
+(mac use (name) `(var ,name (require ',name)))
+
 (multi libs lib 1)
 (multi uses use 1)
+
+; {reader stream} becomes (get reader 'stream)
+(mac curly (module func)
+  `(get ,module ',func))
 
 ;; Modules
 
@@ -60,24 +56,154 @@
 (vars
   stream {reader stream}
   read-all {reader read-all}
-  write {system write}
   read-file {system read-file}
   write-file {system write-file})
 
+(defs
+  env {system get-environment-variable}
+  macex {compiler expand}
+  comp [print (compile (macex _))]
+  write1 {system write}
+  write [void (write1 (str _))])
+
 ;; Basics
-(def len  #)
-(def idfn [do _])
-(def fn?  function?)
-(def atom atom?)
-(def env  {system get-environment-variable})
+
+(sym t true)
+
+(def err (msg . l)
+  (error `(,msg ,@l)))
+
+(mac cmp (x y)
+  `(= (do ,x) (do ,y)))
+
+(mac def? (x)
+  (target
+    lua: `(is? ,x)
+    js:  `(not (cmp (typeof ,x) "undefined"))))
+
+(def testify (x)
+  (if (function? x) x
+    [cmp _ x]))
+  
+(defs
+  fn? function?
+  str? string?
+  num? number?
+  atom atom?
+  false? (testify false)
+  lst? obj?
+  list? obj?
+  len #
+  idfn [do _]
+  str [if (str? _) _ (string _)]
+  lst [if (lst? _) _ (list _)])
+
+(def acons [not (atom? _)])
+(def alist [and (acons _) (or (keys? _) (some? _))])
+(def empty [and (acons _) (not (keys? _)) (none? _)])
+(def no [or (nil? _) (false? _) (empty _)])
+(def t? [not (no _)])
+
+(mac is l
+  (if (one? l)
+    `(not (no ,@l))
+    `(cmp ,@l)))
+
+(mac isnt l
+  (if (one? l)
+    `(no ,@l)
+    `(not (cmp ,@l))))
+
+; for each x in lst, calls (f x).  Returns the last result.
+(def map1 (f lst) (o lst ())
+  (let val nil
+    (step x lst
+      (set val (f x)))
+    val))
+
+; for each x in lst, calls (f x).  Returns nil.
+(def mapnil l
+  (void (apply map1 l)))
+
+(mac assert xs
+  (with e `(let bad nil)
+    (step cond xs
+      (add e `(unless (do ,cond) (set bad (str ',cond)))))
+    (add e `(when (is? bad)
+              (err (cat "assertion failed: " bad))))))
+(alias be assert)
 
 (mac w/uniq (x . body)
   (if (atom? x)
     `(let-unique (,x) ,@body)
     `(let-unique (,@x) ,@body)))
 
-(mac void l
-  `(do ,@l nil))
+(mac ado (a . bs)
+  (w/uniq (g x)
+    `(let (,g ,a
+           it ,g)
+       ,@bs)))
+
+(mac do1 (x . ys)
+  (w/uniq g
+    `(let ,g ,x
+       ,@ys
+       ,g)))
+
+; optional args.  For each (var val) in l, if var is nil, then
+; do (set var val)
+(mac o l
+  (with e '(do)
+    (let r 'nil
+      (step (var val) (pair l)
+        (add e `(if (nil? ,var) (set ,var ,val)))
+        (set r var))
+      (add e r))))
+
+; e.g.
+;  (def foo l (w/args l (a b c . (lh rh))
+;    (obj a: a b: b c: c lh: lh rh: rh rest: rest)))
+(mac w/args (l args . body) (o l () args ())
+  (w/uniq g
+    `(let (,g ,l
+           rest (get ,g 'rest)
+           ,(vals args) ,g
+           ,(or (get args 'rest) ()) (if rest rest (list)))
+       ,@body)))
+
+(def _any? [do (be (or (nil? _) (lst? _))) (and (is? _) (or (keys? _) (some? _)))])
+(def _0? [do (be (or (nil? _) (lst? _))) (or (nil? _) (none? _))])
+(def _1? [do (be (or (nil? _) (lst? _))) (and (is? _) (one? _))])
+(def _2? [do (be (or (nil? _) (lst? _))) (and (is? _) (two? _))])
+(mac any? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (or (keys? it) (some? it))) (do ,yes) (do ,@l))))
+(mac 0? (x yes . l) (o yes t) `(ado ,x (if (or (nil? it) (none? it)) (do ,yes) (do ,@l))))
+(mac 1? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (one? it)) (do ,yes) (do ,@l))))
+(mac 2? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (two? it)) (do ,yes) (do ,@l))))
+
+(mac complement (f)
+  (w/uniq g
+    `(fn ,g (not (apply ,f ,g)))))
+
+(mac repeat (n . l)
+  (w/uniq g
+    `(for ,g ,n
+      ,@l)))
+
+(mac push (place val)
+  `(add ,place ,val))
+
+(mac pop (place)
+  `(call (fn () 
+    (let x (last ,place)
+      (target
+         lua: (table.remove ,place)
+         js: ((get ,place 'splice) -1 1))
+      x))))
+
+(mac w/push (place val . body)
+  `(do (push ,place ,val)
+       ,@body
+       (pop ,place)))
 
 (mac lfn (name args body . l)
   `(let ,name nil
@@ -112,11 +238,9 @@
 (mac nor l
   `(not (or ,@l)))
 
-(def lst? (x)
-  (nor (atom? x) (function? x)))
-
-(def any? (x)
-  (and (lst? x) (some? x)))
+(mac ifnot (cond . l)
+  `(if (not ,cond) ,@l))
+(alias nif ifnot)
 
 ; Just an experiment.
 
@@ -145,11 +269,6 @@
 
 (mac awhen l
   `(let-when it ,@l))
-
-(mac repeat (n . l)
-  (w/uniq g
-    `(for ,g ,n
-      ,@l)))
 
 (def acons (x)
   (not (atom x)))
@@ -186,14 +305,6 @@
         (set sep x))
       (a item)))))
 
-(mac complement (f)
-  (w/uniq g
-    `(fn ,g (not (apply ,f ,g)))))
-
-(def testify (x)
-  (if (function? x) x
-    [= _ x]))
-
 (def keep (f xs)
   (set f (testify f))
   (acc (step x xs
@@ -204,6 +315,63 @@
   (keep (complement (testify f)) xs))
 
 (def rev reverse)
+; ;; Printing.
+
+; (def bstr [do (obj buf: (o _ "") in: 0)])
+; (def bget [get _ 'buf])
+; (def bcat1 (b x) (when (is? x) (cat! {b buf} x)))
+; (def bin (b)
+;   (repeat (inc {b in})
+;     (bcat1 b "  "))
+;   b)
+; (def bout (b)
+;   (dec {b in})
+;   ; (bcat1 b "\n")
+;   b)
+; (def bcat l (w/args l
+;           (b val sep parents . (lh rh))
+;   (do (if (and (not (atom? x)) (in? x parents))
+;     (bcat1 b 'circular)
+;     (w/push parents x
+;             (bcat b x "" parents . (list lh rh)))))
+;   (when (atom? val)
+;     (bcat1 b (if (fn? val) "fn" val))
+;     (return (bget b)))
+;   (o parents () lh "(" rh ")")
+;   (bcat1 b lh)
+;   (let ks ()
+;     (each (k v) val
+;       (add ks k))
+;     (set ks (sort ks))
+;     (step k ks
+;       (let x (get val k)
+;         (o sep "")
+;         (if (not (num? k))
+;           (set sep "\n"))
+;         (bcat1 b sep)
+;         (if (= sep "\n")
+;           (bin b)
+;           (do (unless (atom? x) (bcat1 b lh))
+;               (set sep " ")))
+;         (unless (num? k)
+;           (bcat1 b (str k))
+;           (bcat1 b ": "))
+;         (if (and (not (atom? x)) (in? x parents))
+;             (bcat1 b 'circular)
+;             (w/push parents x
+;               (bcat b x "" parents . (list lh rh))))
+;         (if (= sep "\n")
+;           (bout b)
+;           (unless (atom? x) (bcat1 b rh))))))
+;   (bcat1 b rh)
+;   (bget b)))
+
+; (def cats l
+;   (bcat (bstr) (if (one? l) (at l 0) l)))
+
+; (def write [print (cats _)])
+
+;; Basics
 
 ; Useful benchmark?
 
@@ -211,10 +379,6 @@
 ;   (apply cat 
 ;     (intersperse "\n"
 ;       (intersperse "foo" lines))))
-  
-(def str (x)
-  (if (string? x) x
-    (string x)))
 
 (def wschars (list " " "\t" "\n" "\r"))
 
@@ -244,22 +408,21 @@
 (def startswith (s prefix)
   (= (search s prefix) 0))
 
-(def pr (:sep . l)
-  (let c nil
-    (if sep
-      (step x l
-        (if c (write c)
-          (set c (str sep)))
-        (write (str x)))
-      (step x l
-        (write (str x)))))
-  (when l (hd l)))
-
-(mac do1 (a . bs)
-  (w/uniq g
-    `(let ,g ,a
-       (do ,@bs)
-       ,g)))
+;  (def foo l (w/args l (a b c . (lh rh))
+(def pr l (w/args l (x . xs)
+  (let ((sep lh rh) (lst xs))
+    (o sep "")
+    (let c nil
+      (if lh (write lh))
+      (if sep
+        (step x l
+          (if c (write c)
+            (set c (str sep)))
+          (write (str x)))
+        (step x l
+          (write (str x))))
+      (if rh (write rh)))
+    (when l (hd l)))))
 
 (def prn l
   (do1 (apply pr l)

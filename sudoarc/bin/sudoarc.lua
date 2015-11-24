@@ -233,17 +233,17 @@ function pair(l)
   end
   return(l1)
 end
-function tuple(l, n)
+function tuple(lst, n)
   if nil63(n) then
     n = 2
   end
   local l1 = {}
   local i = 0
-  while i < _35(l) do
+  while i < _35(lst) do
     local l2 = {}
     local j = 0
     while j < n do
-      add(l2, l[i + j + 1])
+      add(l2, lst[i + j + 1])
       j = j + 1
     end
     add(l1, l2)
@@ -252,22 +252,34 @@ function tuple(l, n)
   end
   return(l1)
 end
+function vals(lst)
+  local r = {}
+  local _x4 = lst
+  local _n6 = _35(_x4)
+  local _i6 = 0
+  while _i6 < _n6 do
+    local x = _x4[_i6 + 1]
+    add(r, x)
+    _i6 = _i6 + 1
+  end
+  return(r)
+end
 function sort(l, f)
   tsort(l, f)
   return(l)
 end
 function map(f, x)
   local t = {}
-  local _x4 = x
-  local _n6 = _35(_x4)
-  local _i6 = 0
-  while _i6 < _n6 do
-    local v = _x4[_i6 + 1]
+  local _x5 = x
+  local _n7 = _35(_x5)
+  local _i7 = 0
+  while _i7 < _n7 do
+    local v = _x5[_i7 + 1]
     local y = f(v)
     if is63(y) then
       add(t, y)
     end
-    _i6 = _i6 + 1
+    _i7 = _i7 + 1
   end
   local _o5 = x
   local k = nil
@@ -302,9 +314,9 @@ function keys63(t)
 end
 function empty63(t)
   local _o7 = t
-  local _i9 = nil
-  for _i9 in next, _o7 do
-    local x = _o7[_i9]
+  local _i10 = nil
+  for _i10 in next, _o7 do
+    local x = _o7[_i10]
     return(false)
   end
   return(true)
@@ -528,9 +540,9 @@ function string(x, depth, ancestors)
                       end
                     end
                     local _o11 = join(xs, ks)
-                    local _i13 = nil
-                    for _i13 in next, _o11 do
-                      local v = _o11[_i13]
+                    local _i14 = nil
+                    for _i14 in next, _o11 do
+                      local v = _o11[_i14]
                       s = s .. sp .. v
                       sp = " "
                     end
@@ -557,8 +569,8 @@ function toplevel63()
   return(one63(environment))
 end
 function setenv(k, ...)
-  local _r67 = unstash({...})
-  local _id1 = _r67
+  local _r68 = unstash({...})
+  local _id1 = _r68
   local _keys = cut(_id1, 0)
   if string63(k) then
     local _e7
@@ -1101,6 +1113,10 @@ local function main()
     end
   end
 end
+setenv("void", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"do"}, l, {"nil"}))
+end})
 setenv("alias", {_stash = true, macro = function (newname, oldname)
   return({"define-macro", newname, "l", {"quasiquote", {{"unquote", {"quote", oldname}}, {"unquote-splicing", "l"}}}})
 end})
@@ -1124,22 +1140,93 @@ setenv("special", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"define-special"}, l))
 end})
-setenv("o", {_stash = true, macro = function (...)
+setenv("multi", {_stash = true, macro = function (name, val, argc)
+  if nil63(argc) then
+    argc = 2
+  end
+  if atom63(val) then
+    local _x67 = {"x"}
+    _x67.rest = "ys"
+    return({"mac", name, "l", {"with", "e", {"quote", {"do"}}, {"step", _x67, {"tuple", "l", argc}, {"add", "e", {"quasiquote", {{"unquote", {"quote", val}}, {"unquote", "x"}, {"unquote-splicing", "ys"}}}}}}})
+  else
+    local _x84 = {"x"}
+    _x84.rest = "ys"
+    return({"mac", name, "l", {"with", "e", {"quote", {"do"}}, {"step", "it", {"tuple", "l", argc}, {"let", {_x84, "it"}, {"add", "e", val}}}}})
+  end
+end})
+setenv("vars", {_stash = true, macro = function (...)
   local l = unstash({...})
   local e = {"do"}
-  local lastvar = "nil"
-  local _x40 = pair(l)
-  local _n1 = _35(_x40)
+  local _x92 = tuple(l, 2)
+  local _n1 = _35(_x92)
   local _i1 = 0
   while _i1 < _n1 do
-    local _id1 = _x40[_i1 + 1]
-    local _var1 = _id1[1]
-    local val = _id1[2]
-    add(e, {"if", {"nil?", _var1}, {"set", _var1, val}})
-    lastvar = _var1
+    local _id1 = _x92[_i1 + 1]
+    local x = _id1[1]
+    local ys = cut(_id1, 1)
+    add(e, join({"var", x}, ys))
     _i1 = _i1 + 1
   end
-  add(e, lastvar)
+  return(e)
+end})
+setenv("defs", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  local e = {"do"}
+  local _x100 = tuple(l, 2)
+  local _n3 = _35(_x100)
+  local _i3 = 0
+  while _i3 < _n3 do
+    local _id3 = _x100[_i3 + 1]
+    local x = _id3[1]
+    local ys = cut(_id3, 1)
+    add(e, join({"def", x}, ys))
+    _i3 = _i3 + 1
+  end
+  return(e)
+end})
+setenv("syms", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  local e = {"do"}
+  local _x108 = tuple(l, 2)
+  local _n5 = _35(_x108)
+  local _i5 = 0
+  while _i5 < _n5 do
+    local _id5 = _x108[_i5 + 1]
+    local x = _id5[1]
+    local ys = cut(_id5, 1)
+    add(e, join({"sym", x}, ys))
+    _i5 = _i5 + 1
+  end
+  return(e)
+end})
+setenv("macs", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  local e = {"do"}
+  local _x116 = tuple(l, 3)
+  local _n7 = _35(_x116)
+  local _i7 = 0
+  while _i7 < _n7 do
+    local _id7 = _x116[_i7 + 1]
+    local x = _id7[1]
+    local ys = cut(_id7, 1)
+    add(e, join({"mac", x}, ys))
+    _i7 = _i7 + 1
+  end
+  return(e)
+end})
+setenv("specials", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  local e = {"do"}
+  local _x124 = tuple(l, 3)
+  local _n9 = _35(_x124)
+  local _i9 = 0
+  while _i9 < _n9 do
+    local _id9 = _x124[_i9 + 1]
+    local x = _id9[1]
+    local ys = cut(_id9, 1)
+    add(e, join({"special", x}, ys))
+    _i9 = _i9 + 1
+  end
   return(e)
 end})
 setenv("lib", {_stash = true, macro = function (name)
@@ -1148,161 +1235,332 @@ end})
 setenv("use", {_stash = true, macro = function (name)
   return({"var", name, {"require", {"quote", name}}})
 end})
-setenv("curly", {_stash = true, macro = function (module, func)
-  return({"get", module, {"quote", func}})
-end})
-setenv("multi", {_stash = true, macro = function (name, val, argc)
-  if nil63(argc) then
-    argc = 2
-  end
-  if atom63(val) then
-    local _x90 = {"x"}
-    _x90.rest = "ys"
-    return({"mac", name, "l", {"with", "e", {"quote", {"do"}}, {"step", _x90, {"tuple", "l", argc}, {"add", "e", {"quasiquote", {{"unquote", {"quote", val}}, {"unquote", "x"}, {"unquote-splicing", "ys"}}}}}}})
-  else
-    local _x108 = {"x"}
-    _x108.rest = "ys"
-    return({"mac", name, "l", {"prn", {"with", "e", {"quote", {"do"}}, {"step", "it", {"tuple", "l", argc}, {"let", {_x108, "it"}, {"add", "e", val}}}}}})
-  end
-end})
-setenv("vars", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  local e = {"do"}
-  local _x116 = tuple(l, 2)
-  local _n3 = _35(_x116)
-  local _i3 = 0
-  while _i3 < _n3 do
-    local _id3 = _x116[_i3 + 1]
-    local x = _id3[1]
-    local ys = cut(_id3, 1)
-    add(e, join({"var", x}, ys))
-    _i3 = _i3 + 1
-  end
-  return(e)
-end})
-setenv("defs", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  local e = {"do"}
-  local _x124 = tuple(l, 2)
-  local _n5 = _35(_x124)
-  local _i5 = 0
-  while _i5 < _n5 do
-    local _id5 = _x124[_i5 + 1]
-    local x = _id5[1]
-    local ys = cut(_id5, 1)
-    add(e, join({"def", x}, ys))
-    _i5 = _i5 + 1
-  end
-  return(e)
-end})
-setenv("syms", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  local e = {"do"}
-  local _x132 = tuple(l, 2)
-  local _n7 = _35(_x132)
-  local _i7 = 0
-  while _i7 < _n7 do
-    local _id7 = _x132[_i7 + 1]
-    local x = _id7[1]
-    local ys = cut(_id7, 1)
-    add(e, join({"sym", x}, ys))
-    _i7 = _i7 + 1
-  end
-  return(e)
-end})
-setenv("macs", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  local e = {"do"}
-  local _x140 = tuple(l, 3)
-  local _n9 = _35(_x140)
-  local _i9 = 0
-  while _i9 < _n9 do
-    local _id9 = _x140[_i9 + 1]
-    local x = _id9[1]
-    local ys = cut(_id9, 1)
-    add(e, join({"mac", x}, ys))
-    _i9 = _i9 + 1
-  end
-  return(e)
-end})
-setenv("specials", {_stash = true, macro = function (...)
-  local l = unstash({...})
-  local e = {"do"}
-  local _x148 = tuple(l, 3)
-  local _n11 = _35(_x148)
-  local _i11 = 0
-  while _i11 < _n11 do
-    local _id11 = _x148[_i11 + 1]
-    local x = _id11[1]
-    local ys = cut(_id11, 1)
-    add(e, join({"special", x}, ys))
-    _i11 = _i11 + 1
-  end
-  return(e)
-end})
 setenv("libs", {_stash = true, macro = function (...)
   local l = unstash({...})
   local e = {"do"}
-  local _x156 = tuple(l, 1)
-  local _n13 = _35(_x156)
-  local _i13 = 0
-  while _i13 < _n13 do
-    local _id13 = _x156[_i13 + 1]
-    local x = _id13[1]
-    local ys = cut(_id13, 1)
+  local _x144 = tuple(l, 1)
+  local _n11 = _35(_x144)
+  local _i11 = 0
+  while _i11 < _n11 do
+    local _id11 = _x144[_i11 + 1]
+    local x = _id11[1]
+    local ys = cut(_id11, 1)
     add(e, join({"lib", x}, ys))
-    _i13 = _i13 + 1
+    _i11 = _i11 + 1
   end
   return(e)
 end})
 setenv("uses", {_stash = true, macro = function (...)
   local l = unstash({...})
   local e = {"do"}
-  local _x164 = tuple(l, 1)
-  local _n15 = _35(_x164)
-  local _i15 = 0
-  while _i15 < _n15 do
-    local _id15 = _x164[_i15 + 1]
-    local x = _id15[1]
-    local ys = cut(_id15, 1)
+  local _x152 = tuple(l, 1)
+  local _n13 = _35(_x152)
+  local _i13 = 0
+  while _i13 < _n13 do
+    local _id13 = _x152[_i13 + 1]
+    local x = _id13[1]
+    local ys = cut(_id13, 1)
     add(e, join({"use", x}, ys))
-    _i15 = _i15 + 1
+    _i13 = _i13 + 1
   end
   return(e)
+end})
+setenv("curly", {_stash = true, macro = function (module, func)
+  return({"get", module, {"quote", func}})
 end})
 local compiler = require("compiler")
 local reader = require("reader")
 local system = require("system")
 local stream = reader.stream
 local read_all = reader["read-all"]
-local write = system.write
 local read_file = system["read-file"]
 local write_file = system["write-file"]
+env = system["get-environment-variable"]
+macex = compiler.expand
+comp = function (_)
+  return(print(compile(macex(_))))
+end
+write1 = system.write
+write = function (_)
+  write1(str(_))
+  return(nil)
+end
+setenv("t", {_stash = true, symbol = true})
+function err(msg, ...)
+  local _r12 = unstash({...})
+  local _id14 = _r12
+  local l = cut(_id14, 0)
+  error(join({msg}, l))
+end
+setenv("cmp", {_stash = true, macro = function (x, y)
+  return({"=", {"do", x}, {"do", y}})
+end})
+setenv("def?", {_stash = true, macro = function (x)
+  return({"is?", x})
+end})
+function testify(x)
+  if function63(x) then
+    return(x)
+  else
+    return(function (_)
+      return(_ == x)
+    end)
+  end
+end
+fn63 = function63
+str63 = string63
+num63 = number63
+atom = atom63
+false63 = testify(false)
+lst63 = obj63
+list63 = obj63
 len = _35
 idfn = function (_)
   return(_)
 end
-fn63 = function63
-atom = atom63
-env = system["get-environment-variable"]
+str = function (_)
+  if str63(_) then
+    return(_)
+  else
+    return(string(_))
+  end
+end
+lst = function (_)
+  if lst63(_) then
+    return(_)
+  else
+    return({_})
+  end
+end
+acons = function (_)
+  return(not atom63(_))
+end
+alist = function (_)
+  return(acons(_) and (keys63(_) or some63(_)))
+end
+empty = function (_)
+  return(acons(_) and not keys63(_) and none63(_))
+end
+no = function (_)
+  return(nil63(_) or false63(_) or empty(_))
+end
+t63 = function (_)
+  return(not no(_))
+end
+setenv("is", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  if one63(l) then
+    return({"not", join({"no"}, l)})
+  else
+    return(join({"cmp"}, l))
+  end
+end})
+setenv("isnt", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  if one63(l) then
+    return(join({"no"}, l))
+  else
+    return({"not", join({"cmp"}, l)})
+  end
+end})
+function map1(f, lst)
+  o(lst, {})
+  local val = nil
+  local _x185 = lst
+  local _n14 = _35(_x185)
+  local _i14 = 0
+  while _i14 < _n14 do
+    local x = _x185[_i14 + 1]
+    val = f(x)
+    _i14 = _i14 + 1
+  end
+  return(val)
+end
+function mapnil(...)
+  local l = unstash({...})
+  apply(map1, l)
+  return(nil)
+end
+setenv("assert", {_stash = true, macro = function (...)
+  local xs = unstash({...})
+  local e = {"let", "bad", "nil"}
+  local _x201 = xs
+  local _n16 = _35(_x201)
+  local _i16 = 0
+  while _i16 < _n16 do
+    local cond = _x201[_i16 + 1]
+    add(e, {"unless", {"do", cond}, {"set", "bad", {"str", {"quote", cond}}}})
+    _i16 = _i16 + 1
+  end
+  add(e, {"when", {"is?", "bad"}, {"err", {"cat", "\"assertion failed: \"", "bad"}}})
+  return(e)
+end})
+setenv("be", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"assert"}, l))
+end})
 setenv("w/uniq", {_stash = true, macro = function (x, ...)
-  local _r12 = unstash({...})
-  local _id17 = _r12
-  local body = cut(_id17, 0)
+  local _r29 = unstash({...})
+  local _id16 = _r29
+  local body = cut(_id16, 0)
   if atom63(x) then
     return(join({"let-unique", {x}}, body))
   else
     return(join({"let-unique", x}, body))
   end
 end})
-setenv("void", {_stash = true, macro = function (...)
+setenv("ado", {_stash = true, macro = function (a, ...)
+  local _r31 = unstash({...})
+  local _id18 = _r31
+  local bs = cut(_id18, 0)
+  local g = unique("g")
+  local x = unique("x")
+  return(join({"let", {g, a, "it", g}}, bs))
+end})
+setenv("do1", {_stash = true, macro = function (x, ...)
+  local _r33 = unstash({...})
+  local _id20 = _r33
+  local ys = cut(_id20, 0)
+  local g = unique("g")
+  return(join({"let", g, x}, ys, {g}))
+end})
+setenv("o", {_stash = true, macro = function (...)
   local l = unstash({...})
-  return(join({"do"}, l, {"nil"}))
+  local e = {"do"}
+  local r = "nil"
+  local _x243 = pair(l)
+  local _n18 = _35(_x243)
+  local _i18 = 0
+  while _i18 < _n18 do
+    local _id22 = _x243[_i18 + 1]
+    local _var1 = _id22[1]
+    local val = _id22[2]
+    add(e, {"if", {"nil?", _var1}, {"set", _var1, val}})
+    r = _var1
+    _i18 = _i18 + 1
+  end
+  add(e, r)
+  return(e)
+end})
+setenv("w/args", {_stash = true, macro = function (l, args, ...)
+  local _r35 = unstash({...})
+  local _id24 = _r35
+  local body = cut(_id24, 0)
+  if nil63(l) then
+    l = {}
+  end
+  if nil63(args) then
+    args = {}
+  end
+  local g = unique("g")
+  return(join({"let", {g, l, "rest", {"get", g, {"quote", "rest"}}, vals(args), g, args.rest or {}, {"if", "rest", "rest", {"list"}}}}, body))
+end})
+_any63 = function (_)
+  local bad = nil
+  if not( nil63(_) or lst63(_)) then
+    bad = str({"or", {"nil?", "_"}, {"lst?", "_"}})
+  end
+  if is63(bad) then
+    err("assertion failed: " .. bad)
+  end
+  return(is63(_) and (keys63(_) or some63(_)))
+end
+_063 = function (_)
+  local bad = nil
+  if not( nil63(_) or lst63(_)) then
+    bad = str({"or", {"nil?", "_"}, {"lst?", "_"}})
+  end
+  if is63(bad) then
+    err("assertion failed: " .. bad)
+  end
+  return(nil63(_) or none63(_))
+end
+_163 = function (_)
+  local bad = nil
+  if not( nil63(_) or lst63(_)) then
+    bad = str({"or", {"nil?", "_"}, {"lst?", "_"}})
+  end
+  if is63(bad) then
+    err("assertion failed: " .. bad)
+  end
+  return(is63(_) and one63(_))
+end
+_263 = function (_)
+  local bad = nil
+  if not( nil63(_) or lst63(_)) then
+    bad = str({"or", {"nil?", "_"}, {"lst?", "_"}})
+  end
+  if is63(bad) then
+    err("assertion failed: " .. bad)
+  end
+  return(is63(_) and two63(_))
+end
+setenv("any?", {_stash = true, macro = function (x, yes, ...)
+  local _r41 = unstash({...})
+  local _id26 = _r41
+  local l = cut(_id26, 0)
+  if nil63(yes) then
+    yes = true
+  end
+  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"or", {"keys?", "it"}, {"some?", "it"}}}, {"do", yes}, join({"do"}, l)}})
+end})
+setenv("0?", {_stash = true, macro = function (x, yes, ...)
+  local _r43 = unstash({...})
+  local _id28 = _r43
+  local l = cut(_id28, 0)
+  if nil63(yes) then
+    yes = true
+  end
+  return({"ado", x, {"if", {"or", {"nil?", "it"}, {"none?", "it"}}, {"do", yes}, join({"do"}, l)}})
+end})
+setenv("1?", {_stash = true, macro = function (x, yes, ...)
+  local _r45 = unstash({...})
+  local _id30 = _r45
+  local l = cut(_id30, 0)
+  if nil63(yes) then
+    yes = true
+  end
+  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"one?", "it"}}, {"do", yes}, join({"do"}, l)}})
+end})
+setenv("2?", {_stash = true, macro = function (x, yes, ...)
+  local _r47 = unstash({...})
+  local _id32 = _r47
+  local l = cut(_id32, 0)
+  if nil63(yes) then
+    yes = true
+  end
+  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"two?", "it"}}, {"do", yes}, join({"do"}, l)}})
+end})
+setenv("complement", {_stash = true, macro = function (f)
+  local g = unique("g")
+  return({"fn", g, {"not", {"apply", f, g}}})
+end})
+setenv("repeat", {_stash = true, macro = function (n, ...)
+  local _r51 = unstash({...})
+  local _id34 = _r51
+  local l = cut(_id34, 0)
+  local g = unique("g")
+  return(join({"for", g, n}, l))
+end})
+setenv("push", {_stash = true, macro = function (place, val)
+  return({"add", place, val})
+end})
+setenv("pop", {_stash = true, macro = function (place)
+  local _x366 = {"target"}
+  _x366.lua = {"table.remove", place}
+  _x366.js = {{"get", place, {"quote", "splice"}}, -1, 1}
+  return({"call", {"fn", join(), {"let", "x", {"last", place}, _x366, "x"}}})
+end})
+setenv("w/push", {_stash = true, macro = function (place, val, ...)
+  local _r57 = unstash({...})
+  local _id36 = _r57
+  local body = cut(_id36, 0)
+  return(join({"do", {"push", place, val}}, body, {{"pop", place}}))
 end})
 setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
-  local _r14 = unstash({...})
-  local _id19 = _r14
-  local l = cut(_id19, 0)
+  local _r59 = unstash({...})
+  local _id38 = _r59
+  local l = cut(_id38, 0)
   local _e5
   if some63(l) then
     _e5 = l
@@ -1312,15 +1570,15 @@ setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
   return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, _e5))
 end})
 setenv("afn", {_stash = true, macro = function (args, body, ...)
-  local _r16 = unstash({...})
-  local _id21 = _r16
-  local l = cut(_id21, 0)
+  local _r61 = unstash({...})
+  local _id40 = _r61
+  local l = cut(_id40, 0)
   return(join({"lfn", "self", args, body}, l))
 end})
 setenv("accum", {_stash = true, macro = function (name, ...)
-  local _r18 = unstash({...})
-  local _id23 = _r18
-  local body = cut(_id23, 0)
+  local _r63 = unstash({...})
+  local _id42 = _r63
+  local body = cut(_id42, 0)
   local g = unique("g")
   return({"let", g, join(), join({"lfn", name, {"item"}, {"add", g, "item"}}, body), g})
 end})
@@ -1332,21 +1590,25 @@ setenv("nor", {_stash = true, macro = function (...)
   local l = unstash({...})
   return({"not", join({"or"}, l)})
 end})
-function lst63(x)
-  return(not( atom63(x) or function63(x)))
-end
-function any63(x)
-  return(lst63(x) and some63(x))
-end
+setenv("ifnot", {_stash = true, macro = function (cond, ...)
+  local _r65 = unstash({...})
+  local _id44 = _r65
+  local l = cut(_id44, 0)
+  return(join({"if", {"not", cond}}, l))
+end})
+setenv("nif", {_stash = true, macro = function (...)
+  local l = unstash({...})
+  return(join({"ifnot"}, l))
+end})
 setenv("iflet", {_stash = true, macro = function (name, ...)
-  local _r22 = unstash({...})
-  local _id26 = _r22
-  local l = cut(_id26, 0)
+  local _r67 = unstash({...})
+  local _id47 = _r67
+  local l = cut(_id47, 0)
   if some63(l) then
-    local _id27 = l
-    local x = _id27[1]
-    local a = _id27[2]
-    local bs = cut(_id27, 2)
+    local _id48 = l
+    local x = _id48[1]
+    local a = _id48[2]
+    local bs = cut(_id48, 2)
     local _e6
     if one63(l) then
       _e6 = name
@@ -1357,13 +1619,13 @@ setenv("iflet", {_stash = true, macro = function (name, ...)
   end
 end})
 setenv("whenlet", {_stash = true, macro = function (name, ...)
-  local _r24 = unstash({...})
-  local _id30 = _r24
-  local l = cut(_id30, 0)
+  local _r69 = unstash({...})
+  local _id51 = _r69
+  local l = cut(_id51, 0)
   if some63(l) then
-    local _id31 = l
-    local x = _id31[1]
-    local ys = cut(_id31, 1)
+    local _id52 = l
+    local x = _id52[1]
+    local ys = cut(_id52, 1)
     local _e7
     if one63(l) then
       _e7 = name
@@ -1380,13 +1642,6 @@ end})
 setenv("awhen", {_stash = true, macro = function (...)
   local l = unstash({...})
   return(join({"let-when", "it"}, l))
-end})
-setenv("repeat", {_stash = true, macro = function (n, ...)
-  local _r26 = unstash({...})
-  local _id33 = _r26
-  local l = cut(_id33, 0)
-  local g = unique("g")
-  return(join({"for", g, n}, l))
 end})
 function acons(x)
   return(not atom(x))
@@ -1438,9 +1693,9 @@ function intersperse(x, lst)
     return(add(_g, item))
   end
   local _o1 = lst
-  local _i17 = nil
-  for _i17 in next, _o1 do
-    local item = _o1[_i17]
+  local _i20 = nil
+  for _i20 in next, _o1 do
+    local item = _o1[_i20]
     if sep then
       a(sep)
     else
@@ -1450,19 +1705,6 @@ function intersperse(x, lst)
   end
   return(_g)
 end
-setenv("complement", {_stash = true, macro = function (f)
-  local g = unique("g")
-  return({"fn", g, {"not", {"apply", f, g}}})
-end})
-function testify(x)
-  if function63(x) then
-    return(x)
-  else
-    return(function (_)
-      return(_ == x)
-    end)
-  end
-end
 function keep(f, xs)
   f = testify(f)
   local _g1 = {}
@@ -1470,15 +1712,15 @@ function keep(f, xs)
   a = function (item)
     return(add(_g1, item))
   end
-  local _x248 = xs
-  local _n18 = _35(_x248)
-  local _i18 = 0
-  while _i18 < _n18 do
-    local x = _x248[_i18 + 1]
+  local _x449 = xs
+  local _n21 = _35(_x449)
+  local _i21 = 0
+  while _i21 < _n21 do
+    local x = _x449[_i21 + 1]
     if f(x) then
       a(x)
     end
-    _i18 = _i18 + 1
+    _i21 = _i21 + 1
   end
   return(_g1)
 end
@@ -1489,13 +1731,6 @@ function rem(f, xs)
   end, xs))
 end
 rev = reverse
-function str(x)
-  if string63(x) then
-    return(x)
-  else
-    return(string(x))
-  end
-end
 wschars = {" ", "\t", "\n", "\r"}
 function ws63(s)
   local i = 0
@@ -1508,27 +1743,27 @@ function ws63(s)
   end
 end
 function rtrim(s, ...)
-  local _r47 = unstash({...})
-  local _id34 = _r47
-  local f = _id34.f
+  local _r85 = unstash({...})
+  local _id53 = _r85
+  local f = _id53.f
   while some63(s) and (f or ws63)(char(s, edge(s))) do
     s = clip(s, 0, edge(s))
   end
   return(s)
 end
 function ltrim(s, ...)
-  local _r48 = unstash({...})
-  local _id35 = _r48
-  local f = _id35.f
+  local _r86 = unstash({...})
+  local _id54 = _r86
+  local f = _id54.f
   while some63(s) and (f or ws63)(char(s, 0)) do
     s = clip(s, 1, len(s))
   end
   return(s)
 end
 function trim(s, ...)
-  local _r49 = unstash({...})
-  local _id36 = _r49
-  local f = _id36.f
+  local _r87 = unstash({...})
+  local _id55 = _r87
+  local f = _id55.f
   return(rtrim(ltrim(s, {_stash = true, f = f}), {_stash = true, f = f}))
 end
 function endswith(s, ending)
@@ -1539,51 +1774,65 @@ function startswith(s, prefix)
   return(search(s, prefix) == 0)
 end
 function pr(...)
-  local _r52 = unstash({...})
-  local _id37 = _r52
-  local sep = _id37.sep
-  local l = cut(_id37, 0)
+  local l = unstash({...})
+  local _g3 = l
+  local rest = _g3.rest
+  local _id56 = _g3
+  local x = _id56[1]
+  local _e8
+  if rest then
+    _e8 = rest
+  else
+    _e8 = {}
+  end
+  local xs = _e8
+  local _id57 = lst(xs)
+  local sep = _id57[1]
+  local lh = _id57[2]
+  local rh = _id57[3]
+  if nil63(sep) then
+    sep = ""
+  end
   local c = nil
+  if lh then
+    write(lh)
+  end
   if sep then
-    local _x255 = l
-    local _n19 = _35(_x255)
-    local _i19 = 0
-    while _i19 < _n19 do
-      local x = _x255[_i19 + 1]
+    local _x457 = l
+    local _n22 = _35(_x457)
+    local _i22 = 0
+    while _i22 < _n22 do
+      local _x458 = _x457[_i22 + 1]
       if c then
         write(c)
       else
         c = str(sep)
       end
-      write(str(x))
-      _i19 = _i19 + 1
+      write(str(_x458))
+      _i22 = _i22 + 1
     end
   else
-    local _x256 = l
-    local _n20 = _35(_x256)
-    local _i20 = 0
-    while _i20 < _n20 do
-      local x = _x256[_i20 + 1]
-      write(str(x))
-      _i20 = _i20 + 1
+    local _x459 = l
+    local _n23 = _35(_x459)
+    local _i23 = 0
+    while _i23 < _n23 do
+      local _x460 = _x459[_i23 + 1]
+      write(str(_x460))
+      _i23 = _i23 + 1
     end
+  end
+  if rh then
+    write(rh)
   end
   if l then
     return(hd(l))
   end
 end
-setenv("do1", {_stash = true, macro = function (a, ...)
-  local _r54 = unstash({...})
-  local _id39 = _r54
-  local bs = cut(_id39, 0)
-  local g = unique("g")
-  return({"let", g, a, join({"do"}, bs), g})
-end})
 function prn(...)
   local l = unstash({...})
-  local _g3 = apply(pr, l)
+  local _g4 = apply(pr, l)
   pr("\n")
-  return(_g3)
+  return(_g4)
 end
 function p(...)
   local l = unstash({...})
@@ -1620,9 +1869,9 @@ function writefile(path, contents)
   return(contents)
 end
 setenv("w/file", {_stash = true, macro = function (v, path, ...)
-  local _r63 = unstash({...})
-  local _id41 = _r63
-  local l = cut(_id41, 0)
+  local _r98 = unstash({...})
+  local _id59 = _r98
+  local l = cut(_id59, 0)
   local gp = unique("gp")
   return({"let", {gp, path, v, {"filechars", gp}}, {"set", v, join({"do"}, l)}, {"writefile", gp, v}})
 end})
@@ -1645,10 +1894,10 @@ macex = compiler.expand
 readstr = function (_)
   return(read_all(stream(_)))
 end
-function prnerr(_x280)
-  local _id42 = _x280
-  local expr = _id42[1]
-  local msg = _id42[2]
+function prnerr(_x478)
+  local _id60 = _x478
+  local expr = _id60[1]
+  local msg = _id60[2]
   prn("Error in ", file, ": ")
   prn("   ", msg)
   prn("The error occurred while evaluating: ")
@@ -1656,54 +1905,54 @@ function prnerr(_x280)
   return(msg)
 end
 function loadstr(str, ...)
-  local _r71 = unstash({...})
-  local _id43 = _r71
-  local on_err = _id43["on-err"]
-  local verbose = _id43.verbose
-  local print = _id43.print
-  local _x282 = readstr(str)
-  local _n21 = _35(_x282)
-  local _i21 = 0
-  while _i21 < _n21 do
-    local expr = _x282[_i21 + 1]
+  local _r106 = unstash({...})
+  local _id61 = _r106
+  local on_err = _id61["on-err"]
+  local verbose = _id61.verbose
+  local print = _id61.print
+  local _x480 = readstr(str)
+  local _n24 = _35(_x480)
+  local _i24 = 0
+  while _i24 < _n24 do
+    local expr = _x480[_i24 + 1]
     if "1" == env("VERBOSE") then
       prn(string(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))
     end
-    local _x283 = nil
+    local _x481 = nil
     local _msg = nil
     local _e3 = xpcall(function ()
-      _x283 = eval(expr)
-      return(_x283)
+      _x481 = eval(expr)
+      return(_x481)
     end, function (m)
       _msg = _37message_handler(m)
       return(_msg)
     end)
-    local _e8
+    local _e9
     if _e3 then
-      _e8 = _x283
+      _e9 = _x481
     else
-      _e8 = _msg
+      _e9 = _msg
     end
-    local _id44 = {_e3, _e8}
-    local ok = _id44[1]
-    local x = _id44[2]
+    local _id62 = {_e3, _e9}
+    local ok = _id62[1]
+    local x = _id62[2]
     if ok and print == true then
       prn(x)
     end
     if not ok then
       (on_err or prnerr)({expr, x})
     end
-    _i21 = _i21 + 1
+    _i24 = _i24 + 1
   end
 end
 function load(file, ...)
-  local _r74 = unstash({...})
-  local _id45 = _r74
-  local on_err = _id45["on-err"]
-  local verbose = _id45.verbose
+  local _r109 = unstash({...})
+  local _id63 = _r109
+  local on_err = _id63["on-err"]
+  local verbose = _id63.verbose
   if verbose then
     prn("Loading ", file)
   end
@@ -1712,13 +1961,13 @@ end
 if luajit63() then
   ffi = require("ffi")
   setenv("defc", {_stash = true, macro = function (name, val)
-    local _e9
+    local _e10
     if id_literal63(val) then
-      _e9 = inner(val)
+      _e10 = inner(val)
     else
-      _e9 = val
+      _e10 = val
     end
-    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e9}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e10}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
   end})
   ffi.cdef("int usleep (unsigned int usecs)")
   usleep = ffi.C.usleep
@@ -1730,9 +1979,9 @@ end
 function shell(cmd)
   local function exec(s)
     local h = io.popen(cmd)
-    local _g4 = h.read(h, "*a")
+    local _g5 = h.read(h, "*a")
     h.close(h)
-    return(_g4)
+    return(_g5)
   end
   return(exec(cmd))
 end

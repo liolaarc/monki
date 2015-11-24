@@ -233,17 +233,17 @@ function pair(l)
   end
   return(l1)
 end
-function tuple(l, n)
+function tuple(lst, n)
   if nil63(n) then
     n = 2
   end
   local l1 = {}
   local i = 0
-  while i < _35(l) do
+  while i < _35(lst) do
     local l2 = {}
     local j = 0
     while j < n do
-      add(l2, l[i + j + 1])
+      add(l2, lst[i + j + 1])
       j = j + 1
     end
     add(l1, l2)
@@ -252,22 +252,34 @@ function tuple(l, n)
   end
   return(l1)
 end
+function vals(lst)
+  local r = {}
+  local _x4 = lst
+  local _n6 = _35(_x4)
+  local _i6 = 0
+  while _i6 < _n6 do
+    local x = _x4[_i6 + 1]
+    add(r, x)
+    _i6 = _i6 + 1
+  end
+  return(r)
+end
 function sort(l, f)
   tsort(l, f)
   return(l)
 end
 function map(f, x)
   local t = {}
-  local _x4 = x
-  local _n6 = _35(_x4)
-  local _i6 = 0
-  while _i6 < _n6 do
-    local v = _x4[_i6 + 1]
+  local _x5 = x
+  local _n7 = _35(_x5)
+  local _i7 = 0
+  while _i7 < _n7 do
+    local v = _x5[_i7 + 1]
     local y = f(v)
     if is63(y) then
       add(t, y)
     end
-    _i6 = _i6 + 1
+    _i7 = _i7 + 1
   end
   local _o5 = x
   local k = nil
@@ -302,9 +314,9 @@ function keys63(t)
 end
 function empty63(t)
   local _o7 = t
-  local _i9 = nil
-  for _i9 in next, _o7 do
-    local x = _o7[_i9]
+  local _i10 = nil
+  for _i10 in next, _o7 do
+    local x = _o7[_i10]
     return(false)
   end
   return(true)
@@ -528,9 +540,9 @@ function string(x, depth, ancestors)
                       end
                     end
                     local _o11 = join(xs, ks)
-                    local _i13 = nil
-                    for _i13 in next, _o11 do
-                      local v = _o11[_i13]
+                    local _i14 = nil
+                    for _i14 in next, _o11 do
+                      local v = _o11[_i14]
                       s = s .. sp .. v
                       sp = " "
                     end
@@ -557,8 +569,8 @@ function toplevel63()
   return(one63(environment))
 end
 function setenv(k, ...)
-  local _r67 = unstash({...})
-  local _id1 = _r67
+  local _r68 = unstash({...})
+  local _id1 = _r68
   local _keys = cut(_id1, 0)
   if string63(k) then
     local _e7

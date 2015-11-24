@@ -156,15 +156,20 @@
       (add l1 (list (at l i) (at l (+ i 1))))
       (inc i))))
 
-(define-global tuple (l n)
+(define-global tuple (lst n)
   (if (nil? n) (set n 2))
   (with l1 ()
-    (for i (# l)
+    (for i (# lst)
       (let l2 ()
         (for j n
-          (add l2 (at l (+ i j))))
+          (add l2 (at lst (+ i j))))
         (add l1 l2))
       (inc i (- n 1)))))
+
+(define-global vals (lst)
+  (with r ()
+    (step x lst
+      (add r x))))
 
 (define-global sort (l f)
   (target
