@@ -185,9 +185,9 @@
 (yesno 2? (and (lst? it) (two? it)))
 
 (def _any? [do (be (or (nil? _) (lst? _))) (any? _)])
-(def _0? [do (be (or (nil? _) (lst? _))) (0? _)])
-(def _1? [do (be (or (nil? _) (lst? _))) (1? _)])
-(def _2? [do (be (or (nil? _) (lst? _))) (2? _)])
+(def _0?   [do (be (or (nil? _) (lst? _))) (0? _)])
+(def _1?   [do (be (or (nil? _) (lst? _))) (1? _)])
+(def _2?   [do (be (or (nil? _) (lst? _))) (2? _)])
 
 (mac complement (f)
   (w/uniq g
@@ -230,19 +230,20 @@
          ,@body)
        ,g)))
 
-(mac acc l `(accum a ,@l))
+(mac bag l
+  `(accum put ,@l))
 
 ; ; This serves as an example of how to write a metamacro.  There are
 ; ; probably better ways to write it, and the idea isn't very good in
 ; ; this case.  But it's a general technique worth knowing.
 
 ; (each form (list "let" "each" "step" "for" "when" "while")
-;   (eval `(mac ,(cat "acc:" form) l
-;            `(acc (,',form ,@l)))))
+;   (eval `(mac ,(cat "bag:" form) l
+;            `(bag (,',form ,@l)))))
 
-; ; (eval (acc:let x 42 (a '+) (a x) (a 2))) ; gives 44
-; ; (map print (acc:for i 10 (unless (= i 2) (a (cat "Current line is " i)))))
-; ; (sort (acc:each (k v) (hd environment) (a k)))
+; ; (eval (bag:let x 42 (put '+) (put x) (put 2))) ; gives 44
+; ; (map print (bag:for i 10 (unless (= i 2) (put (cat "Current line is " i)))))
+; ; (sort (bag:each (k v) (hd environment) (put k)))
 
 (mac nor l
   `(not (or ,@l)))
@@ -279,16 +280,34 @@
 (mac awhen l
   `(let-when it ,@l))
 
-(def acons (x)
-  (not (atom x)))
+(def kvs (x)
+  (if (acons x)
+    (if (keys? x)
+      (bag (each (k v) x
+             (if (num? k) (put v) (put (list k v :key)))))
+      x)))
+
+; (mac key? ((k v) lst exprs . body)
+;   `(ado ,lst
+;      (when (is? it)
+;        ; (when (lst? it)
+;        ;   (set it (car it)))
+;        (if (and (lst? it) (get it 'key))
+;          (let ((,k ,v) it)
+;            (set it ,exprs))
+;          (let ,v it
+;            (set it ,exprs))
+;        ,@body))))
 
 (def car (x)
-  (if (and (acons x) (some? x))
-      (hd x)))
+  (if (is x)
+    (hd x)))
  
 (def cdr (x)
-  (if (and (acons x) (some? x))
-      (tl x)))        
+  (if (is x)
+    (ado (tl x)
+      (0? it (kvs it)
+        it))))
 
 (def caar (x) (car (car x)))
 (def cadr (x) (car (cdr x)))
@@ -309,16 +328,16 @@
 
 (def intersperse (x lst)
   (let sep nil
-    (acc (each item lst
-      (if sep (a sep)
+    (bag (each item lst
+      (if sep (put sep)
         (set sep x))
-      (a item)))))
+      (put item)))))
 
 (def keep (f xs)
   (set f (testify f))
-  (acc (step x xs
+  (bag (step x xs
     (when (f x)
-      (a x)))))
+      (put x)))))
 
 (def rem (f xs)
   (keep (complement (testify f)) xs))

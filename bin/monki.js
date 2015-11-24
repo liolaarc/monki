@@ -1715,9 +1715,9 @@ setenv("accum", {_stash: true, macro: function (name) {
   var g = unique("g");
   return(["let", g, join(), join(["lfn", name, ["item"], ["add", g, "item"]], body), g]);
 }});
-setenv("acc", {_stash: true, macro: function () {
+setenv("bag", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
-  return(join(["accum", "a"], l));
+  return(join(["accum", "put"], l));
 }});
 setenv("nor", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
@@ -1776,17 +1776,55 @@ setenv("awhen", {_stash: true, macro: function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
   return(join(["let-when", "it"], l));
 }});
-acons = function (x) {
-  return(! atom(x));
+kvs = function (x) {
+  if (acons(x)) {
+    if (keys63(x)) {
+      var _g4 = [];
+      var put = undefined;
+      put = function (item) {
+        return(add(_g4, item));
+      };
+      var _o = x;
+      var k = undefined;
+      for (k in _o) {
+        var v = _o[k];
+        var _e7;
+        if (numeric63(k)) {
+          _e7 = parseInt(k);
+        } else {
+          _e7 = k;
+        }
+        var _k = _e7;
+        if (num63(_k)) {
+          put(v);
+        } else {
+          var _x422 = [_k, v];
+          _x422.key = true;
+          put(_x422);
+        }
+      }
+      return(_g4);
+    } else {
+      return(x);
+    }
+  }
 };
 car = function (x) {
-  if (acons(x) && some63(x)) {
+  if (! no(x)) {
     return(hd(x));
   }
 };
 cdr = function (x) {
-  if (acons(x) && some63(x)) {
-    return(tl(x));
+  if (! no(x)) {
+    var _g5 = tl(x);
+    var it = _g5;
+    var _g6 = it;
+    var _it = _g6;
+    if (nil63(_it) || none63(_it)) {
+      return(kvs(_it));
+    } else {
+      return(_it);
+    }
   }
 };
 caar = function (x) {
@@ -1803,18 +1841,18 @@ cons = function (x, y) {
 };
 copylist = function (xs) {
   var l = [];
-  var _o = xs;
+  var _o1 = xs;
   var k = undefined;
-  for (k in _o) {
-    var v = _o[k];
-    var _e7;
+  for (k in _o1) {
+    var v = _o1[k];
+    var _e8;
     if (numeric63(k)) {
-      _e7 = parseInt(k);
+      _e8 = parseInt(k);
     } else {
-      _e7 = k;
+      _e8 = k;
     }
-    var _k = _e7;
-    l[_k] = v;
+    var _k1 = _e8;
+    l[_k1] = v;
   }
   return(l);
 };
@@ -1827,54 +1865,54 @@ listify = function (x) {
 };
 intersperse = function (x, lst) {
   var sep = undefined;
-  var _g4 = [];
-  var a = undefined;
-  a = function (item) {
-    return(add(_g4, item));
+  var _g7 = [];
+  var put = undefined;
+  put = function (item) {
+    return(add(_g7, item));
   };
-  var _o1 = lst;
-  var _i20 = undefined;
-  for (_i20 in _o1) {
-    var item = _o1[_i20];
-    var _e8;
-    if (numeric63(_i20)) {
-      _e8 = parseInt(_i20);
+  var _o2 = lst;
+  var _i21 = undefined;
+  for (_i21 in _o2) {
+    var item = _o2[_i21];
+    var _e9;
+    if (numeric63(_i21)) {
+      _e9 = parseInt(_i21);
     } else {
-      _e8 = _i20;
+      _e9 = _i21;
     }
-    var __i20 = _e8;
+    var __i21 = _e9;
     if (sep) {
-      a(sep);
+      put(sep);
     } else {
       sep = x;
     }
-    a(item);
+    put(item);
   }
-  return(_g4);
+  return(_g7);
 };
 keep = function (f, xs) {
   f = testify(f);
-  var _g5 = [];
-  var a = undefined;
-  a = function (item) {
-    return(add(_g5, item));
+  var _g8 = [];
+  var put = undefined;
+  put = function (item) {
+    return(add(_g8, item));
   };
-  var _x424 = xs;
-  var _n21 = _35(_x424);
-  var _i21 = 0;
-  while (_i21 < _n21) {
-    var x = _x424[_i21];
+  var _x427 = xs;
+  var _n22 = _35(_x427);
+  var _i22 = 0;
+  while (_i22 < _n22) {
+    var x = _x427[_i22];
     if (f(x)) {
-      a(x);
+      put(x);
     }
-    _i21 = _i21 + 1;
+    _i22 = _i22 + 1;
   }
-  return(_g5);
+  return(_g8);
 };
 rem = function (f, xs) {
   return(keep(function () {
-    var _g6 = unstash(Array.prototype.slice.call(arguments, 0));
-    return(! apply(testify(f), _g6));
+    var _g9 = unstash(Array.prototype.slice.call(arguments, 0));
+    return(! apply(testify(f), _g9));
   }, xs));
 };
 rev = reverse;
@@ -1890,8 +1928,8 @@ ws63 = function (s) {
   }
 };
 rtrim = function (s) {
-  var _r87 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id53 = _r87;
+  var _r88 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id53 = _r88;
   var f = _id53.f;
   while (some63(s) && (f || ws63)(char(s, edge(s)))) {
     s = clip(s, 0, edge(s));
@@ -1899,8 +1937,8 @@ rtrim = function (s) {
   return(s);
 };
 ltrim = function (s) {
-  var _r88 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id54 = _r88;
+  var _r89 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id54 = _r89;
   var f = _id54.f;
   while (some63(s) && (f || ws63)(char(s, 0))) {
     s = clip(s, 1, len(s));
@@ -1908,8 +1946,8 @@ ltrim = function (s) {
   return(s);
 };
 trim = function (s) {
-  var _r89 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id55 = _r89;
+  var _r90 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id55 = _r90;
   var f = _id55.f;
   return(rtrim(ltrim(s, {_stash: true, f: f}), {_stash: true, f: f}));
 };
@@ -1922,17 +1960,17 @@ startswith = function (s, prefix) {
 };
 pr = function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
-  var _g7 = l;
-  var rest = _g7.rest;
-  var _id56 = _g7;
+  var _g10 = l;
+  var rest = _g10.rest;
+  var _id56 = _g10;
   var x = _id56[0];
-  var _e9;
+  var _e10;
   if (rest) {
-    _e9 = rest;
+    _e10 = rest;
   } else {
-    _e9 = [];
+    _e10 = [];
   }
-  var xs = _e9;
+  var xs = _e10;
   var _id57 = lst(xs);
   var sep = _id57[0];
   var lh = _id57[1];
@@ -1945,27 +1983,27 @@ pr = function () {
     write(lh);
   }
   if (sep) {
-    var _x427 = l;
-    var _n22 = _35(_x427);
-    var _i22 = 0;
-    while (_i22 < _n22) {
-      var _x428 = _x427[_i22];
+    var _x430 = l;
+    var _n23 = _35(_x430);
+    var _i23 = 0;
+    while (_i23 < _n23) {
+      var _x431 = _x430[_i23];
       if (c) {
         write(c);
       } else {
         c = str(sep);
       }
-      write(str(_x428));
-      _i22 = _i22 + 1;
+      write(str(_x431));
+      _i23 = _i23 + 1;
     }
   } else {
-    var _x429 = l;
-    var _n23 = _35(_x429);
-    var _i23 = 0;
-    while (_i23 < _n23) {
-      var _x430 = _x429[_i23];
-      write(str(_x430));
-      _i23 = _i23 + 1;
+    var _x432 = l;
+    var _n24 = _35(_x432);
+    var _i24 = 0;
+    while (_i24 < _n24) {
+      var _x433 = _x432[_i24];
+      write(str(_x433));
+      _i24 = _i24 + 1;
     }
   }
   if (rh) {
@@ -1977,9 +2015,9 @@ pr = function () {
 };
 prn = function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
-  var _g8 = apply(pr, l);
+  var _g11 = apply(pr, l);
   pr("\n");
-  return(_g8);
+  return(_g11);
 };
 p = function () {
   var l = unstash(Array.prototype.slice.call(arguments, 0));
@@ -2016,8 +2054,8 @@ writefile = function (path, contents) {
   return(contents);
 };
 setenv("w/file", {_stash: true, macro: function (v, path) {
-  var _r100 = unstash(Array.prototype.slice.call(arguments, 2));
-  var _id59 = _r100;
+  var _r101 = unstash(Array.prototype.slice.call(arguments, 2));
+  var _id59 = _r101;
   var l = cut(_id59, 0);
   var gp = unique("gp");
   return(["let", [gp, path, v, ["filechars", gp]], ["set", v, join(["do"], l)], ["writefile", gp, v]]);
@@ -2041,8 +2079,8 @@ macex = compiler.expand;
 readstr = function (_) {
   return(read_all(stream(_)));
 };
-prnerr = function (_x444) {
-  var _id60 = _x444;
+prnerr = function (_x447) {
+  var _id60 = _x447;
   var expr = _id60[0];
   var msg = _id60[1];
   prn("Error in ", file, ": ");
@@ -2052,16 +2090,16 @@ prnerr = function (_x444) {
   return(msg);
 };
 loadstr = function (str) {
-  var _r108 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id61 = _r108;
+  var _r109 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id61 = _r109;
   var on_err = _id61["on-err"];
   var verbose = _id61.verbose;
   var print = _id61.print;
-  var _x445 = readstr(str);
-  var _n24 = _35(_x445);
-  var _i24 = 0;
-  while (_i24 < _n24) {
-    var expr = _x445[_i24];
+  var _x448 = readstr(str);
+  var _n25 = _35(_x448);
+  var _i25 = 0;
+  while (_i25 < _n25) {
+    var expr = _x448[_i25];
     if ("1" === env("VERBOSE")) {
       prn(string(expr));
     }
@@ -2072,8 +2110,8 @@ loadstr = function (str) {
       try {
         return([true, eval(expr)]);
       }
-      catch (_e10) {
-        return([false, _e10.message]);
+      catch (_e11) {
+        return([false, _e11.message]);
       }
     })();
     var ok = _id62[0];
@@ -2084,12 +2122,12 @@ loadstr = function (str) {
     if (! ok) {
       (on_err || prnerr)([expr, x]);
     }
-    _i24 = _i24 + 1;
+    _i25 = _i25 + 1;
   }
 };
 load = function (file) {
-  var _r110 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id63 = _r110;
+  var _r111 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id63 = _r111;
   var on_err = _id63["on-err"];
   var verbose = _id63.verbose;
   if (verbose) {
@@ -2100,8 +2138,8 @@ load = function (file) {
 shell = function (cmd) {
   var childproc = require("child_process");
   var exec = childproc.execSync;
-  var _o2 = exec(cmd);
-  return(_o2.toString());
+  var _o3 = exec(cmd);
+  return(_o3.toString());
 };
 exit = function (code) {
   return(process.exit(code));
