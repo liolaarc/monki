@@ -13,6 +13,10 @@
 (alias mac define-macro)
 (alias special define-special)
 
+; {foo bar} becomes (get foo 'bar)
+(mac curly (module func)
+  `(get ,module ',func))
+
 ;; Multi-Definition funcs
 
 (mac multi (name val argc)
@@ -42,10 +46,6 @@
 (multi libs lib 1)
 (multi uses use 1)
 
-; {reader stream} becomes (get reader 'stream)
-(mac curly (module func)
-  `(get ,module ',func))
-
 ;; Modules
 
 (uses
@@ -54,24 +54,28 @@
   system)
 
 (vars
-  stream {reader stream}
-  read-all {reader read-all}
-  read-file {system read-file}
+  stream     {reader stream}
+  read-all   {reader read-all}
+  read-file  {system read-file}
   write-file {system write-file})
 
 (defs
-  env {system get-environment-variable}
-  macex {compiler expand}
-  comp [print (compile (macex _))]
+  env    {system get-environment-variable}
+  macex  {compiler expand}
+  comp   [print (compile (macex _))]
   write1 {system write}
-  write [void (write1 (str _))])
+  write  [void (write1 (str _))])
 
-;; Basics
+;; Arc Basics
 
 (sym t true)
 
 (def err (msg . l)
-  (error `(,msg ,@l)))
+  (if (nil? msg) (set msg "fatal"))
+  (let x (if (none? l)
+             (str msg)
+             (apply cat `(,(str msg) ,": " ,@(map str l))))
+    (error x)))
 
 (mac cmp (x y)
   `(= (do ,x) (do ,y)))
@@ -128,9 +132,9 @@
 (mac assert xs
   (with e `(let bad nil)
     (step cond xs
-      (add e `(unless (do ,cond) (set bad (str ',cond)))))
+      (add e `(unless (do ,cond) (set bad ',(string cond)))))
     (add e `(when (is? bad)
-              (err (cat "assertion failed: " bad))))))
+              (err "assertion failed" bad)))))
 (alias be assert)
 
 (mac w/uniq (x . body)
@@ -171,14 +175,19 @@
            ,(or (get args 'rest) ()) (if rest rest (list)))
        ,@body)))
 
-(def _any? [do (be (or (nil? _) (lst? _))) (and (is? _) (or (keys? _) (some? _)))])
-(def _0? [do (be (or (nil? _) (lst? _))) (or (nil? _) (none? _))])
-(def _1? [do (be (or (nil? _) (lst? _))) (and (is? _) (one? _))])
-(def _2? [do (be (or (nil? _) (lst? _))) (and (is? _) (two? _))])
-(mac any? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (or (keys? it) (some? it))) (do ,yes) (do ,@l))))
-(mac 0? (x yes . l) (o yes t) `(ado ,x (if (or (nil? it) (none? it)) (do ,yes) (do ,@l))))
-(mac 1? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (one? it)) (do ,yes) (do ,@l))))
-(mac 2? (x yes . l) (o yes t) `(ado ,x (if (and (lst? it) (two? it)) (do ,yes) (do ,@l))))
+(mac yesno (name body)
+  `(mac ,name (x yes . l) (o yes t)
+     `(ado ,x (if ,',body (do ,yes) (do ,@l)))))
+
+(yesno any? (and (lst? it) (or (keys? it) (some? it))))
+(yesno 0? (or (nil? it) (none? it)))
+(yesno 1? (and (lst? it) (one? it)))
+(yesno 2? (and (lst? it) (two? it)))
+
+(def _any? [do (be (or (nil? _) (lst? _))) (any? _)])
+(def _0? [do (be (or (nil? _) (lst? _))) (0? _)])
+(def _1? [do (be (or (nil? _) (lst? _))) (1? _)])
+(def _2? [do (be (or (nil? _) (lst? _))) (2? _)])
 
 (mac complement (f)
   (w/uniq g
