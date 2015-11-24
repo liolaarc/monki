@@ -39,7 +39,7 @@
   (and (is? x) (= (type x) (target js: 'object lua: 'table))))
 
 (define-global atom? (x)
-  (or (nil? x) (string? x) (number? x) (boolean? x)))
+  (or (nil? x) (string? x) (number? x) (boolean? x) (function? x)))
 
 (define-global nan (/ 0 0))
 (define-global inf (/ 1 0))
@@ -155,6 +155,16 @@
     (for i (# l)
       (add l1 (list (at l i) (at l (+ i 1))))
       (inc i))))
+
+(define-global tuple (l n)
+  (if (nil? n) (set n 2))
+  (with l1 ()
+    (for i (# l)
+      (let l2 ()
+        (for j n
+          (add l2 (at l (+ i j))))
+        (add l1 l2))
+      (inc i (- n 1)))))
 
 (define-global sort (l f)
   (target

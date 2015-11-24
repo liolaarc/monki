@@ -43,7 +43,7 @@ obj63 = function (x) {
   return(is63(x) && type(x) === "object");
 };
 atom63 = function (x) {
-  return(nil63(x) || string63(x) || number63(x) || boolean63(x));
+  return(nil63(x) || string63(x) || number63(x) || boolean63(x) || function63(x));
 };
 nan = 0 / 0;
 inf = 1 / 0;
@@ -257,6 +257,25 @@ pair = function (l) {
   while (i < _35(l)) {
     add(l1, [l[i], l[i + 1]]);
     i = i + 1;
+    i = i + 1;
+  }
+  return(l1);
+};
+tuple = function (l, n) {
+  if (nil63(n)) {
+    n = 2;
+  }
+  var l1 = [];
+  var i = 0;
+  while (i < _35(l)) {
+    var l2 = [];
+    var j = 0;
+    while (j < n) {
+      add(l2, l[i + j]);
+      j = j + 1;
+    }
+    add(l1, l2);
+    i = i + (n - 1);
     i = i + 1;
   }
   return(l1);
@@ -626,8 +645,8 @@ toplevel63 = function () {
   return(one63(environment));
 };
 setenv = function (k) {
-  var _r69 = unstash(Array.prototype.slice.call(arguments, 1));
-  var _id1 = _r69;
+  var _r70 = unstash(Array.prototype.slice.call(arguments, 1));
+  var _id1 = _r70;
   var _keys = cut(_id1, 0);
   if (string63(k)) {
     var _e18;

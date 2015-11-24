@@ -854,7 +854,7 @@ c"
   (test= true (atom? "abc"))
   (test= true (atom? 42))
   (test= true (atom? true))
-  (test= false (atom? (fn ())))
+  (test= true (atom? (fn ())))
   (test= false (atom? '(1)))
   (test= false (atom? (obj))))
 

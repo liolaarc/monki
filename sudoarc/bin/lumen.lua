@@ -47,7 +47,7 @@ function obj63(x)
   return(is63(x) and type(x) == "table")
 end
 function atom63(x)
-  return(nil63(x) or string63(x) or number63(x) or boolean63(x))
+  return(nil63(x) or string63(x) or number63(x) or boolean63(x) or function63(x))
 end
 nan = 0 / 0
 inf = 1 / 0
@@ -229,6 +229,25 @@ function pair(l)
   while i < _35(l) do
     add(l1, {l[i + 1], l[i + 1 + 1]})
     i = i + 1
+    i = i + 1
+  end
+  return(l1)
+end
+function tuple(l, n)
+  if nil63(n) then
+    n = 2
+  end
+  local l1 = {}
+  local i = 0
+  while i < _35(l) do
+    local l2 = {}
+    local j = 0
+    while j < n do
+      add(l2, l[i + j + 1])
+      j = j + 1
+    end
+    add(l1, l2)
+    i = i + (n - 1)
     i = i + 1
   end
   return(l1)
@@ -538,8 +557,8 @@ function toplevel63()
   return(one63(environment))
 end
 function setenv(k, ...)
-  local _r66 = unstash({...})
-  local _id1 = _r66
+  local _r67 = unstash({...})
+  local _id1 = _r67
   local _keys = cut(_id1, 0)
   if string63(k) then
     local _e7

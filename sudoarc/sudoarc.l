@@ -1,12 +1,75 @@
 
-(define-macro mac l `(define-macro ,@l))
-(mac var l `(define ,@l))
-(mac def l `(define-global ,@l))
-(mac sym l `(define-symbol ,@l))
-(mac special l `(define-special ,@l))
+;; Definition funcs
 
-(mac imp (l) `(require ',@l))
-(mac lib (l) `(def ,l (imp ,l)))
+(define-macro alias (newname oldname)
+  `(define-macro ,newname l `(,',oldname ,@l)))
+
+(alias var define)
+(alias def define-global)
+(alias sym define-symbol)
+(alias mac define-macro)
+(alias special define-special)
+
+; if a variable is nil, set it to a default value.
+(mac o l
+  (with e '(do)
+    (let lastvar 'nil
+      (step (var val) (pair l)
+        (add e `(if (nil? ,var) (set ,var ,val)))
+        (set lastvar var))
+      (add e lastvar))))
+
+;; Module funcs
+
+(mac lib (name) `(def ,name (require ',name)))
+(mac use (name) `(var ,name (require ',name)))
+
+; {reader stream} becomes (get reader 'stream)
+(mac curly (module func)
+  `(get ,module ',func))
+
+;; Multi-Definition funcs
+
+(mac multi (name val argc) (o argc 2)
+  (if (atom? val)
+    `(mac ,name l
+      (with e '(do)
+        (step (x . ys) (tuple l ,argc)
+          (add e `(,',val ,x ,@ys)))))
+    `(mac ,name l
+      (prn (with e '(do)
+        (step it (tuple l ,argc)
+          (let ((x . ys) it)
+            (add e ,val))))))))
+
+(multi vars var 2)
+(multi defs def 2)
+(multi syms sym 2)
+(multi macs mac 3)
+(multi specials special 3)
+(multi libs lib 1)
+(multi uses use 1)
+
+;; Modules
+
+(uses
+  compiler
+  reader
+  system)
+
+(vars
+  stream {reader stream}
+  read-all {reader read-all}
+  write {system write}
+  read-file {system read-file}
+  write-file {system write-file})
+
+;; Basics
+(def len  #)
+(def idfn [do _])
+(def fn?  function?)
+(def atom atom?)
+(def env  {system get-environment-variable})
 
 ; Useful shorthand for seeing what a Lumen expression compiles to.  It
 ; can be used anywhere eval is used, and it shows you what code eval
@@ -16,35 +79,18 @@
 ;     (comp exprs)
 ;     (eval exprs))
 ;
+(def comp    [print (compile (macex _))])
+(def macex   {compiler expand})
+(def readstr [read-all (stream _)])
 
-(define-global comp (expr)
-  (print (compile (macroexpand expr))))
-
-(define reader (require 'reader))
-(define reader-stream (get reader 'stream))
-(define read-all (get reader 'read-all))
-
-(define system (require 'system))
-(define write (get system 'write))
-(define read-file (get system 'read-file))
-(define write-file (get system 'write-file))
-(define-global env (get system 'get-environment-variable))
-
-(define-global readstr (s)
-    (read-all (reader-stream s)))
-
-;
-; Let's see how far we can push Lumen in the direction of Arc.
-;
-
-(define-global prnerr ((expr msg))
+(def prnerr ((expr msg))
   (prn "Error in " file ": ")
   (prn "   " msg)
   (prn "The error occurred while evaluating: ")
   (prn expr)
   msg)
 
-(define-global loadstr (str :verbose :on-err :print)
+(def loadstr (str :verbose :on-err :print)
   (step expr (readstr str)
     (when (= "1" (env "VERBOSE")) (prn (string expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
@@ -54,26 +100,14 @@
       (unless ok
         ((or on-err prnerr) (list expr x))))))
 
-(define-global load (file :verbose :on-err)
+(def load (file :verbose :on-err)
   (when verbose
-    (print (cat "Loading " file)))
+    (prn "Loading " file))
   (loadstr (read-file file)
     verbose: verbose
     on-err: on-err))
 
-(mac macex (e)
-  `(macroexpand ,e))
-
-(mac len l
-  `(# ,@l))
-
-(mac letmac (name args body rest: l)
-  `(let-macro ((,name ,args ,body))
-     ,@l))
-
-(def idfn (fn (x) x))
-
-(mac w/uniq (x rest: body)
+(mac w/uniq (x . body)
   (if (atom? x)
     `(let-unique (,x) ,@body)
     `(let-unique (,@x) ,@body)))
@@ -81,16 +115,16 @@
 (mac void l
   `(do ,@l nil))
 
-(mac lfn (name args body rest: l)
+(mac lfn (name args body . l)
   `(let ,name nil
      (set ,name (fn ,args ,body))
      ,@(if (some? l) l
          (list name))))
 
-(mac afn (args body rest: l)
+(mac afn (args body . l)
   `(lfn self ,args ,body ,@l))
 
-(mac accum (name rest: body)
+(mac accum (name . body)
   (w/uniq g
     `(let ,g ()
        (lfn ,name (item) (add ,g item)
@@ -99,17 +133,17 @@
 
 (mac acc l `(accum a ,@l))
 
-; This serves as an example of how to write a metamacro.  There are
-; probably better ways to write it, and the idea isn't very good in
-; this case.  But it's a general technique worth knowing.
+; ; This serves as an example of how to write a metamacro.  There are
+; ; probably better ways to write it, and the idea isn't very good in
+; ; this case.  But it's a general technique worth knowing.
 
 ; (each form (list "let" "each" "step" "for" "when" "while")
 ;   (eval `(mac ,(cat "acc:" form) l
 ;            `(acc (,',form ,@l)))))
 
-; (eval (acc:let x 42 (a '+) (a x) (a 2))) ; gives 44
-; (map print (acc:for i 10 (unless (= i 2) (a (cat "Current line is " i)))))
-; (sort (acc:each (k v) (hd environment) (a k)))
+; ; (eval (acc:let x 42 (a '+) (a x) (a 2))) ; gives 44
+; ; (map print (acc:for i 10 (unless (= i 2) (a (cat "Current line is " i)))))
+; ; (sort (acc:each (k v) (hd environment) (a k)))
 
 (mac nor l
   `(not (or ,@l)))
@@ -125,19 +159,19 @@
 ; (mac iffy l
 ;   (if (none? l) nil
 ;       (one? l) (hd l)
-;       (let ((x a rest: bs) l)
+;       (let ((x a . bs) l)
 ;         `(if ,x ,a (iffy ,@bs)))))
 
-(mac iflet (name rest: l)
+(mac iflet (name . l)
   (when (some? l)
-    (let ((x a rest: bs) l)
+    (let ((x a . bs) l)
       `(let ,name ,x
         ,(if (one? l) name
           `(if ,name ,a (iflet ,name ,@bs)))))))
 
-(mac whenlet (name rest: l)
+(mac whenlet (name . l)
   (when (some? l)
-    (let ((x rest: ys) l)
+    (let ((x . ys) l)
       `(let ,name ,x
          ,(if (one? l) name
             `(do ,@ys))))))
@@ -148,13 +182,10 @@
 (mac awhen l
   `(let-when it ,@l))
 
-(mac repeat (n rest: l)
+(mac repeat (n . l)
   (w/uniq g
     `(for ,g ,n
       ,@l)))
-
-(def atom (x)
-  (or (atom? x) (function? x)))
 
 (def acons (x)
   (not (atom x)))
@@ -249,7 +280,7 @@
 (def startswith (s prefix)
   (= (search s prefix) 0))
 
-(def pr (:sep rest: l)
+(def pr (:sep . l)
   (let c nil
     (if sep
       (step x l
@@ -260,7 +291,7 @@
         (write (str x)))))
   (when l (hd l)))
 
-(mac do1 (a rest: bs)
+(mac do1 (a . bs)
   (w/uniq g
     `(let ,g ,a
        (do ,@bs)
@@ -270,10 +301,14 @@
   (do1 (apply pr l)
        (pr "\n")))
 
+(def p l
+  (void (apply prn l)))
+
 (def filechars (path)
   (read-file path))
 
-(def readfile (path) (readstr (filechars path)))
+(def readfile (path)
+  (readstr (filechars path)))
 
 (def doshell args
   (rtrim (shell (apply cat (intersperse " " args)))))
@@ -297,28 +332,27 @@
   (mvfile (cat path ".tmp") path)
   contents)
 
-(mac w/file (v path rest: l)
+(mac w/file (v path . l)
   (w/uniq gp
     `(let (,gp ,path
            ,v (filechars ,gp))
        (set ,v (do ,@l))
        (writefile ,gp ,v))))
 
-(def args () (readstr (env 'cmdline)))
-(def host () (or (env "LUMEN_HOST") ""))
-(def host? (x) (search (host) x))
-
-(mac import (name)
-  `(def ,name (require ',name)))
+(defs
+  args (fn () (readstr (env 'cmdline)))
+  host (fn () (or (env "LUMEN_HOST") ""))
+  host? [search (host) _]
+  luajit? (fn () (host? 'luajit)))
 
 ;
 ; These run only on LuaJIT.
 ;
 
 (target lua:
-  (when (host? 'luajit)
+  (when (luajit?)
 
-    (import ffi)
+    (lib ffi)
 
     (mac defc (name val)
       `(do ((get ffi 'cdef) ',(if (id-literal? val) (inner val) val))
@@ -331,7 +365,8 @@
     ;   (print 'end)
     (defc usleep |int usleep (unsigned int usecs)|)
     (def sleep (secs)
-      (do (usleep (* secs 1000000)) nil))))
+      (do (usleep (* secs 1000000))
+          nil))))
 
 ;
 ; These run on all hosts.
@@ -342,29 +377,29 @@
 ;   (shell "echo hi") => "hi\n"
 (def shell (cmd)
   (target js: (do
-    (define childproc (require 'child_process))
-    (define exec (get childproc 'execSync))
+    (var childproc (require 'child_process))
+    (var exec {childproc execSync})
          ; http://stackoverflow.com/questions/20643470/execute-a-command-line-binary-with-node-js
          ; https://nodejs.org/api/child_process.html#child_process_child_process_execsync_command_options
          ;
          ; Returns the stdout of the command.  Throws if the process
          ; times out or has a non-zero exit code.
          (let o (exec cmd)
-           ; ((get o 'toString)) ; TODO: Research why this breaks.
-           ((get o "toString")))))
+           ; ({o toString}) ; TODO: Research why this breaks.
+           ({o toString}))))
   (target lua: (do
-    (define exec (s)
+    (var exec (s)
       ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
       ; Watch out, popen() sometimes fails to block:
       ; http://lua-users.org/lists/lua-l/2013-10/msg00727.html
-      (let h ((get io 'popen) cmd)
-        (do1 ((get h 'read) h "*a")
-             ((get h 'close) h))))
+      (let h ({io popen} cmd)
+        (do1 ({h read} h "*a")
+             ({h close} h))))
     (exec cmd))))
 
 ; (exit)
 (def exit (code)
-  (target js: (process.exit code)
-          lua: (os.exit code)))
+  (target js: ({process exit} code)
+          lua: ({os exit} code)))
 
 

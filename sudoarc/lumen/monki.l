@@ -24,6 +24,82 @@
       (= n 95)))               ; _
 ||)
 
+; (patch "compiler.l"
+; ||
+; (export run
+; ||
+; ||
+; (define-global load-compile-file (file lang rest: preload)
+;   (if (nil? lang) (set lang target))
+;   (let (compiler (require 'compiler)
+;         run (get compiler 'run)
+;         expand (get compiler 'expand)
+;         system (require 'system)
+;         read-file (get system 'read-file)
+;         reader (require 'reader)
+;         stream (get reader 'stream)
+;         read-all (get reader 'read-all)
+;         reads (fn (s) (read-all (stream s)))
+;         prev-target target
+;         prev-print print)
+;     (set target lang)
+;     (when (is? preload)
+;       (step x preload
+;         (run (read-file x))))
+;     (step expr (reads (read-file file))
+;       (set print (fn l nil))
+;       (let ((ok x) (guard (eval expr)))
+;         (set print prev-print)
+;         (unless ok
+;           (print x)
+;           (return))
+;         (print (compile (expand `(do ,expr))))))
+;     (set target prev-target)
+;     nil))
+
+; (export run
+; ||)
+
+; runtime.l: def tuple (xs n)
+(patch "runtime.l"
+||
+(define-global pair (l)
+  (with l1 ()
+    (for i (# l)
+      (add l1 (list (at l i) (at l (+ i 1))))
+      (inc i))))
+||
+||
+(define-global pair (l)
+  (with l1 ()
+    (for i (# l)
+      (add l1 (list (at l i) (at l (+ i 1))))
+      (inc i))))
+
+(define-global tuple (l n)
+  (if (nil? n) (set n 2))
+  (with l1 ()
+    (for i (# l)
+      (let l2 ()
+        (for j n
+          (add l2 (at l (+ i j))))
+        (add l1 l2))
+      (inc i (- n 1)))))
+||)
+
+; runtime.l: modify atom? to return true for functions.
+(patch "runtime.l"
+||
+(define-global atom? (x)
+  (or (nil? x) (string? x) (number? x) (boolean? x)))
+||
+||
+(define-global atom? (x)
+  (or (nil? x) (string? x) (number? x) (boolean? x) (function? x)))
+||)
+(patch "test.l"
+||(test= false (atom? (fn ())))||
+||(test= true (atom? (fn ())))||)
 
 ; runtime.l: def obj? (x)
 (patch "runtime.l"
@@ -93,19 +169,6 @@
         (cat! s sp v)
         (set sp " "))
       (cat s  ")"))))
-||)
-
-; bin/lumen: Fix LUMEN_HOST to handle spaces.
-(patch "bin/lumen"
-||
-if [ ! -z ${LUMEN_HOST} ]
-then
-    host=${LUMEN_HOST}
-||
-||
-if [ ! -z "${LUMEN_HOST}" ]
-then
-    host="${LUMEN_HOST}"
 ||)
 
 ; bin/lumen: Use rlwrap when possible.
