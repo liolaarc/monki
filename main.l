@@ -337,6 +337,20 @@
     (when (in? op '(eval e))
       (loadstr (clip (env 'cmdline) (# op)) :print)
       (return))
+    ; compile files.
+    (when (in? op '(compile comp))
+      (step file params
+        (if (or (is file 'js) (is file 'lua)) (set target file)
+          (do (var x (filechars file))
+              (let ((ok val) (guard (readstr x)))
+                (unless ok
+                  (prn val)
+                  (err (cat "failed to read " file)))
+                (set x val))
+              (set x (macex `(do ,@x)))
+              (set x (compile x))
+              (prn x))))
+      (return))
     ; repl.
     (when (in? op '(repl r))
       (return)) ; lumen's (main) will start a repl.

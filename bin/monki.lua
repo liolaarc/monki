@@ -2172,20 +2172,20 @@ function tree(path, pattern)
     error("tree: not a dir: " .. path)
   end
   pushd(path)
-  local _e1
-  if pattern then
-    _e1 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
-  else
-    _e1 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
-  end
-  local s = trim(_e1)
   local _e2
-  if s and some63(s) then
-    _e2 = map(fixpath, split(s, "\n"))
+  if pattern then
+    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
   else
-    _e2 = {}
+    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
   end
-  local _g = _e2
+  local s = trim(_e2)
+  local _e3
+  if s and some63(s) then
+    _e3 = map(fixpath, split(s, "\n"))
+  else
+    _e3 = {}
+  end
+  local _g = _e3
   popd()
   return(_g)
 end
@@ -2199,13 +2199,13 @@ function which(prog)
     _msg = _37message_handler(m)
     return(_msg)
   end)
-  local _e3
+  local _e4
   if _e then
-    _e3 = _x31
+    _e4 = _x31
   else
-    _e3 = _msg
+    _e4 = _msg
   end
-  local _id5 = {_e, _e3}
+  local _id5 = {_e, _e4}
   local ok = _id5[1]
   local x = _id5[2]
   if ok then
@@ -2217,20 +2217,20 @@ function freebsd63()
 end
 function make(...)
   local args = unstash({...})
-  local _e4
+  local _e5
   if freebsd63() then
-    local _e5
+    local _e6
     if which("gmake") then
-      _e5 = "gmake"
+      _e6 = "gmake"
     else
       error("Install gmake by running:  sudo pkg install gmake")
-      _e5 = nil
+      _e6 = nil
     end
-    _e4 = _e5
+    _e5 = _e6
   else
-    _e4 = "make"
+    _e5 = "make"
   end
-  local prog = _e4
+  local prog = _e5
   return(prn(apply(_36, join({"time", prog}, args))))
 end
 function clean()
@@ -2300,10 +2300,10 @@ function patch(file, x, y)
   y = unlit(y)
   local _gp = j(getcwd(), file)
   local fs = filechars(_gp)
-  local _e6
+  local _e7
   if not search(fs, x) then
     error(file .. ": patch: failed to find code:\n  " .. x)
-    _e6 = nil
+    _e7 = nil
   end
   fs = replace(fs, x, y)
   return(writefile(_gp, fs))
@@ -2386,13 +2386,13 @@ function git(path, what, ...)
   return(apply(_36, join(_x69, args)))
 end
 function gitdir(path, nocheck)
-  local _e7
+  local _e8
   if path then
-    _e7 = j(path, ".monki", "git")
+    _e8 = j(path, ".monki", "git")
   else
-    _e7 = j(".monki", "git")
+    _e8 = j(".monki", "git")
   end
-  local dst = _e7
+  local dst = _e8
   if not nocheck then
     if not git63(dst) then
       local errmsg = "Error: no .git at " .. dst
@@ -2512,6 +2512,47 @@ function mmain(argv)
     loadstr(clip(env("cmdline"), _35(op)), {_stash = true, print = true})
     return
   end
+  if in63(op, {"compile", "comp"}) then
+    local _x73 = params
+    local _n3 = _35(_x73)
+    local _i3 = 0
+    while _i3 < _n3 do
+      local file = _x73[_i3 + 1]
+      if file == "js" or file == "lua" then
+        target = file
+      else
+        local x = filechars(file)
+        local _x74 = nil
+        local _msg1 = nil
+        local _e1 = xpcall(function ()
+          _x74 = readstr(x)
+          return(_x74)
+        end, function (m)
+          _msg1 = _37message_handler(m)
+          return(_msg1)
+        end)
+        local _e9
+        if _e1 then
+          _e9 = _x74
+        else
+          _e9 = _msg1
+        end
+        local _id8 = {_e1, _e9}
+        local ok = _id8[1]
+        local val = _id8[2]
+        if not ok then
+          prn(val)
+          err("failed to read " .. file)
+        end
+        x = val
+        x = macex(join({"do"}, x))
+        x = compile(x)
+        prn(x)
+      end
+      _i3 = _i3 + 1
+    end
+    return
+  end
   if in63(op, {"repl", "r"}) then
     return
   end
@@ -2532,11 +2573,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x75 = argv
-  local _n3 = _35(_x75)
-  local _i3 = 0
-  while _i3 < _n3 do
-    local arg = _x75[_i3 + 1]
+  local _x80 = argv
+  local _n4 = _35(_x80)
+  local _i4 = 0
+  while _i4 < _n4 do
+    local arg = _x80[_i4 + 1]
     if dir63(arg) then
       monkitree(arg)
     else
@@ -2546,7 +2587,7 @@ function mmain(argv)
         error("unknown cmd " .. arg)
       end
     end
-    _i3 = _i3 + 1
+    _i4 = _i4 + 1
   end
 end
 mmain(args())

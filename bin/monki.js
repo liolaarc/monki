@@ -2605,6 +2605,39 @@ mmain = function (argv) {
     loadstr(clip(env("cmdline"), _35(op)), {_stash: true, print: true});
     return;
   }
+  if (in63(op, ["compile", "comp"])) {
+    var _x62 = params;
+    var _n3 = _35(_x62);
+    var _i3 = 0;
+    while (_i3 < _n3) {
+      var file = _x62[_i3];
+      if (file === "js" || file === "lua") {
+        target = file;
+      } else {
+        var x = filechars(file);
+        var _id8 = (function () {
+          try {
+            return([true, readstr(x)]);
+          }
+          catch (_e8) {
+            return([false, _e8.message]);
+          }
+        })();
+        var ok = _id8[0];
+        var val = _id8[1];
+        if (! ok) {
+          prn(val);
+          err("failed to read " + file);
+        }
+        x = val;
+        x = macex(join(["do"], x));
+        x = compile(x);
+        prn(x);
+      }
+      _i3 = _i3 + 1;
+    }
+    return;
+  }
   if (in63(op, ["repl", "r"])) {
     return;
   }
@@ -2625,11 +2658,11 @@ mmain = function (argv) {
     prn(apply(git, join([gitdir(pwd())], params || [])));
     return;
   }
-  var _x64 = argv;
-  var _n3 = _35(_x64);
-  var _i3 = 0;
-  while (_i3 < _n3) {
-    var arg = _x64[_i3];
+  var _x68 = argv;
+  var _n4 = _35(_x68);
+  var _i4 = 0;
+  while (_i4 < _n4) {
+    var arg = _x68[_i4];
     if (dir63(arg)) {
       monkitree(arg);
     } else {
@@ -2639,7 +2672,7 @@ mmain = function (argv) {
         throw new Error("unknown cmd " + arg);
       }
     }
-    _i3 = _i3 + 1;
+    _i4 = _i4 + 1;
   }
 };
 mmain(args());
