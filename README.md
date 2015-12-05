@@ -40,7 +40,7 @@ $ git commit
 $ git push
 ```
 
-This created `lumen/monki.l` within `lumen/` along with all of Lumen's files.  A `monki.l` file tells Monki what to do to the subfolder it resides in.  
+This created `lumen/monki.l` along with all of Lumen's files.  A `monki.l` file tells Monki what to do to the subfolder it resides in.
 
 If you just want a copy of someone's repo, then you won't need to edit any `monki.l` files.  `monki clone foo/bar dst` automatically generates a `dst/monki.l` file for you.
 
