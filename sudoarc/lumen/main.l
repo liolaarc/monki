@@ -26,6 +26,7 @@
   ((get system 'write) "> ")
   (target
     js: (let in (get process 'stdin)
+          ((get in 'removeAllListeners))
           ((get in 'setEncoding) 'utf8)
           ((get in 'on) 'data rep1))
     lua: (while true

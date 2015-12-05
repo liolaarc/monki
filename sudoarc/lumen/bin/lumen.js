@@ -1123,6 +1123,7 @@ repl = function () {
   };
   system.write("> ");
   var _in = process.stdin;
+  _in.removeAllListeners();
   _in.setEncoding("utf8");
   return(_in.on("data", rep1));
 };

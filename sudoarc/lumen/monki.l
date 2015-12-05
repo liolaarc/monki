@@ -478,6 +478,19 @@ case $host in
 """)
 
 
+;
+; Calling (repl) from a REPL no longer results in a double REPL
+; on LUMEN_HOST=node, though this isn't a proper fix.
+;
+(patch "main.l"
+"""
+          ((get in 'setEncoding) 'utf8)
+"""
+"""
+          ((get in 'removeAllListeners))
+          ((get in 'setEncoding) 'utf8)
+""")
+
 ; Apply all of these changes by rebuilding Lumen several times.  The
 ; first rebuild will be using the old Lumen compiler. The second will
 ; be running with any changes we made to the compiler. The third
