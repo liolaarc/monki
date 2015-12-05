@@ -21,7 +21,7 @@ Anywhere within your project's git repo, run `monki clone user/project dstdir` t
 
 Later on, the project may add some new features or fix some bugs.  To pull in those changes, run `monki dstdir/`
 
-Don't make direct changes to the files under dstdir.  They'll be overwritten by `monki dstdir/`.  Instead, if you wish to make edits to the project, open `dstdir/monki.l` (which monki creates during the initial clone) and describe the changes you wish to make.
+Don't make direct changes to the files under dstdir.  They'll be overwritten by `monki dstdir/`.  Instead, if you wish to make edits to the project, open `dstdir/monki.l` (which monki creates during the initial clone) and describe the changes you wish to make.  (See below.)
 
 ## In-depth example
 
