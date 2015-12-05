@@ -140,11 +140,15 @@ read_table[""] = function (s)
                 if not digit63(str, edge(str)) then
                   return(str)
                 else
-                  local n = number(str)
-                  if nil63(n) or nan63(n) or inf63(n) then
+                  if not number_code63(code(str, edge(str))) then
                     return(str)
                   else
-                    return(n)
+                    local n = number(str)
+                    if nil63(n) or nan63(n) or inf63(n) then
+                      return(str)
+                    else
+                      return(n)
+                    end
                   end
                 end
               end

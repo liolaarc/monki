@@ -140,11 +140,15 @@ read_table[""] = function (s) {
                 if (! digit63(str, edge(str))) {
                   return(str);
                 } else {
-                  var n = number(str);
-                  if (nil63(n) || nan63(n) || inf63(n)) {
+                  if (! number_code63(code(str, edge(str)))) {
                     return(str);
                   } else {
-                    return(n);
+                    var n = number(str);
+                    if (nil63(n) || nan63(n) || inf63(n)) {
+                      return(str);
+                    } else {
+                      return(n);
+                    }
                   }
                 }
               }

@@ -102,9 +102,11 @@
   str [if (str? _) _ (string _)]
   lst [if (lst? _) _ (list _)])
 
+(def parts [list (vals _) (keys _)])
 (def acons [not (atom? _)])
 (def alist [and (acons _) (or (keys? _) (some? _))])
 (def empty [and (acons _) (not (keys? _)) (none? _)])
+
 (def no [or (nil? _) (false? _) (empty _)])
 (def t? [not (no _)])
 
@@ -142,17 +144,29 @@
     `(let-unique (,x) ,@body)
     `(let-unique (,@x) ,@body)))
 
-(mac ado (a . bs)
-  (w/uniq (g x)
-    `(let (,g ,a
-           it ,g)
-       ,@bs)))
+(mac ado (x . ys)
+  `(let it ,x
+     ,@ys))
 
 (mac do1 (x . ys)
   (w/uniq g
     `(let ,g ,x
        ,@ys
        ,g)))
+
+(mac if1 (x then . else)
+  `(if ,x ,then
+     (do ,@else)))
+(alias but if1)
+
+(mac lastly (x . ys)
+  `(do1 (do ,@ys) ,x))
+
+(mac after (x . ys)
+  `(let ((ok v) (guard (do ,x)))
+     (if ok v
+       (lastly (err v)
+         ,@ys))))
 
 ; optional args.  For each (var val) in l, if var is nil, then
 ; do (set var val)
@@ -198,21 +212,17 @@
     `(for ,g ,n
       ,@l)))
 
-(mac push (place val)
-  `(add ,place ,val))
+(mac push (lst x)
+  `(ado ,lst (add it ,x) it))
 
-(mac pop (place)
-  `(call (fn () 
-    (let x (last ,place)
-      (target
-         lua: (table.remove ,place)
-         js: ((get ,place 'splice) -1 1))
-      x))))
+(mac pop (lst)
+  `(ado ,lst (last it) (drop it)))
 
-(mac w/push (place val . body)
-  `(do (push ,place ,val)
-       ,@body
-       (pop ,place)))
+(mac w/push (lst x . l)
+  (w/uniq g
+    `(let ,g (push ,lst ,x)
+       (lastly (pop ,g)
+          ,@l))))
 
 (mac lfn (name args body . l)
   `(let ,name nil

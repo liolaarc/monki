@@ -400,6 +400,84 @@ case $host in
   "eval-print")
 
 
+;
+; https://github.com/sctb/lumen/pull/32
+; Add stack traces to error messages.
+;
+
+(patch "compiler.l"
+"""
+          hf `(return (%array false (get ,e "message")))
+"""
+"""
+          hf `(return (%array false (get ,e "message") (get ,e "stack")))
+""")
+
+(patch "macros.l"
+"""
+    (let-unique (e x msg)
+      `(let (,x nil
+             ,msg nil
+             ,e (xpcall
+                 (fn () (set ,x ,expr))
+                 (fn (m) (set ,msg (%message-handler m)))))
+         (list ,e (if ,e ,x ,msg))))))
+"""
+"""
+    (let-unique (e x msg trace)
+      `(let (,x nil
+             ,msg nil
+             ,trace nil
+             ,e (xpcall
+                 (fn () (set ,x ,expr))
+                 (fn (m)
+                   (set ,trace ((get debug 'traceback)))
+                   (set ,msg (%message-handler m ,trace)))))
+         (list ,e (if ,e ,x ,msg)
+                  (if ,e nil ,trace))))))
+""")
+
+(patch "main.l"
+"""
+  (let ((ok x) (guard ((get compiler 'eval) form)))
+    (if (not ok) (print (cat "error: " x))
+"""
+"""
+  (let ((ok x trace) (guard ((get compiler 'eval) form)))
+    (if (not ok) (print (target js: trace
+                                lua: (cat "error: " x "\n" trace)))
+""")
+
+(patch "test.l"
+"""
+    (test= (list false "Expected ) at 5") (guard (read "(open")))))
+"""
+"""
+    (test= (list false "Expected ) at 5") (cut (guard (read "(open")) 0 2))))
+""")
+
+(patch "test.l"
+"""
+(define-test guard
+  (test= '(true 42) (guard 42))
+  (test= '(false foo) (guard (error "foo")))
+  (test= '(false foo) (guard (do (error "foo") (error "baz"))))
+  (test= '(false baz) (guard (do (guard (error "foo")) (error "baz"))))
+  (test= '(true 42) (guard (if true 42 (error "baz"))))
+  (test= '(false baz) (guard (if false 42 (error "baz")))))
+"""
+"""
+(define-test guard
+  (let-macro ((guard2 (x) `(cut (guard ,x) 0 2)))
+    (test= '(true 42) (guard2 42))
+    (test= '(false foo) (guard2 (error "foo")))
+    (test= '(false foo) (guard2 (do (error "foo") (error "baz"))))
+    (test= '(false baz) (guard2 (do (guard2 (error "foo")) (error "baz"))))
+    (test= '(true 42) (guard2 (if true 42 (error "baz")))
+    (test= '(false baz) (guard2 (if false 42 (error "baz")))))))
+""")
+
+
 ; Apply all of these changes by rebuilding Lumen several times.  The
 ; first rebuild will be using the old Lumen compiler. The second will
 ; be running with any changes we made to the compiler. The third

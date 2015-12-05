@@ -55,7 +55,10 @@
     (test= true (nan? (read "nan")))
     (test= true (nan? (read "-nan")))
     (test= true (inf? (read "inf")))
-    (test= true (inf? (read "-inf")))))
+    (test= true (inf? (read "-inf")))
+    (test= "0?" (read "0?"))
+    (test= "0!" (read "0!"))
+    (test= "0." (read "0."))))
 
 (define-test read-more
   (let read (get reader 'read-string)
@@ -69,7 +72,7 @@
       (test= more (read "`(a b ,(z" more))
       (test= more (read "`\"biz" more))
       (test= more (read "'\"boz" more)))
-    (test= (list false "Expected ) at 5") (guard (read "(open")))))
+    (test= (list false "Expected ) at 5") (cut (guard (read "(open")) 0 2))))
 
 (define-test boolean
   (test= true (or true false))
@@ -463,12 +466,13 @@ c"
       (test= 12 a))))
 
 (define-test guard
-  (test= '(true 42) (guard 42))
-  (test= '(false foo) (guard (error "foo")))
-  (test= '(false foo) (guard (do (error "foo") (error "baz"))))
-  (test= '(false baz) (guard (do (guard (error "foo")) (error "baz"))))
-  (test= '(true 42) (guard (if true 42 (error "baz"))))
-  (test= '(false baz) (guard (if false 42 (error "baz")))))
+  (let-macro ((guard2 (x) `(cut (guard ,x) 0 2)))
+    (test= '(true 42) (guard2 42))
+    (test= '(false foo) (guard2 (error "foo")))
+    (test= '(false foo) (guard2 (do (error "foo") (error "baz"))))
+    (test= '(false baz) (guard2 (do (guard2 (error "foo")) (error "baz"))))
+    (test= '(true 42) (guard2 (if true 42 (error "baz")))
+    (test= '(false baz) (guard2 (if false 42 (error "baz")))))))
 
 (define-test let
   (let a 10
@@ -551,12 +555,9 @@ c"
     (test= 'zz end)
     (test= 'yy try)
     (test= '99 return))
-  (define in (in) (+ in 1))
-  (test= '22 (in 21))
-  (define in (end try return) (list (+ end 1) (cat try " " return)))
-  (test= (list 22 "foo bar") (in 21 'foo 'bar))
-  (define var (var if) (+ var if))
-  (test= '22 (var 21 1)))
+  (define var (if end return)
+    (return (+ if end return)))
+  (test= 6 (var 1 2 3)))
 
 (define-test destructuring
   (let ((a b c) '(1 2 3))

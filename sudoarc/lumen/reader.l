@@ -92,6 +92,7 @@
         (= str "-inf") -inf
         (= str ".")    "rest:"
         (not (digit? str (edge str))) str
+        (not (number-code? (code str (edge str)))) str
       (let n (number str)
         (if (or (nil? n) (nan? n) (inf? n)) str n)))))
 
