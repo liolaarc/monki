@@ -25,25 +25,28 @@ Don't make direct changes to the files under dstdir.  They'll be overwritten by 
 
 ## In-depth example
 
-The "sudoarc" subfolder is an example of Monki's usage.  It was created by running `monki clone laarc/lumen-sudoarc sudoarc` from the project directory.
+The "sudoarc" subfolder is an example of Monki's usage.  It was created by running `monki clone laarc/lumen-sudoarc sudoarc` from the project directory, which clones [laarc/lumen-sudoarc](https://github.com/laarc/lumen-sudoarc).
 
-The "lumen" folder within sudoarc is an example of how to make local changes to someone else's project:  https://github.com/laarc/monki/blob/master/sudoarc/lumen/monki.l
+If you visit [laarc/lumen-sudoarc](https://github.com/laarc/lumen-sudoarc), you'll notice the "lumen" subfolder is also manged by Monki.  It's very easy to re-use code across all of your repos, since it's just a matter of running `monki clone yourname/yourproject dir`.
 
-It was originally created by running
+The lumen subfolder was originally created by running:
 
 ```
 $ git clone https://github.com/laarc/lumen-sudoarc sudoarc
 $ cd sudoarc
 $ monki clone sctb/lumen lumen
+$ git add lumen
+$ git commit
+$ git push
 ```
 
-This created `lumen/monki.l` within sudoarc.  A `monki.l` file tells Monki what to do to the subfolder it resides in. 
+This created `lumen/monki.l` within `lumen/` along with all of Lumen's files.  A `monki.l` file tells Monki what to do to the subfolder it resides in.  
 
 If you just want a copy of someone's repo, then you won't need to edit any `monki.l` files.  `monki clone foo/bar dst` automatically generates a `dst/monki.l` file for you.
 
-But if you want to make any changes to their repo, examine the above `monki.l` file for a few minutes.  It clones [Lumen](https://github.com/sctb/lumen) and then applies a variety of hacks to add various features I needed.
+If you want to make any changes to someone else's repo, examine sudoarc's [lumen/monki.l](https://github.com/laarc/monki/blob/master/sudoarc/lumen/monki.l) file to see an example.  It instructs monki to clone [Lumen](https://github.com/sctb/lumen), modify it with various hacks (like multiline raw string syntax), fully rebuild it three times, then `make test`.
 
-(That's where the name came from: I needed a way to monkeypatch Lumen, and I didn't want to fork it and deal with keeping it in sync.)
+(That's basically why the project was originally created.  I needed a way to monkeypatch Lumen, and I didn't want to fork it and deal with keeping it in sync.)
 
 
 
