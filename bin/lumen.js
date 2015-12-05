@@ -1092,7 +1092,7 @@ eval_print = function (form) {
       return([true, compiler.eval(form)]);
     }
     catch (_e) {
-      return([false, _e.message]);
+      return([false, _e.message, _e.stack]);
     }
   })();
   var ok = _id[0];
