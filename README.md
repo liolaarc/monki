@@ -35,6 +35,7 @@ Later on, the project may add some new features or fix some bugs.  To pull in th
 $ monki dstdir/
 $ git add dstdir
 $ git commit -m 'monki dstdir/`
+```
 
 Don't make direct changes to any of the files under dstdir.  They'll be overwritten whenever you pull in changes via `monki dstdir/`.
 
