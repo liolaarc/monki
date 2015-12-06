@@ -65,6 +65,3 @@ If you just want a copy of someone's repo, then you won't need to edit any `monk
 If you want to make any changes to someone else's repo, examine sudoarc's [lumen/monki.l](https://github.com/laarc/monki/blob/master/sudoarc/lumen/monki.l) file to see an example.  It instructs monki to clone [Lumen](https://github.com/sctb/lumen), modify it with various hacks (like multiline raw string syntax), fully rebuild Lumen three times, then run the test suite using `make test`.
 
 (That's basically why the project was created:  I needed a way to monkeypatch Lumen, and I didn't want to fork it and deal with keeping it in sync.)
-
-
-
