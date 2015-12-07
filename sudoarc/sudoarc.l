@@ -64,7 +64,7 @@
   macex  {compiler expand}
   comp   [print (compile (macex _))]
   write1 {system write}
-  write  [void (write1 (str _))])
+  write  [void (write1 (tostr _))])
 
 ;; Arc Basics
 
@@ -73,8 +73,8 @@
 (def err (msg . l)
   (if (nil? msg) (set msg "fatal"))
   (let x (if (none? l)
-             (str msg)
-             (apply cat `(,(str msg) ,": " ,@(map str l))))
+             (tostr msg)
+             (apply cat `(,(tostr msg) ,": " ,@(map str l))))
     (error x)))
 
 (mac cmp (x y)
@@ -99,8 +99,8 @@
   list? obj?
   len #
   idfn [do _]
-  str [if (str? _) _ (string _)]
-  lst [if (lst? _) _ (list _)])
+  tostr [if (str? _) _ (str _)]
+  tolist [if (list? _) _ (list _)])
 
 (def parts [list (vals _) (keys _)])
 (def acons [not (atom? _)])
@@ -134,7 +134,7 @@
 (mac assert xs
   (with e `(let bad nil)
     (step cond xs
-      (add e `(unless (do ,cond) (set bad ',(string cond)))))
+      (add e `(unless (do ,cond) (set bad ',(str cond)))))
     (add e `(when (is? bad)
               (err "assertion failed" bad)))))
 (alias be assert)
@@ -193,15 +193,15 @@
   `(mac ,name (x yes . l) (o yes t)
      `(ado ,x (if ,',body (do ,yes) (do ,@l)))))
 
-(yesno any? (and (lst? it) (or (keys? it) (some? it))))
+(yesno any? (and (list? it) (or (keys? it) (some? it))))
 (yesno 0? (or (nil? it) (none? it)))
-(yesno 1? (and (lst? it) (one? it)))
-(yesno 2? (and (lst? it) (two? it)))
+(yesno 1? (and (list? it) (one? it)))
+(yesno 2? (and (list? it) (two? it)))
 
-(def _any? [do (be (or (nil? _) (lst? _))) (any? _)])
-(def _0?   [do (be (or (nil? _) (lst? _))) (0? _)])
-(def _1?   [do (be (or (nil? _) (lst? _))) (1? _)])
-(def _2?   [do (be (or (nil? _) (lst? _))) (2? _)])
+(def _any? [do (be (or (nil? _) (list? _))) (any? _)])
+(def _0?   [do (be (or (nil? _) (list? _))) (0? _)])
+(def _1?   [do (be (or (nil? _) (list? _))) (1? _)])
+(def _2?   [do (be (or (nil? _) (list? _))) (2? _)])
 
 (mac complement (f)
   (w/uniq g
@@ -300,9 +300,9 @@
 ; (mac key? ((k v) lst exprs . body)
 ;   `(ado ,lst
 ;      (when (is? it)
-;        ; (when (lst? it)
+;        ; (when (list? it)
 ;        ;   (set it (car it)))
-;        (if (and (lst? it) (get it 'key))
+;        (if (and (list? it) (get it 'key))
 ;          (let ((,k ,v) it)
 ;            (set it ,exprs))
 ;          (let ,v it
@@ -392,7 +392,7 @@
 ;           (do (unless (atom? x) (bcat1 b lh))
 ;               (set sep " ")))
 ;         (unless (num? k)
-;           (bcat1 b (str k))
+;           (bcat1 b (tostr k))
 ;           (bcat1 b ": "))
 ;         (if (and (not (atom? x)) (in? x parents))
 ;             (bcat1 b 'circular)
@@ -448,17 +448,17 @@
 
 ;  (def foo l (w/args l (a b c . (lh rh))
 (def pr l (w/args l (x . xs)
-  (let ((sep lh rh) (lst xs))
+  (let ((sep lh rh) (tolist xs))
     (o sep "")
     (let c nil
       (if lh (write lh))
       (if sep
         (step x l
           (if c (write c)
-            (set c (str sep)))
-          (write (str x)))
+            (set c (tostr sep)))
+          (write (tostr x)))
         (step x l
-          (write (str x))))
+          (write (tostr x))))
       (if rh (write rh)))
     (when l (hd l)))))
 
@@ -530,7 +530,7 @@
 
 (def loadstr (str :verbose :on-err :print)
   (step expr (readstr str)
-    (when (= "1" (env "VERBOSE")) (prn (string expr)))
+    (when (= "1" (env "VERBOSE")) (prn (str expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
     (let ((ok x) (guard (eval expr)))
       (when (and ok (= print true))

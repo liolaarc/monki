@@ -159,7 +159,7 @@
 ;
 (patch "runtime.l"
 ||
-(define-global string (x depth)
+(define-global str (x depth)
   (if (and depth (> depth 40)) "circular"
       (nil? x) "nil"
       (nan? x) "nan"
@@ -174,16 +174,16 @@
           d (+ (or depth 0) 1))
       (each (k v) x
         (if (number? k)
-            (set (get xs k) (string v d))
+            (set (get xs k) (str v d))
           (do (add ks (cat k ":"))
-              (add ks (string v d)))))
+              (add ks (str v d)))))
       (each v (join xs ks)
         (cat! s sp v)
         (set sp " "))
       (cat s  ")"))))
 ||
 ||
-(define-global string (x depth ancestors)
+(define-global str (x depth ancestors)
   (if (nil? x) "nil"
       (nan? x) "nan"
       (= x inf) "inf"
@@ -201,9 +201,9 @@
         (return "circular"))
       (each (k v) x
         (if (number? k)
-            (set (get xs k) (string v d ans))
+            (set (get xs k) (str v d ans))
           (do (add ks (cat k ":"))
-              (add ks (string v d ans)))))
+              (add ks (str v d ans)))))
       (each v (join xs ks)
         (cat! s sp v)
         (set sp " "))
@@ -401,95 +401,17 @@ case $host in
 
 
 ;
-; https://github.com/sctb/lumen/pull/32
-; Add stack traces to error messages.
-;
-
-(patch "compiler.l"
-"""
-          hf `(return (%array false (get ,e "message")))
-"""
-"""
-          hf `(return (%array false (get ,e "message") (get ,e "stack")))
-""")
-
-(patch "macros.l"
-"""
-    (let-unique (e x msg)
-      `(let (,x nil
-             ,msg nil
-             ,e (xpcall
-                 (fn () (set ,x ,expr))
-                 (fn (m) (set ,msg (%message-handler m)))))
-         (list ,e (if ,e ,x ,msg))))))
-"""
-"""
-    (let-unique (e x msg trace)
-      `(let (,x nil
-             ,msg nil
-             ,trace nil
-             ,e (xpcall
-                 (fn () (set ,x ,expr))
-                 (fn (m)
-                   (set ,trace ((get debug 'traceback)))
-                   (set ,msg (%message-handler m ,trace)))))
-         (list ,e (if ,e ,x ,msg)
-                  (if ,e nil ,trace))))))
-""")
-
-(patch "main.l"
-"""
-  (let ((ok x) (guard ((get compiler 'eval) form)))
-    (if (not ok) (print (cat "error: " x))
-"""
-"""
-  (let ((ok x trace) (guard ((get compiler 'eval) form)))
-    (if (not ok) (print (target js: trace
-                                lua: (cat "error: " x "\n" trace)))
-""")
-
-(patch "test.l"
-"""
-    (test= (list false "Expected ) at 5") (guard (read "(open")))))
-"""
-"""
-    (test= (list false "Expected ) at 5") (cut (guard (read "(open")) 0 2))))
-""")
-
-(patch "test.l"
-"""
-(define-test guard
-  (test= '(true 42) (guard 42))
-  (test= '(false foo) (guard (error "foo")))
-  (test= '(false foo) (guard (do (error "foo") (error "baz"))))
-  (test= '(false baz) (guard (do (guard (error "foo")) (error "baz"))))
-  (test= '(true 42) (guard (if true 42 (error "baz"))))
-  (test= '(false baz) (guard (if false 42 (error "baz")))))
-"""
-"""
-(define-test guard
-  (let-macro ((guard2 (x) `(cut (guard ,x) 0 2)))
-    (test= '(true 42) (guard2 42))
-    (test= '(false foo) (guard2 (error "foo")))
-    (test= '(false foo) (guard2 (do (error "foo") (error "baz"))))
-    (test= '(false baz) (guard2 (do (guard2 (error "foo")) (error "baz"))))
-    (test= '(true 42) (guard2 (if true 42 (error "baz")))
-    (test= '(false baz) (guard2 (if false 42 (error "baz")))))))
-""")
-
-
-;
 ; Calling (repl) from a REPL no longer results in a double REPL
 ; on LUMEN_HOST=node, though this isn't a proper fix.
 ;
 (patch "main.l"
-"""
+||
           ((get in 'setEncoding) 'utf8)
-"""
-"""
+||
+||
           ((get in 'removeAllListeners))
           ((get in 'setEncoding) 'utf8)
-""")
+||)
 
 ; Apply all of these changes by rebuilding Lumen several times.  The
 ; first rebuild will be using the old Lumen compiler. The second will

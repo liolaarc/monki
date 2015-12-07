@@ -562,7 +562,7 @@ escape = function (s) {
   }
   return(s1 + "\"");
 };
-string = function (x, depth, ancestors) {
+str = function (x, depth, ancestors) {
   if (nil63(x)) {
     return("nil");
   } else {
@@ -615,10 +615,10 @@ string = function (x, depth, ancestors) {
                       }
                       var _k8 = _e16;
                       if (number63(_k8)) {
-                        xs[_k8] = string(v, d, ans);
+                        xs[_k8] = str(v, d, ans);
                       } else {
                         add(ks, _k8 + ":");
-                        add(ks, string(v, d, ans));
+                        add(ks, str(v, d, ans));
                       }
                     }
                     var _o11 = join(xs, ks);
@@ -960,11 +960,10 @@ setenv("guard", {_stash: true, macro: function (expr) {
   if (target === "js") {
     return([["fn", join(), ["%try", ["list", true, expr]]]]);
   } else {
-    var e = unique("e");
     var x = unique("x");
     var msg = unique("msg");
     var trace = unique("trace");
-    return(["let", [x, "nil", msg, "nil", trace, "nil", e, ["xpcall", ["fn", join(), ["set", x, expr]], ["fn", ["m"], ["set", trace, [["get", "debug", ["quote", "traceback"]]]], ["set", msg, ["%message-handler", "m", trace]]]]], ["list", e, ["if", e, x, msg], ["if", e, "nil", trace]]]);
+    return(["let", [x, "nil", msg, "nil", trace, "nil"], ["if", ["xpcall", ["fn", join(), ["set", x, expr]], ["fn", ["m"], ["set", msg, ["clip", "m", ["+", ["search", "m", "\": \""], 2]]], ["set", trace, [["get", "debug", ["quote", "traceback"]]]]]], ["list", true, x], ["list", false, msg, trace]]]);
   }
 }});
 setenv("each", {_stash: true, macro: function (x, t) {
@@ -1102,7 +1101,7 @@ eval_print = function (form) {
     return(print(trace));
   } else {
     if (is63(x)) {
-      return(print(string(x)));
+      return(print(str(x)));
     }
   }
 };

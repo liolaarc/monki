@@ -1,12 +1,5 @@
 environment = {{}}
 target = "lua"
-local ssub = string.sub
-local sbyte = string.byte
-local sfind = string.find
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-local tunpack = table.unpack
 function nil63(x)
   return(x == nil)
 end
@@ -58,7 +51,7 @@ function inf63(n)
   return(n == inf or n == -inf)
 end
 function clip(s, from, upto)
-  return(ssub(s, from + 1, upto))
+  return(string.sub(s, from + 1, upto))
 end
 function cut(x, from, upto)
   local l = {}
@@ -122,7 +115,7 @@ function code(s, n)
   if n then
     _e2 = n + 1
   end
-  return(sbyte(s, _e2))
+  return(string.byte(s, _e2))
 end
 function string_literal63(x)
   return(string63(x) and char(x, 0) == "\"")
@@ -131,10 +124,10 @@ function id_literal63(x)
   return(string63(x) and char(x, 0) == "|")
 end
 function add(l, x)
-  return(tinsert(l, x))
+  return(table.insert(l, x))
 end
 function drop(l)
-  return(tremove(l))
+  return(table.remove(l))
 end
 function last(l)
   return(l[edge(l) + 1])
@@ -265,7 +258,7 @@ function vals(lst)
   return(r)
 end
 function sort(l, f)
-  tsort(l, f)
+  table.sort(l, f)
   return(l)
 end
 function map(f, x)
@@ -364,7 +357,7 @@ function search(s, pattern, start)
     _e3 = start + 1
   end
   local _start = _e3
-  local i = sfind(s, pattern, _start, true)
+  local i = string.find(s, pattern, _start, true)
   return(i and i - 1)
 end
 function split(s, sep)
@@ -487,7 +480,7 @@ function escape(s)
   end
   return(s1 .. "\"")
 end
-function string(x, depth, ancestors)
+function str(x, depth, ancestors)
   if nil63(x) then
     return("nil")
   else
@@ -533,10 +526,10 @@ function string(x, depth, ancestors)
                     for k in next, _o10 do
                       local v = _o10[k]
                       if number63(k) then
-                        xs[k] = string(v, d, ans)
+                        xs[k] = str(v, d, ans)
                       else
                         add(ks, k .. ":")
-                        add(ks, string(v, d, ans))
+                        add(ks, str(v, d, ans))
                       end
                     end
                     local _o11 = join(xs, ks)
@@ -557,7 +550,7 @@ function string(x, depth, ancestors)
     end
   end
 end
-local values = unpack or tunpack
+local values = unpack or table.unpack
 function apply(f, args)
   local _args = stash(args)
   return(f(values(_args)))
@@ -590,10 +583,6 @@ function setenv(k, ...)
     frame[k] = entry
     return(frame[k])
   end
-end
-function _37message_handler(msg)
-  local i = search(msg, ": ")
-  return(clip(msg, i + 2))
 end
 local math = math
 abs = math.abs
@@ -859,11 +848,10 @@ setenv("guard", {_stash = true, macro = function (expr)
   if target == "js" then
     return({{"fn", join(), {"%try", {"list", true, expr}}}})
   else
-    local e = unique("e")
     local x = unique("x")
     local msg = unique("msg")
     local trace = unique("trace")
-    return({"let", {x, "nil", msg, "nil", trace, "nil", e, {"xpcall", {"fn", join(), {"set", x, expr}}, {"fn", {"m"}, {"set", trace, {{"get", "debug", {"quote", "traceback"}}}}, {"set", msg, {"%message-handler", "m", trace}}}}}, {"list", e, {"if", e, x, msg}, {"if", e, "nil", trace}}})
+    return({"let", {x, "nil", msg, "nil", trace, "nil"}, {"if", {"xpcall", {"fn", join(), {"set", x, expr}}, {"fn", {"m"}, {"set", msg, {"clip", "m", {"+", {"search", "m", "\": \""}, 2}}}, {"set", trace, {{"get", "debug", {"quote", "traceback"}}}}}}, {"list", true, x}, {"list", false, msg, trace}}})
   end
 end})
 setenv("each", {_stash = true, macro = function (x, t, ...)
@@ -975,27 +963,20 @@ function eval_print(form)
   local _x = nil
   local _msg = nil
   local _trace = nil
-  local _e = xpcall(function ()
+  local _e
+  if xpcall(function ()
     _x = compiler.eval(form)
     return(_x)
   end, function (m)
+    _msg = clip(m, search(m, ": ") + 2)
     _trace = debug.traceback()
-    _msg = _37message_handler(m, _trace)
-    return(_msg)
-  end)
-  local _e1
-  if _e then
-    _e1 = _x
+    return(_trace)
+  end) then
+    _e = {true, _x}
   else
-    _e1 = _msg
+    _e = {false, _msg, _trace}
   end
-  local _e2
-  if _e then
-    _e2 = nil
-  else
-    _e2 = _trace
-  end
-  local _id = {_e, _e1, _e2}
+  local _id = _e
   local ok = _id[1]
   local x = _id[2]
   local trace = _id[3]
@@ -1003,7 +984,7 @@ function eval_print(form)
     return(print("error: " .. x .. "\n" .. trace))
   else
     if is63(x) then
-      return(print(string(x)))
+      return(print(str(x)))
     end
   end
 end
@@ -1097,11 +1078,11 @@ local function main()
     end
     i = i + 1
   end
-  local _x3 = pre
-  local _n = _35(_x3)
+  local _x4 = pre
+  local _n = _35(_x4)
   local _i = 0
   while _i < _n do
-    local file = _x3[_i + 1]
+    local file = _x4[_i + 1]
     run_file(file)
     _i = _i + 1
   end
@@ -1292,7 +1273,7 @@ comp = function (_)
 end
 write1 = system.write
 write = function (_)
-  write1(str(_))
+  write1(tostr(_))
   return(nil)
 end
 setenv("t", {_stash = true, symbol = true})
@@ -1303,13 +1284,13 @@ function err(msg, ...)
   if nil63(msg) then
     msg = "fatal"
   end
-  local _e5
+  local _e4
   if none63(l) then
-    _e5 = str(msg)
+    _e4 = tostr(msg)
   else
-    _e5 = apply(cat, join({str(msg), ": "}, map(str, l)))
+    _e4 = apply(cat, join({tostr(msg), ": "}, map(str, l)))
   end
-  local x = _e5
+  local x = _e4
   error(x)
 end
 setenv("cmp", {_stash = true, macro = function (x, y)
@@ -1338,15 +1319,15 @@ len = _35
 idfn = function (_)
   return(_)
 end
-str = function (_)
+tostr = function (_)
   if str63(_) then
     return(_)
   else
-    return(string(_))
+    return(str(_))
   end
 end
-lst = function (_)
-  if lst63(_) then
+tolist = function (_)
+  if list63(_) then
     return(_)
   else
     return({_})
@@ -1412,7 +1393,7 @@ setenv("assert", {_stash = true, macro = function (...)
   local _i16 = 0
   while _i16 < _n16 do
     local cond = _x200[_i16 + 1]
-    add(e, {"unless", {"do", cond}, {"set", "bad", {"quote", string(cond)}}})
+    add(e, {"unless", {"do", cond}, {"set", "bad", {"quote", str(cond)}}})
     _i16 = _i16 + 1
   end
   add(e, {"when", {"is?", "bad"}, {"err", "\"assertion failed\"", "bad"}})
@@ -1510,7 +1491,7 @@ setenv("any?", {_stash = true, macro = function (x, yes, ...)
   if nil63(yes) then
     yes = true
   end
-  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"or", {"keys?", "it"}, {"some?", "it"}}}, {"do", yes}, join({"do"}, l)}})
+  return({"ado", x, {"if", {"and", {"list?", "it"}, {"or", {"keys?", "it"}, {"some?", "it"}}}, {"do", yes}, join({"do"}, l)}})
 end})
 setenv("0?", {_stash = true, macro = function (x, yes, ...)
   local _r48 = unstash({...})
@@ -1528,7 +1509,7 @@ setenv("1?", {_stash = true, macro = function (x, yes, ...)
   if nil63(yes) then
     yes = true
   end
-  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"one?", "it"}}, {"do", yes}, join({"do"}, l)}})
+  return({"ado", x, {"if", {"and", {"list?", "it"}, {"one?", "it"}}, {"do", yes}, join({"do"}, l)}})
 end})
 setenv("2?", {_stash = true, macro = function (x, yes, ...)
   local _r52 = unstash({...})
@@ -1537,25 +1518,25 @@ setenv("2?", {_stash = true, macro = function (x, yes, ...)
   if nil63(yes) then
     yes = true
   end
-  return({"ado", x, {"if", {"and", {"lst?", "it"}, {"two?", "it"}}, {"do", yes}, join({"do"}, l)}})
+  return({"ado", x, {"if", {"and", {"list?", "it"}, {"two?", "it"}}, {"do", yes}, join({"do"}, l)}})
 end})
 _any63 = function (_)
   local bad = nil
-  if not( nil63(_) or lst63(_)) then
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))"
+  if not( nil63(_) or list63(_)) then
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))"
   end
   if is63(bad) then
     err("assertion failed", bad)
   end
   local it = _
-  if lst63(it) and (keys63(it) or some63(it)) then
+  if list63(it) and (keys63(it) or some63(it)) then
     return(true)
   end
 end
 _063 = function (_)
   local bad = nil
-  if not( nil63(_) or lst63(_)) then
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))"
+  if not( nil63(_) or list63(_)) then
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))"
   end
   if is63(bad) then
     err("assertion failed", bad)
@@ -1567,27 +1548,27 @@ _063 = function (_)
 end
 _163 = function (_)
   local bad = nil
-  if not( nil63(_) or lst63(_)) then
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))"
+  if not( nil63(_) or list63(_)) then
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))"
   end
   if is63(bad) then
     err("assertion failed", bad)
   end
   local it = _
-  if lst63(it) and one63(it) then
+  if list63(it) and one63(it) then
     return(true)
   end
 end
 _263 = function (_)
   local bad = nil
-  if not( nil63(_) or lst63(_)) then
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))"
+  if not( nil63(_) or list63(_)) then
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))"
   end
   if is63(bad) then
     err("assertion failed", bad)
   end
   local it = _
-  if lst63(it) and two63(it) then
+  if list63(it) and two63(it) then
     return(true)
   end
 end
@@ -1619,13 +1600,13 @@ setenv("lfn", {_stash = true, macro = function (name, args, body, ...)
   local _r68 = unstash({...})
   local _id44 = _r68
   local l = cut(_id44, 0)
-  local _e6
+  local _e5
   if some63(l) then
-    _e6 = l
+    _e5 = l
   else
-    _e6 = {name}
+    _e5 = {name}
   end
-  return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, _e6))
+  return(join({"let", name, "nil", {"set", name, {"fn", args, body}}}, _e5))
 end})
 setenv("afn", {_stash = true, macro = function (args, body, ...)
   local _r70 = unstash({...})
@@ -1667,13 +1648,13 @@ setenv("iflet", {_stash = true, macro = function (name, ...)
     local x = _id54[1]
     local a = _id54[2]
     local bs = cut(_id54, 2)
-    local _e7
+    local _e6
     if one63(l) then
-      _e7 = name
+      _e6 = name
     else
-      _e7 = {"if", name, a, join({"iflet", name}, bs)}
+      _e6 = {"if", name, a, join({"iflet", name}, bs)}
     end
-    return({"let", name, x, _e7})
+    return({"let", name, x, _e6})
   end
 end})
 setenv("whenlet", {_stash = true, macro = function (name, ...)
@@ -1684,13 +1665,13 @@ setenv("whenlet", {_stash = true, macro = function (name, ...)
     local _id58 = l
     local x = _id58[1]
     local ys = cut(_id58, 1)
-    local _e8
+    local _e7
     if one63(l) then
-      _e8 = name
+      _e7 = name
     else
-      _e8 = join({"do"}, ys)
+      _e7 = join({"do"}, ys)
     end
-    return({"let", name, x, _e8})
+    return({"let", name, x, _e7})
   end
 end})
 setenv("aif", {_stash = true, macro = function (...)
@@ -1866,14 +1847,14 @@ function pr(...)
   local rest = _g4.rest
   local _id62 = _g4
   local x = _id62[1]
-  local _e9
+  local _e8
   if rest then
-    _e9 = rest
+    _e8 = rest
   else
-    _e9 = {}
+    _e8 = {}
   end
-  local xs = _e9
-  local _id63 = lst(xs)
+  local xs = _e8
+  local _id63 = tolist(xs)
   local sep = _id63[1]
   local lh = _id63[2]
   local rh = _id63[3]
@@ -1893,9 +1874,9 @@ function pr(...)
       if c then
         write(c)
       else
-        c = str(sep)
+        c = tostr(sep)
       end
-      write(str(_x492))
+      write(tostr(_x492))
       _i23 = _i23 + 1
     end
   else
@@ -1904,7 +1885,7 @@ function pr(...)
     local _i24 = 0
     while _i24 < _n24 do
       local _x494 = _x493[_i24 + 1]
-      write(str(_x494))
+      write(tostr(_x494))
       _i24 = _i24 + 1
     end
   end
@@ -2003,7 +1984,7 @@ function loadstr(str, ...)
   while _i25 < _n25 do
     local expr = _x514[_i25 + 1]
     if "1" == env("VERBOSE") then
-      prn(string(expr))
+      prn(str(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))
@@ -2011,27 +1992,20 @@ function loadstr(str, ...)
     local _x515 = nil
     local _msg = nil
     local _trace = nil
-    local _e3 = xpcall(function ()
+    local _e9
+    if xpcall(function ()
       _x515 = eval(expr)
       return(_x515)
     end, function (m)
+      _msg = clip(m, search(m, ": ") + 2)
       _trace = debug.traceback()
-      _msg = _37message_handler(m, _trace)
-      return(_msg)
-    end)
-    local _e10
-    if _e3 then
-      _e10 = _x515
+      return(_trace)
+    end) then
+      _e9 = {true, _x515}
     else
-      _e10 = _msg
+      _e9 = {false, _msg, _trace}
     end
-    local _e11
-    if _e3 then
-      _e11 = nil
-    else
-      _e11 = _trace
-    end
-    local _id68 = {_e3, _e10, _e11}
+    local _id68 = _e9
     local ok = _id68[1]
     local x = _id68[2]
     if ok and print == true then
@@ -2056,13 +2030,13 @@ end
 if luajit63() then
   ffi = require("ffi")
   setenv("defc", {_stash = true, macro = function (name, val)
-    local _e12
+    local _e10
     if id_literal63(val) then
-      _e12 = inner(val)
+      _e10 = inner(val)
     else
-      _e12 = val
+      _e10 = val
     end
-    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e12}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
+    return({"do", {{"get", "ffi", {"quote", "cdef"}}, {"quote", _e10}}, {"def", name, {"get", {"get", "ffi", {"quote", "C"}}, {"quote", name}}}})
   end})
   ffi.cdef("int usleep (unsigned int usecs)")
   usleep = ffi.C.usleep
@@ -2205,20 +2179,20 @@ function tree(path, pattern)
     error("tree: not a dir: " .. path)
   end
   pushd(path)
-  local _e2
+  local _e
   if pattern then
-    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
+    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "grep", pattern, "|", "cat")
   else
-    _e2 = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
+    _e = _36("find", ".", "|", "grep", "-v", "'/\\.monki/'", "|", "cat")
   end
-  local s = trim(_e2)
-  local _e3
+  local s = trim(_e)
+  local _e1
   if s and some63(s) then
-    _e3 = map(fixpath, split(s, "\n"))
+    _e1 = map(fixpath, split(s, "\n"))
   else
-    _e3 = {}
+    _e1 = {}
   end
-  local _g = _e3
+  local _g = _e1
   popd()
   return(_g)
 end
@@ -2226,27 +2200,20 @@ function which(prog)
   local _x31 = nil
   local _msg = nil
   local _trace = nil
-  local _e = xpcall(function ()
+  local _e2
+  if xpcall(function ()
     _x31 = _36("which", prog)
     return(_x31)
   end, function (m)
+    _msg = clip(m, search(m, ": ") + 2)
     _trace = debug.traceback()
-    _msg = _37message_handler(m, _trace)
-    return(_msg)
-  end)
-  local _e4
-  if _e then
-    _e4 = _x31
+    return(_trace)
+  end) then
+    _e2 = {true, _x31}
   else
-    _e4 = _msg
+    _e2 = {false, _msg, _trace}
   end
-  local _e5
-  if _e then
-    _e5 = nil
-  else
-    _e5 = _trace
-  end
-  local _id5 = {_e, _e4, _e5}
+  local _id5 = _e2
   local ok = _id5[1]
   local x = _id5[2]
   if ok then
@@ -2258,20 +2225,20 @@ function freebsd63()
 end
 function make(...)
   local args = unstash({...})
-  local _e6
+  local _e3
   if freebsd63() then
-    local _e7
+    local _e4
     if which("gmake") then
-      _e7 = "gmake"
+      _e4 = "gmake"
     else
       error("Install gmake by running:  sudo pkg install gmake")
-      _e7 = nil
+      _e4 = nil
     end
-    _e6 = _e7
+    _e3 = _e4
   else
-    _e6 = "make"
+    _e3 = "make"
   end
-  local prog = _e6
+  local prog = _e3
   return(prn(apply(_36, join({"time", prog}, args))))
 end
 function clean()
@@ -2341,10 +2308,10 @@ function patch(file, x, y)
   y = unlit(y)
   local _gp = j(getcwd(), file)
   local fs = filechars(_gp)
-  local _e8
+  local _e5
   if not search(fs, x) then
     error(file .. ": patch: failed to find code:\n  " .. x)
-    _e8 = nil
+    _e5 = nil
   end
   fs = replace(fs, x, y)
   return(writefile(_gp, fs))
@@ -2365,11 +2332,11 @@ function make_global(file, ...)
   local _r40 = unstash({...})
   local _id6 = _r40
   local variables = cut(_id6, 0)
-  local _x65 = variables
-  local _n = _35(_x65)
+  local _x66 = variables
+  local _n = _35(_x66)
   local _i = 0
   while _i < _n do
-    local v = _x65[_i + 1]
+    local v = _x66[_i + 1]
     patch1(file, "(define " .. v .. " ", "(define-global " .. v .. " ")
     _i = _i + 1
   end
@@ -2379,11 +2346,11 @@ function _36(...)
   local hush = args.hush
   local c = ""
   local cmds = {}
-  local _x67 = args
-  local _n1 = _35(_x67)
+  local _x68 = args
+  local _n1 = _35(_x68)
   local _i1 = 0
   while _i1 < _n1 do
-    local arg = _x67[_i1 + 1]
+    local arg = _x68[_i1 + 1]
     if arg == ";" then
       add(cmds, c)
       c = ""
@@ -2422,18 +2389,18 @@ function git(path, what, ...)
       error("no .git at " .. path)
     end
   end
-  local _x69 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
-  _x69.hush = true
-  return(apply(_36, join(_x69, args)))
+  local _x70 = {"git", "--git-dir=" .. q(j(path, ".git")), what}
+  _x70.hush = true
+  return(apply(_36, join(_x70, args)))
 end
 function gitdir(path, nocheck)
-  local _e9
+  local _e6
   if path then
-    _e9 = j(path, ".monki", "git")
+    _e6 = j(path, ".monki", "git")
   else
-    _e9 = j(".monki", "git")
+    _e6 = j(".monki", "git")
   end
-  local dst = _e9
+  local dst = _e6
   if not nocheck then
     if not git63(dst) then
       local errmsg = "Error: no .git at " .. dst
@@ -2554,39 +2521,32 @@ function mmain(argv)
     return
   end
   if in63(op, {"compile", "comp"}) then
-    local _x73 = params
-    local _n3 = _35(_x73)
+    local _x74 = params
+    local _n3 = _35(_x74)
     local _i3 = 0
     while _i3 < _n3 do
-      local file = _x73[_i3 + 1]
+      local file = _x74[_i3 + 1]
       if file == "js" or file == "lua" then
         target = file
       else
         local x = filechars(file)
-        local _x74 = nil
+        local _x75 = nil
         local _msg1 = nil
         local _trace1 = nil
-        local _e1 = xpcall(function ()
-          _x74 = readstr(x)
-          return(_x74)
+        local _e7
+        if xpcall(function ()
+          _x75 = readstr(x)
+          return(_x75)
         end, function (m)
+          _msg1 = clip(m, search(m, ": ") + 2)
           _trace1 = debug.traceback()
-          _msg1 = _37message_handler(m, _trace1)
-          return(_msg1)
-        end)
-        local _e10
-        if _e1 then
-          _e10 = _x74
+          return(_trace1)
+        end) then
+          _e7 = {true, _x75}
         else
-          _e10 = _msg1
+          _e7 = {false, _msg1, _trace1}
         end
-        local _e11
-        if _e1 then
-          _e11 = nil
-        else
-          _e11 = _trace1
-        end
-        local _id8 = {_e1, _e10, _e11}
+        local _id8 = _e7
         local ok = _id8[1]
         local val = _id8[2]
         if not ok then
@@ -2622,11 +2582,11 @@ function mmain(argv)
     prn(apply(git, join({gitdir(pwd())}, params or {})))
     return
   end
-  local _x80 = argv
-  local _n4 = _35(_x80)
+  local _x82 = argv
+  local _n4 = _35(_x82)
   local _i4 = 0
   while _i4 < _n4 do
-    local arg = _x80[_i4 + 1]
+    local arg = _x82[_i4 + 1]
     if dir63(arg) then
       monkitree(arg)
     else

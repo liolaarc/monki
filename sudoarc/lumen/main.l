@@ -6,9 +6,11 @@
 
 (define-global eval-print (form)
   (let ((ok x trace) (guard ((get compiler 'eval) form)))
-    (if (not ok) (print (target js: trace
-                                lua: (cat "error: " x "\n" trace)))
-        (is? x) (print (string x)))))
+    (if (not ok)
+        (target
+          js: (print trace)
+          lua: (print (cat "error: " x "\n" trace)))
+        (is? x) (print (str x)))))
 
 (define rep (s)
   (eval-print ((get reader 'read-string) s)))

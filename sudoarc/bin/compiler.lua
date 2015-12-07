@@ -579,7 +579,7 @@ local function compile_atom(x)
                     if number63(x) then
                       return(x .. "")
                     else
-                      error("Cannot compile atom: " .. string(x))
+                      error("Cannot compile atom: " .. str(x))
                     end
                   end
                 end
@@ -1207,7 +1207,7 @@ setenv("%object", {_stash = true, special = function (...)
       local _k2 = _id28[1]
       local _v2 = _id28[2]
       if not string63(_k2) then
-        error("Illegal key: " .. string(_k2))
+        error("Illegal key: " .. str(_k2))
       end
       s = s .. c .. key(_k2) .. sep .. compile(_v2)
       c = ", "

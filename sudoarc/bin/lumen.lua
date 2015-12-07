@@ -1,12 +1,5 @@
 environment = {{}}
 target = "lua"
-local ssub = string.sub
-local sbyte = string.byte
-local sfind = string.find
-local tinsert = table.insert
-local tremove = table.remove
-local tsort = table.sort
-local tunpack = table.unpack
 function nil63(x)
   return(x == nil)
 end
@@ -58,7 +51,7 @@ function inf63(n)
   return(n == inf or n == -inf)
 end
 function clip(s, from, upto)
-  return(ssub(s, from + 1, upto))
+  return(string.sub(s, from + 1, upto))
 end
 function cut(x, from, upto)
   local l = {}
@@ -122,7 +115,7 @@ function code(s, n)
   if n then
     _e2 = n + 1
   end
-  return(sbyte(s, _e2))
+  return(string.byte(s, _e2))
 end
 function string_literal63(x)
   return(string63(x) and char(x, 0) == "\"")
@@ -131,10 +124,10 @@ function id_literal63(x)
   return(string63(x) and char(x, 0) == "|")
 end
 function add(l, x)
-  return(tinsert(l, x))
+  return(table.insert(l, x))
 end
 function drop(l)
-  return(tremove(l))
+  return(table.remove(l))
 end
 function last(l)
   return(l[edge(l) + 1])
@@ -265,7 +258,7 @@ function vals(lst)
   return(r)
 end
 function sort(l, f)
-  tsort(l, f)
+  table.sort(l, f)
   return(l)
 end
 function map(f, x)
@@ -364,7 +357,7 @@ function search(s, pattern, start)
     _e3 = start + 1
   end
   local _start = _e3
-  local i = sfind(s, pattern, _start, true)
+  local i = string.find(s, pattern, _start, true)
   return(i and i - 1)
 end
 function split(s, sep)
@@ -487,7 +480,7 @@ function escape(s)
   end
   return(s1 .. "\"")
 end
-function string(x, depth, ancestors)
+function str(x, depth, ancestors)
   if nil63(x) then
     return("nil")
   else
@@ -533,10 +526,10 @@ function string(x, depth, ancestors)
                     for k in next, _o10 do
                       local v = _o10[k]
                       if number63(k) then
-                        xs[k] = string(v, d, ans)
+                        xs[k] = str(v, d, ans)
                       else
                         add(ks, k .. ":")
-                        add(ks, string(v, d, ans))
+                        add(ks, str(v, d, ans))
                       end
                     end
                     local _o11 = join(xs, ks)
@@ -557,7 +550,7 @@ function string(x, depth, ancestors)
     end
   end
 end
-local values = unpack or tunpack
+local values = unpack or table.unpack
 function apply(f, args)
   local _args = stash(args)
   return(f(values(_args)))
@@ -590,10 +583,6 @@ function setenv(k, ...)
     frame[k] = entry
     return(frame[k])
   end
-end
-function _37message_handler(msg)
-  local i = search(msg, ": ")
-  return(clip(msg, i + 2))
 end
 local math = math
 abs = math.abs
@@ -859,11 +848,10 @@ setenv("guard", {_stash = true, macro = function (expr)
   if target == "js" then
     return({{"fn", join(), {"%try", {"list", true, expr}}}})
   else
-    local e = unique("e")
     local x = unique("x")
     local msg = unique("msg")
     local trace = unique("trace")
-    return({"let", {x, "nil", msg, "nil", trace, "nil", e, {"xpcall", {"fn", join(), {"set", x, expr}}, {"fn", {"m"}, {"set", trace, {{"get", "debug", {"quote", "traceback"}}}}, {"set", msg, {"%message-handler", "m", trace}}}}}, {"list", e, {"if", e, x, msg}, {"if", e, "nil", trace}}})
+    return({"let", {x, "nil", msg, "nil", trace, "nil"}, {"if", {"xpcall", {"fn", join(), {"set", x, expr}}, {"fn", {"m"}, {"set", msg, {"clip", "m", {"+", {"search", "m", "\": \""}, 2}}}, {"set", trace, {{"get", "debug", {"quote", "traceback"}}}}}}, {"list", true, x}, {"list", false, msg, trace}}})
   end
 end})
 setenv("each", {_stash = true, macro = function (x, t, ...)
@@ -975,27 +963,20 @@ function eval_print(form)
   local _x = nil
   local _msg = nil
   local _trace = nil
-  local _e = xpcall(function ()
+  local _e
+  if xpcall(function ()
     _x = compiler.eval(form)
     return(_x)
   end, function (m)
+    _msg = clip(m, search(m, ": ") + 2)
     _trace = debug.traceback()
-    _msg = _37message_handler(m, _trace)
-    return(_msg)
-  end)
-  local _e1
-  if _e then
-    _e1 = _x
+    return(_trace)
+  end) then
+    _e = {true, _x}
   else
-    _e1 = _msg
+    _e = {false, _msg, _trace}
   end
-  local _e2
-  if _e then
-    _e2 = nil
-  else
-    _e2 = _trace
-  end
-  local _id = {_e, _e1, _e2}
+  local _id = _e
   local ok = _id[1]
   local x = _id[2]
   local trace = _id[3]
@@ -1003,7 +984,7 @@ function eval_print(form)
     return(print("error: " .. x .. "\n" .. trace))
   else
     if is63(x) then
-      return(print(string(x)))
+      return(print(str(x)))
     end
   end
 end
@@ -1097,11 +1078,11 @@ local function main()
     end
     i = i + 1
   end
-  local _x3 = pre
-  local _n = _35(_x3)
+  local _x4 = pre
+  local _n = _35(_x4)
   local _i = 0
   while _i < _n do
-    local file = _x3[_i + 1]
+    local file = _x4[_i + 1]
     run_file(file)
     _i = _i + 1
   end

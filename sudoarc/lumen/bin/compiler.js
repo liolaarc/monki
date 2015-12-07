@@ -633,7 +633,7 @@ var compile_atom = function (x) {
                     if (number63(x)) {
                       return(x + "");
                     } else {
-                      throw new Error("Cannot compile atom: " + string(x));
+                      throw new Error("Cannot compile atom: " + str(x));
                     }
                   }
                 }
@@ -1268,7 +1268,7 @@ setenv("%object", {_stash: true, special: function () {
       var _k10 = _id28[0];
       var _v2 = _id28[1];
       if (! string63(_k10)) {
-        throw new Error("Illegal key: " + string(_k10));
+        throw new Error("Illegal key: " + str(_k10));
       }
       s = s + c + key(_k10) + sep + compile(_v2);
       c = ", ";

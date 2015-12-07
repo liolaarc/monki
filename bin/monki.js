@@ -562,7 +562,7 @@ escape = function (s) {
   }
   return(s1 + "\"");
 };
-string = function (x, depth, ancestors) {
+str = function (x, depth, ancestors) {
   if (nil63(x)) {
     return("nil");
   } else {
@@ -615,10 +615,10 @@ string = function (x, depth, ancestors) {
                       }
                       var _k8 = _e16;
                       if (number63(_k8)) {
-                        xs[_k8] = string(v, d, ans);
+                        xs[_k8] = str(v, d, ans);
                       } else {
                         add(ks, _k8 + ":");
-                        add(ks, string(v, d, ans));
+                        add(ks, str(v, d, ans));
                       }
                     }
                     var _o11 = join(xs, ks);
@@ -960,11 +960,10 @@ setenv("guard", {_stash: true, macro: function (expr) {
   if (target === "js") {
     return([["fn", join(), ["%try", ["list", true, expr]]]]);
   } else {
-    var e = unique("e");
     var x = unique("x");
     var msg = unique("msg");
     var trace = unique("trace");
-    return(["let", [x, "nil", msg, "nil", trace, "nil", e, ["xpcall", ["fn", join(), ["set", x, expr]], ["fn", ["m"], ["set", trace, [["get", "debug", ["quote", "traceback"]]]], ["set", msg, ["%message-handler", "m", trace]]]]], ["list", e, ["if", e, x, msg], ["if", e, "nil", trace]]]);
+    return(["let", [x, "nil", msg, "nil", trace, "nil"], ["if", ["xpcall", ["fn", join(), ["set", x, expr]], ["fn", ["m"], ["set", msg, ["clip", "m", ["+", ["search", "m", "\": \""], 2]]], ["set", trace, [["get", "debug", ["quote", "traceback"]]]]]], ["list", true, x], ["list", false, msg, trace]]]);
   }
 }});
 setenv("each", {_stash: true, macro: function (x, t) {
@@ -1102,7 +1101,7 @@ eval_print = function (form) {
     return(print(trace));
   } else {
     if (is63(x)) {
-      return(print(string(x)));
+      return(print(str(x)));
     }
   }
 };
@@ -1387,7 +1386,7 @@ comp = function (_) {
 };
 write1 = system.write;
 write = function (_) {
-  write1(str(_));
+  write1(tostr(_));
   return(undefined);
 };
 setenv("t", {_stash: true, symbol: true});
@@ -1400,9 +1399,9 @@ err = function (msg) {
   }
   var _e3;
   if (none63(l)) {
-    _e3 = str(msg);
+    _e3 = tostr(msg);
   } else {
-    _e3 = apply(cat, join([str(msg), ": "], map(str, l)));
+    _e3 = apply(cat, join([tostr(msg), ": "], map(str, l)));
   }
   var x = _e3;
   throw new Error(x);
@@ -1433,15 +1432,15 @@ len = _35;
 idfn = function (_) {
   return(_);
 };
-str = function (_) {
+tostr = function (_) {
   if (str63(_)) {
     return(_);
   } else {
-    return(string(_));
+    return(str(_));
   }
 };
-lst = function (_) {
-  if (lst63(_)) {
+tolist = function (_) {
+  if (list63(_)) {
     return(_);
   } else {
     return([_]);
@@ -1507,7 +1506,7 @@ setenv("assert", {_stash: true, macro: function () {
   var _i16 = 0;
   while (_i16 < _n16) {
     var cond = _x184[_i16];
-    add(e, ["unless", ["do", cond], ["set", "bad", ["quote", string(cond)]]]);
+    add(e, ["unless", ["do", cond], ["set", "bad", ["quote", str(cond)]]]);
     _i16 = _i16 + 1;
   }
   add(e, ["when", ["is?", "bad"], ["err", "\"assertion failed\"", "bad"]]);
@@ -1605,7 +1604,7 @@ setenv("any?", {_stash: true, macro: function (x, yes) {
   if (nil63(yes)) {
     yes = true;
   }
-  return(["ado", x, ["if", ["and", ["lst?", "it"], ["or", ["keys?", "it"], ["some?", "it"]]], ["do", yes], join(["do"], l)]]);
+  return(["ado", x, ["if", ["and", ["list?", "it"], ["or", ["keys?", "it"], ["some?", "it"]]], ["do", yes], join(["do"], l)]]);
 }});
 setenv("0?", {_stash: true, macro: function (x, yes) {
   var _r48 = unstash(Array.prototype.slice.call(arguments, 2));
@@ -1623,7 +1622,7 @@ setenv("1?", {_stash: true, macro: function (x, yes) {
   if (nil63(yes)) {
     yes = true;
   }
-  return(["ado", x, ["if", ["and", ["lst?", "it"], ["one?", "it"]], ["do", yes], join(["do"], l)]]);
+  return(["ado", x, ["if", ["and", ["list?", "it"], ["one?", "it"]], ["do", yes], join(["do"], l)]]);
 }});
 setenv("2?", {_stash: true, macro: function (x, yes) {
   var _r52 = unstash(Array.prototype.slice.call(arguments, 2));
@@ -1632,25 +1631,25 @@ setenv("2?", {_stash: true, macro: function (x, yes) {
   if (nil63(yes)) {
     yes = true;
   }
-  return(["ado", x, ["if", ["and", ["lst?", "it"], ["two?", "it"]], ["do", yes], join(["do"], l)]]);
+  return(["ado", x, ["if", ["and", ["list?", "it"], ["two?", "it"]], ["do", yes], join(["do"], l)]]);
 }});
 _any63 = function (_) {
   var bad = undefined;
-  if (!( nil63(_) || lst63(_))) {
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))";
+  if (!( nil63(_) || list63(_))) {
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))";
   }
   if (is63(bad)) {
     err("assertion failed", bad);
   }
   var it = _;
-  if (lst63(it) && (keys63(it) || some63(it))) {
+  if (list63(it) && (keys63(it) || some63(it))) {
     return(true);
   }
 };
 _063 = function (_) {
   var bad = undefined;
-  if (!( nil63(_) || lst63(_))) {
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))";
+  if (!( nil63(_) || list63(_))) {
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))";
   }
   if (is63(bad)) {
     err("assertion failed", bad);
@@ -1662,27 +1661,27 @@ _063 = function (_) {
 };
 _163 = function (_) {
   var bad = undefined;
-  if (!( nil63(_) || lst63(_))) {
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))";
+  if (!( nil63(_) || list63(_))) {
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))";
   }
   if (is63(bad)) {
     err("assertion failed", bad);
   }
   var it = _;
-  if (lst63(it) && one63(it)) {
+  if (list63(it) && one63(it)) {
     return(true);
   }
 };
 _263 = function (_) {
   var bad = undefined;
-  if (!( nil63(_) || lst63(_))) {
-    bad = "(\"or\" (\"nil?\" \"_\") (\"lst?\" \"_\"))";
+  if (!( nil63(_) || list63(_))) {
+    bad = "(\"or\" (\"nil?\" \"_\") (\"list?\" \"_\"))";
   }
   if (is63(bad)) {
     err("assertion failed", bad);
   }
   var it = _;
-  if (lst63(it) && two63(it)) {
+  if (list63(it) && two63(it)) {
     return(true);
   }
 };
@@ -1989,7 +1988,7 @@ pr = function () {
     _e10 = [];
   }
   var xs = _e10;
-  var _id63 = lst(xs);
+  var _id63 = tolist(xs);
   var sep = _id63[0];
   var lh = _id63[1];
   var rh = _id63[2];
@@ -2009,9 +2008,9 @@ pr = function () {
       if (c) {
         write(c);
       } else {
-        c = str(sep);
+        c = tostr(sep);
       }
-      write(str(_x444));
+      write(tostr(_x444));
       _i23 = _i23 + 1;
     }
   } else {
@@ -2020,7 +2019,7 @@ pr = function () {
     var _i24 = 0;
     while (_i24 < _n24) {
       var _x446 = _x445[_i24];
-      write(str(_x446));
+      write(tostr(_x446));
       _i24 = _i24 + 1;
     }
   }
@@ -2119,7 +2118,7 @@ loadstr = function (str) {
   while (_i25 < _n25) {
     var expr = _x461[_i25];
     if ("1" === env("VERBOSE")) {
-      prn(string(expr));
+      prn(str(expr));
     }
     if ("1" === env("COMP")) {
       prn(comp(expr));

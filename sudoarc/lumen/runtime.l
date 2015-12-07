@@ -3,14 +3,6 @@
 (define-global environment (list (obj)))
 (define-global target (language))
 
-(target lua: (define ssub (get string 'sub)))
-(target lua: (define sbyte (get string 'byte)))
-(target lua: (define sfind (get string 'find)))
-(target lua: (define tinsert (get table 'insert)))
-(target lua: (define tremove (get table 'remove)))
-(target lua: (define tsort (get table 'sort)))
-(target lua: (define tunpack (get table 'unpack)))
-
 (define-global nil? (x)
   (target
     js: (or (= x nil) (= x null))
@@ -52,7 +44,7 @@
 
 (define-global clip (s from upto)
   (target js: ((get s 'substring) from upto)
-          lua: (ssub s (+ from 1) upto)))
+          lua: ((get string 'sub) s (+ from 1) upto)))
 
 (define-global cut (x from upto)
   (with l ()
@@ -88,7 +80,7 @@
 (define-global code (s n)
   (target
     js: ((get s 'charCodeAt) n)
-    lua: (sbyte s (if n (+ n 1)))))
+    lua: ((get string 'byte) s (if n (+ n 1)))))
 
 (define-global string-literal? (x)
   (and (string? x) (= (char x 0) "\"")))
@@ -98,11 +90,11 @@
 
 (define-global add (l x)
   (target js: (do ((get l 'push) x) nil)
-          lua: (tinsert l x)))
+          lua: ((get table 'insert) l x)))
 
 (define-global drop (l)
   (target js: ((get l 'pop))
-          lua: (tremove l)))
+          lua: ((get table 'remove) l)))
 
 (define-global last (l)
   (at l (edge l)))
@@ -173,7 +165,7 @@
 
 (define-global sort (l f)
   (target
-    lua: (do (tsort l f) l)
+    lua: (do ((get table 'sort) l f) l)
     js: ((get l 'sort) (when f (fn (a b) (if (f a b) -1 1))))))
 
 (define-global map (f x)
@@ -228,7 +220,7 @@
     js: (let i ((get s 'indexOf) pattern start)
           (if (>= i 0) i))
     lua: (let (start (if start (+ start 1))
-               i (sfind s pattern start true))
+               i ((get string 'find) s pattern start true))
            (and i (- i 1)))))
 
 (define-global split (s sep)
@@ -296,7 +288,7 @@
         (cat! s1 c1)))
     (cat s1 "\"")))
 
-(define-global string (x depth ancestors)
+(define-global str (x depth ancestors)
   (if (nil? x) "nil"
       (nan? x) "nan"
       (= x inf) "inf"
@@ -314,16 +306,16 @@
         (return "circular"))
       (each (k v) x
         (if (number? k)
-            (set (get xs k) (string v d ans))
+            (set (get xs k) (str v d ans))
           (do (add ks (cat k ":"))
-              (add ks (string v d ans)))))
+              (add ks (str v d ans)))))
       (each v (join xs ks)
         (cat! s sp v)
         (set sp " "))
       (cat s  ")"))))
 
 (target lua:
-  (define values (or unpack tunpack)))
+  (define values (or unpack (get table 'unpack))))
 
 (define-global apply (f args)
   (let args (stash args)
@@ -344,11 +336,6 @@
       (each (k v) keys
         (set (get entry k) v))
       (set (get frame k) entry))))
-
-(target lua:
-  (define-global %message-handler (msg)
-    (let i (search msg ": ")
-      (clip msg (+ i 2)))))
 
 (target js:
   (define-global print (x)
