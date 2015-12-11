@@ -363,7 +363,7 @@
         (when (dir? dst)
           (error (cat "monki clone: already exists: " dst)))
         (mkdir dst)
-        ($ "echo" (cat "(clone " (inner (string (cut params 0 (edge params)))) ")")
+        ($ "echo" (cat "(clone " (inner (str (cut params 0 (edge params)))) ")")
            ">" (j dst "monki.l"))
         (return (monkitree dst))))
     ; git.

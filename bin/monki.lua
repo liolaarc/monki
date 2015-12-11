@@ -2575,7 +2575,7 @@ function mmain(argv)
       error("monki clone: already exists: " .. dst)
     end
     mkdir(dst)
-    _36("echo", "(clone " .. inner(string(cut(params, 0, edge(params)))) .. ")", ">", j(dst, "monki.l"))
+    _36("echo", "(clone " .. inner(str(cut(params, 0, edge(params)))) .. ")", ">", j(dst, "monki.l"))
     return(monkitree(dst))
   end
   if op == "git" or op == "g" then

@@ -2668,7 +2668,7 @@ mmain = function (argv) {
       throw new Error("monki clone: already exists: " + dst);
     }
     mkdir(dst);
-    _36("echo", "(clone " + inner(string(cut(params, 0, edge(params)))) + ")", ">", j(dst, "monki.l"));
+    _36("echo", "(clone " + inner(str(cut(params, 0, edge(params)))) + ")", ">", j(dst, "monki.l"));
     return(monkitree(dst));
   }
   if (op === "git" || op === "g") {
