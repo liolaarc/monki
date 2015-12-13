@@ -7,7 +7,7 @@
 
 # Let's see how this goes.  Watch for signs of io.popen failing to
 # block.
-export LUMEN_HOST=${LUMEN_HOST:-luajit}
+export LUMEN_HOST="${LUMEN_HOST:-luajit}"
 
 # resolve symlinks.
 if [ -z "$at" ]; then at="`readlink -f "$0" 2>/dev/null`"; fi
@@ -21,7 +21,7 @@ home="$(pwd)"
 bin="${home}/bin"
 cd "${dir}"
 
-if [ ! -z ${LUMEN_HOST} ];       then host=${LUMEN_HOST}
+if [ ! -z "${LUMEN_HOST}" ];     then host="${LUMEN_HOST}"
 elif luajit -v > /dev/null 2>&1; then host=luajit
 elif    lua -v > /dev/null 2>&1; then host=lua
 elif   node -v > /dev/null 2>&1; then host=node
@@ -81,8 +81,8 @@ EOF
 export cmdline
 
 if [ ! -z "$rlwrap" ]; then
-  exec "${rlwrap}" "${host}" "${bin}/monki.${ext}" $args
+  exec "${rlwrap}" ${host} "${bin}/monki.${ext}" $args
 else
-  exec             "${host}" "${bin}/monki.${ext}" $args
+  exec             ${host} "${bin}/monki.${ext}" $args
 fi
 
