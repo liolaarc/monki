@@ -983,23 +983,24 @@ local ok = __id[1]
 local req = __id[2]
 if ok then
   require = req(".")
+  eval({"define-global", "require", {{"require", {"quote", "require"}}, "\".\""}})
   pretty_print = require("pretty-print").prettyPrint
   compiler.run("\nffi = require('ffi')\nffi.cdef[[int fcntl(int fildes, int cmd, ...);]]\nffi.cdef[[static const int F_GETFL= 3;/* get file status flags */]]\nffi.cdef[[static const int F_SETFL= 4;/* set file status flags */]]\nffi.cdef[[static const int O_NONBLOCK	= 0x0004;		/* no delay */]]\nlocal flags = ffi.C.fcntl(0, ffi.C.F_GETFL, 0)\nbit = require(\"bit\")\nflags = bit.bxor(flags, ffi.C.O_NONBLOCK)\nffi.C.fcntl(0, ffi.C.F_SETFL, flags)\n")
 end
 function eval_print(form)
-  local _x3 = nil
+  local _x7 = nil
   local _msg1 = nil
   local _trace1 = nil
   local _e1
   if xpcall(function ()
-    _x3 = compiler.eval(form)
-    return(_x3)
+    _x7 = compiler.eval(form)
+    return(_x7)
   end, function (m)
     _msg1 = clip(m, search(m, ": ") + 2)
     _trace1 = debug.traceback()
     return(_trace1)
   end) then
-    _e1 = {true, _x3}
+    _e1 = {true, _x7}
   else
     _e1 = {false, _msg1, _trace1}
   end
@@ -1105,11 +1106,11 @@ local function main()
     end
     i = i + 1
   end
-  local _x7 = pre
-  local _n = _35(_x7)
+  local _x11 = pre
+  local _n = _35(_x11)
   local _i = 0
   while _i < _n do
-    local file = _x7[_i + 1]
+    local file = _x11[_i + 1]
     run_file(file)
     _i = _i + 1
   end

@@ -10,7 +10,8 @@
 (target lua:
   (let ((ok req) (guard (require 'require)))
     (when ok
-      (set require (req "."))
+      (define-global require (req "."))
+      (eval '(define-global require ((require 'require) ".")))
       (define-global pretty-print (get (require 'pretty-print) 'prettyPrint))
       ; On some platforms, luvit sets stdin to nonblocking.  This hack
       ; forces stdin to be in blocking mode.   (TODO: Remove this hack.)
