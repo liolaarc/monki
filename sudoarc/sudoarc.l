@@ -528,9 +528,9 @@
   (prn expr)
   msg)
 
-(def loadstr (str :verbose :on-err :print)
-  (step expr (readstr str)
-    (when (= "1" (env "VERBOSE")) (prn (str expr)))
+(def loadstr (s :verbose :on-err :print)
+  (step expr (readstr s)
+    (when (= "1" (env "VERBOSE")) (prn (s expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
     (let ((ok x) (guard (eval expr)))
       (when (and ok (= print true))
@@ -586,14 +586,18 @@
          ; times out or has a non-zero exit code.
          (let o (exec cmd)
            ; ({o toString}) ; TODO: Research why this breaks.
-           ({o toString}))))
+           (with result ({o toString}))
+             (when (env "VERBOSE")
+               (prn result)))))
   (target lua: (do
     (var exec (s)
       ; http://stackoverflow.com/questions/9676113/lua-os-execute-return-value
       ; Watch out, popen() sometimes fails to block:
       ; http://lua-users.org/lists/lua-l/2013-10/msg00727.html
       (let h ({io popen} cmd)
-        (do1 ({h read} h "*a")
+        (do1 (with result ({h read} h "*a")
+               (when (env "VERBOSE")
+                 (prn result)))
              ({h close} h))))
     (exec cmd))))
 

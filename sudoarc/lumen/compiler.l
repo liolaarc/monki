@@ -4,11 +4,12 @@
 
 (define getenv (k p)
   (when (string? k)
-    (let b (find (fn (e)
-                   (get e k))
-                 (reverse environment))
-      (when (is? b)
-        (if p (get b p) b)))))
+    (let i (edge environment)
+      (while (>= i 0)
+        (let b (get (at environment i) k)
+          (if (is? b)
+              (return (if p (get b p) b))
+            (dec i)))))))
 
 (define macro-function (k)
   (getenv k 'macro))

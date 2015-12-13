@@ -959,32 +959,59 @@ end})
 local reader = require("reader")
 local compiler = require("compiler")
 local system = require("system")
+function pretty_print(x)
+  return(print(str(x)))
+end
+local __x = nil
+local _msg = nil
+local _trace = nil
+local _e
+if xpcall(function ()
+  __x = require("require")
+  return(__x)
+end, function (m)
+  _msg = clip(m, search(m, ": ") + 2)
+  _trace = debug.traceback()
+  return(_trace)
+end) then
+  _e = {true, __x}
+else
+  _e = {false, _msg, _trace}
+end
+local __id = _e
+local ok = __id[1]
+local req = __id[2]
+if ok then
+  require = req(".")
+  pretty_print = require("pretty-print").prettyPrint
+  compiler.run("\nffi = require('ffi')\nffi.cdef[[int fcntl(int fildes, int cmd, ...);]]\nffi.cdef[[static const int F_GETFL= 3;/* get file status flags */]]\nffi.cdef[[static const int F_SETFL= 4;/* set file status flags */]]\nffi.cdef[[static const int O_NONBLOCK	= 0x0004;		/* no delay */]]\nlocal flags = ffi.C.fcntl(0, ffi.C.F_GETFL, 0)\nbit = require(\"bit\")\nflags = bit.bxor(flags, ffi.C.O_NONBLOCK)\nffi.C.fcntl(0, ffi.C.F_SETFL, flags)\n")
+end
 function eval_print(form)
-  local _x = nil
-  local _msg = nil
-  local _trace = nil
-  local _e
+  local _x3 = nil
+  local _msg1 = nil
+  local _trace1 = nil
+  local _e1
   if xpcall(function ()
-    _x = compiler.eval(form)
-    return(_x)
+    _x3 = compiler.eval(form)
+    return(_x3)
   end, function (m)
-    _msg = clip(m, search(m, ": ") + 2)
-    _trace = debug.traceback()
-    return(_trace)
+    _msg1 = clip(m, search(m, ": ") + 2)
+    _trace1 = debug.traceback()
+    return(_trace1)
   end) then
-    _e = {true, _x}
+    _e1 = {true, _x3}
   else
-    _e = {false, _msg, _trace}
+    _e1 = {false, _msg1, _trace1}
   end
-  local _id = _e
-  local ok = _id[1]
-  local x = _id[2]
-  local trace = _id[3]
+  local _id1 = _e1
+  local ok = _id1[1]
+  local x = _id1[2]
+  local trace = _id1[3]
   if not ok then
     return(print("error: " .. x .. "\n" .. trace))
   else
     if is63(x) then
-      return(print(str(x)))
+      return(pretty_print(x))
     end
   end
 end
@@ -1078,11 +1105,11 @@ local function main()
     end
     i = i + 1
   end
-  local _x4 = pre
-  local _n = _35(_x4)
+  local _x7 = pre
+  local _n = _35(_x7)
   local _i = 0
   while _i < _n do
-    local file = _x4[_i + 1]
+    local file = _x7[_i + 1]
     run_file(file)
     _i = _i + 1
   end
@@ -1972,19 +1999,19 @@ function prnerr(_x512)
   prn(expr)
   return(msg)
 end
-function loadstr(str, ...)
+function loadstr(s, ...)
   local _r116 = unstash({...})
   local _id67 = _r116
   local on_err = _id67["on-err"]
   local verbose = _id67.verbose
   local print = _id67.print
-  local _x514 = readstr(str)
+  local _x514 = readstr(s)
   local _n25 = _35(_x514)
   local _i25 = 0
   while _i25 < _n25 do
     local expr = _x514[_i25 + 1]
     if "1" == env("VERBOSE") then
-      prn(str(expr))
+      prn(s(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))
@@ -2048,7 +2075,12 @@ end
 function shell(cmd)
   local function exec(s)
     local h = io.popen(cmd)
-    local _g6 = h.read(h, "*a")
+    local result = h.read(h, "*a")
+    local _e11
+    if env("VERBOSE") then
+      _e11 = prn(result)
+    end
+    local _g6 = result
     h.close(h)
     return(_g6)
   end

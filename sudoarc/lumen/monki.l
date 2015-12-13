@@ -27,68 +27,6 @@
 ||)
 
 
-; compiler.l: On LUMEN_HOST=node, "0?" is incorrectly read as 0.  We
-; fix the bug here.
-
-(patch "reader.l"
-||
-(define-reader ("" s) ; atom
-||
-||
-(define digit? (s i)
-  (let c (code s i)
-    (and (>= c 48) (<= c 57))))
-
-(define-reader ("" s) ; atom
-||)
-
-(patch "reader.l"
-||
-        (= str "-inf") -inf
-||
-||
-        (= str "-inf") -inf
-        (not (digit? str (edge str))) str
-||)
-
-
-; (patch "compiler.l"
-; ||
-; (export run
-; ||
-; ||
-; (define-global load-compile-file (file lang rest: preload)
-;   (if (nil? lang) (set lang target))
-;   (let (compiler (require 'compiler)
-;         run (get compiler 'run)
-;         expand (get compiler 'expand)
-;         system (require 'system)
-;         read-file (get system 'read-file)
-;         reader (require 'reader)
-;         stream (get reader 'stream)
-;         read-all (get reader 'read-all)
-;         reads (fn (s) (read-all (stream s)))
-;         prev-target target
-;         prev-print print)
-;     (set target lang)
-;     (when (is? preload)
-;       (step x preload
-;         (run (read-file x))))
-;     (step expr (reads (read-file file))
-;       (set print (fn l nil))
-;       (let ((ok x) (guard (eval expr)))
-;         (set print prev-print)
-;         (unless ok
-;           (print x)
-;           (return))
-;         (print (compile (expand `(do ,expr))))))
-;     (set target prev-target)
-;     nil))
-
-; (export run
-; ||)
-
-
 ; runtime.l:
 ;   def tuple (lst n)
 ;   def vals (lst)
@@ -412,6 +350,60 @@ case $host in
           ((get in 'removeAllListeners))
           ((get in 'setEncoding) 'utf8)
 ||)
+
+
+
+;
+; Add support for LUMEN_HOST=luvit
+;
+
+(patch "main.l"
+||(is? x) (print (str x))||
+||(is? x) (pretty-print x)||)
+
+
+(patch "main.l"
+||
+(define system (require 'system))
+||
+||
+(define system (require 'system))
+
+(define-global pretty-print (x)
+  (print (str x)))
+
+(target lua:
+  (let ((ok req) (guard (require 'require)))
+    (when ok
+      (set require (req "."))
+      (define-global pretty-print (get (require 'pretty-print) 'prettyPrint))
+      ; On some platforms, luvit sets stdin to nonblocking.  This hack
+      ; forces stdin to be in blocking mode.   (TODO: Remove this hack.)
+      ((get compiler 'run) """
+ffi = require('ffi')
+ffi.cdef[[int fcntl(int fildes, int cmd, ...);]]
+ffi.cdef[[static const int F_GETFL= 3;/* get file status flags */]]
+ffi.cdef[[static const int F_SETFL= 4;/* set file status flags */]]
+ffi.cdef[[static const int O_NONBLOCK	= 0x0004;		/* no delay */]]
+local flags = ffi.C.fcntl(0, ffi.C.F_GETFL, 0)
+bit = require("bit")
+flags = bit.bxor(flags, ffi.C.O_NONBLOCK)
+ffi.C.fcntl(0, ffi.C.F_SETFL, flags)
+"""))))
+||)
+
+
+(patch "system.l"
+||
+(define argv
+  (target js: (cut (get process 'argv) 2) lua: arg))
+||
+||
+(define argv
+  (target js: (cut (get process 'argv) 2) lua: (or arg (cut args 1))))
+||)
+
+
 
 ; Apply all of these changes by rebuilding Lumen several times.  The
 ; first rebuild will be using the old Lumen compiler. The second will

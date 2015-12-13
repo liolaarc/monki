@@ -4,13 +4,35 @@
 (define compiler (require 'compiler))
 (define system (require 'system))
 
+(define-global pretty-print (x)
+  (print (str x)))
+
+(target lua:
+  (let ((ok req) (guard (require 'require)))
+    (when ok
+      (set require (req "."))
+      (define-global pretty-print (get (require 'pretty-print) 'prettyPrint))
+      ; On some platforms, luvit sets stdin to nonblocking.  This hack
+      ; forces stdin to be in blocking mode.   (TODO: Remove this hack.)
+      ((get compiler 'run) """
+ffi = require('ffi')
+ffi.cdef[[int fcntl(int fildes, int cmd, ...);]]
+ffi.cdef[[static const int F_GETFL= 3;/* get file status flags */]]
+ffi.cdef[[static const int F_SETFL= 4;/* set file status flags */]]
+ffi.cdef[[static const int O_NONBLOCK	= 0x0004;		/* no delay */]]
+local flags = ffi.C.fcntl(0, ffi.C.F_GETFL, 0)
+bit = require("bit")
+flags = bit.bxor(flags, ffi.C.O_NONBLOCK)
+ffi.C.fcntl(0, ffi.C.F_SETFL, flags)
+"""))))
+
 (define-global eval-print (form)
   (let ((ok x trace) (guard ((get compiler 'eval) form)))
     (if (not ok)
         (target
           js: (print trace)
           lua: (print (cat "error: " x "\n" trace)))
-        (is? x) (print (str x)))))
+        (is? x) (pretty-print x))))
 
 (define rep (s)
   (eval-print ((get reader 'read-string) s)))

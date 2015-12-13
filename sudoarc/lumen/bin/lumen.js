@@ -1085,6 +1085,9 @@ setenv("export", {_stash: true, macro: function () {
 var reader = require("reader");
 var compiler = require("compiler");
 var system = require("system");
+pretty_print = function (x) {
+  return(print(str(x)));
+};
 eval_print = function (form) {
   var _id = (function () {
     try {
@@ -1101,7 +1104,7 @@ eval_print = function (form) {
     return(print(trace));
   } else {
     if (is63(x)) {
-      return(print(str(x)));
+      return(pretty_print(x));
     }
   }
 };

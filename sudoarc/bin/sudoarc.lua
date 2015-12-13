@@ -1972,19 +1972,19 @@ function prnerr(_x512)
   prn(expr)
   return(msg)
 end
-function loadstr(str, ...)
+function loadstr(s, ...)
   local _r116 = unstash({...})
   local _id67 = _r116
   local on_err = _id67["on-err"]
   local verbose = _id67.verbose
   local print = _id67.print
-  local _x514 = readstr(str)
+  local _x514 = readstr(s)
   local _n25 = _35(_x514)
   local _i25 = 0
   while _i25 < _n25 do
     local expr = _x514[_i25 + 1]
     if "1" == env("VERBOSE") then
-      prn(str(expr))
+      prn(s(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))
@@ -2048,7 +2048,12 @@ end
 function shell(cmd)
   local function exec(s)
     local h = io.popen(cmd)
-    local _g6 = h.read(h, "*a")
+    local result = h.read(h, "*a")
+    local _e11
+    if env("VERBOSE") then
+      _e11 = prn(result)
+    end
+    local _g6 = result
     h.close(h)
     return(_g6)
   end

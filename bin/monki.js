@@ -1085,6 +1085,9 @@ setenv("export", {_stash: true, macro: function () {
 var reader = require("reader");
 var compiler = require("compiler");
 var system = require("system");
+pretty_print = function (x) {
+  return(print(str(x)));
+};
 eval_print = function (form) {
   var _id = (function () {
     try {
@@ -1101,7 +1104,7 @@ eval_print = function (form) {
     return(print(trace));
   } else {
     if (is63(x)) {
-      return(print(str(x)));
+      return(pretty_print(x));
     }
   }
 };
@@ -2106,19 +2109,19 @@ prnerr = function (_x460) {
   prn(expr);
   return(msg);
 };
-loadstr = function (str) {
+loadstr = function (s) {
   var _r116 = unstash(Array.prototype.slice.call(arguments, 1));
   var _id67 = _r116;
   var on_err = _id67["on-err"];
   var verbose = _id67.verbose;
   var print = _id67.print;
-  var _x461 = readstr(str);
+  var _x461 = readstr(s);
   var _n25 = _35(_x461);
   var _i25 = 0;
   while (_i25 < _n25) {
     var expr = _x461[_i25];
     if ("1" === env("VERBOSE")) {
-      prn(str(expr));
+      prn(s(expr));
     }
     if ("1" === env("COMP")) {
       prn(comp(expr));
@@ -2156,7 +2159,10 @@ shell = function (cmd) {
   var childproc = require("child_process");
   var exec = childproc.execSync;
   var _o3 = exec(cmd);
-  return(_o3.toString());
+  var result = _o3.toString();
+  if (env("VERBOSE")) {
+    return(prn(result));
+  }
 };
 exit = function (code) {
   return(process.exit(code));

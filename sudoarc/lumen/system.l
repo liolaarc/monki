@@ -54,7 +54,7 @@
           lua: ((get os 'exit) code)))
 
 (define argv
-  (target js: (cut (get process 'argv) 2) lua: arg))
+  (target js: (cut (get process 'argv) 2) lua: (or arg (cut args 1))))
 
 (export read-file
         write-file
