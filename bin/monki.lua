@@ -2011,7 +2011,7 @@ function loadstr(s, ...)
   while _i25 < _n25 do
     local expr = _x514[_i25 + 1]
     if "1" == env("VERBOSE") then
-      prn(s(expr))
+      prn(str(expr))
     end
     if "1" == env("COMP") then
       prn(comp(expr))

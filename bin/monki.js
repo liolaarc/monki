@@ -2121,7 +2121,7 @@ loadstr = function (s) {
   while (_i25 < _n25) {
     var expr = _x461[_i25];
     if ("1" === env("VERBOSE")) {
-      prn(s(expr));
+      prn(str(expr));
     }
     if ("1" === env("COMP")) {
       prn(comp(expr));

@@ -530,7 +530,7 @@
 
 (def loadstr (s :verbose :on-err :print)
   (step expr (readstr s)
-    (when (= "1" (env "VERBOSE")) (prn (s expr)))
+    (when (= "1" (env "VERBOSE")) (prn (str expr)))
     (when (= "1" (env "COMP")) (prn (comp expr)))
     (let ((ok x) (guard (eval expr)))
       (when (and ok (= print true))

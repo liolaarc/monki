@@ -102,10 +102,6 @@ var wrap = function (s, x) {
     return([x, y]);
   }
 };
-var digit63 = function (s, i) {
-  var c = code(s, i);
-  return(c >= 48 && c <= 57);
-};
 read_table[""] = function (s) {
   var str = "";
   while (true) {
@@ -137,18 +133,14 @@ read_table[""] = function (s) {
               if (str === ".") {
                 return("rest:");
               } else {
-                if (! digit63(str, edge(str))) {
+                if (! number_code63(code(str, edge(str)))) {
                   return(str);
                 } else {
-                  if (! number_code63(code(str, edge(str)))) {
+                  var n = number(str);
+                  if (nil63(n) || nan63(n) || inf63(n)) {
                     return(str);
                   } else {
-                    var n = number(str);
-                    if (nil63(n) || nan63(n) || inf63(n)) {
-                      return(str);
-                    } else {
-                      return(n);
-                    }
+                    return(n);
                   }
                 }
               }
