@@ -982,8 +982,8 @@ local __id = _e
 local ok = __id[1]
 local req = __id[2]
 if ok then
-  require = req(".")
-  eval({"define-global", "require", {{"require", {"quote", "require"}}, "\".\""}})
+  require = req("/")
+  eval({"define-global", "require", {{"require", {"quote", "require"}}, "\"/\""}})
   pretty_print = require("pretty-print").prettyPrint
   compiler.run("\nffi = require('ffi')\nffi.cdef[[int fcntl(int fildes, int cmd, ...);]]\nffi.cdef[[static const int F_GETFL= 3;/* get file status flags */]]\nffi.cdef[[static const int F_SETFL= 4;/* set file status flags */]]\nffi.cdef[[static const int O_NONBLOCK	= 0x0004;		/* no delay */]]\nlocal flags = ffi.C.fcntl(0, ffi.C.F_GETFL, 0)\nbit = require(\"bit\")\nflags = bit.bxor(flags, ffi.C.O_NONBLOCK)\nffi.C.fcntl(0, ffi.C.F_SETFL, flags)\n")
 end
