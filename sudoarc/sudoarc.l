@@ -115,11 +115,6 @@
     `(not (no ,@l))
     `(cmp ,@l)))
 
-(mac isnt l
-  (if (one? l)
-    `(no ,@l)
-    `(not (cmp ,@l))))
-
 ; for each x in lst, calls (f x).  Returns the last result.
 (def map1 (f lst) (o lst ())
   (let val nil
@@ -154,10 +149,13 @@
        ,@ys
        ,g)))
 
-(mac if1 (x then . else)
-  `(if ,x ,then
+(mac but (cond then . else)
+  `(if ,cond ,then
      (do ,@else)))
-(alias but if1)
+
+(mac isnt (cond then . else)
+  `(if (not ,cond) ,then
+     (do ,@else)))
 
 (mac lastly (x . ys)
   `(do1 (do ,@ys) ,x))
@@ -233,15 +231,26 @@
 (mac afn (args body . l)
   `(lfn self ,args ,body ,@l))
 
+(mac letmac (name args body . l)
+  `(let-macro ((,name ,args ,body))
+     ,@l))
+
+(mac add (l x)
+  (target js: `(do ((get ,l 'push) ,x) nil)
+          lua: `((get table 'insert) ,l ,x)))
+
+
 (mac accum (name . body)
   (w/uniq g
-    `(let ,g ()
-       (lfn ,name (item) (add ,g item)
-         ,@body)
-       ,g)))
+    `(with ,g ()
+       (letmac ,name (x) (list 'add ',g x)
+         ,@body))))
 
 (mac bag l
   `(accum put ,@l))
+
+(mac sbag l
+  `(sort (bag ,@l)))
 
 ; ; This serves as an example of how to write a metamacro.  There are
 ; ; probably better ways to write it, and the idea isn't very good in
@@ -290,24 +299,23 @@
 (mac awhen l
   `(let-when it ,@l))
 
-(def kvs (x)
-  (if (acons x)
-    (if (keys? x)
-      (bag (each (k v) x
-             (if (num? k) (put v) (put (list k v :key)))))
-      x)))
+(mac kv (lst . body)
+  `(each (k v) ,lst
+     ,@body))
 
-; (mac key? ((k v) lst exprs . body)
-;   `(ado ,lst
-;      (when (is? it)
-;        ; (when (list? it)
-;        ;   (set it (car it)))
-;        (if (and (list? it) (get it 'key))
-;          (let ((,k ,v) it)
-;            (set it ,exprs))
-;          (let ,v it
-;            (set it ,exprs))
-;        ,@body))))
+(mac skv (lst . body)
+  (w/uniq g
+    `(let ,g ,lst
+       (step k (sbag (kv ,g
+                       (isnt (num? k) (put k)
+                         ,@body)))
+         (let v (get ,g k)
+           ,@body)))))
+
+(def kvs (x)
+  (bag (kv x
+         (if (num? k) (put v)
+           (put (list k v))))))
 
 (def car (x)
   (if (is x)
